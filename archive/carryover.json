@@ -1,6 +1,12 @@
 {
-  "generated_at": "2026-08-03T20:25:30.850963+00:00",
-  "updated_date": "20260803",
+  "generated_at": "2026-08-04T03:15:38.241053+00:00",
+  "updated_date": "20260706-20260804",
   "carryover_days": 9,
-  "tag_states": {}
+  "tag_states": {
+    "mcd": {
+      "updated_date": "20260706-20260804",
+      "carryover_days": 9,
+      "items": []
+    }
+  }
 }

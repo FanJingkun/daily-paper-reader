@@ -1,0 +1,217 @@
+{
+  "date": "20260706-20260804",
+  "date_label": "2026-07-06 ~ 2026-08-04",
+  "generated_at": "2026-08-04 03:24:45 UTC",
+  "recommend_exists": true,
+  "run_count": 1,
+  "papers": [
+    {
+      "paper_id": "2607.17914v1",
+      "route": "20260706-20260804/2607.17914v1-value-aware-prediction-for-robust-multi-agent-coordination-under-communication-loss",
+      "title": "Value-Aware Prediction for Robust Multi-Agent Coordination Under Communication Loss",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 10.0,
+      "evidence": "通信中断下的多智能体协调，用价值感知预测填补通信缺口",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.05939v1",
+      "route": "20260706-20260804/2607.05939v1-intercepting-an-agile-target-with-net-carrying-drones-using-competitive-multi-agent-reinforcement-learning",
+      "title": "Intercepting an Agile Target with Net-Carrying Drones using Competitive Multi-Agent Reinforcement Learning",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "使用MAPPO与优先虚构自对弈训练追捕无人机拦截敏捷目标，属竞争性多智能体学习",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.17924v1",
+      "route": "20260706-20260804/2607.17924v1-aggregate-in-the-advantage-not-the-ratio-a-canonical-form-analysis-of-cooperative-multi-agent-policy-optimization",
+      "title": "Aggregate in the Advantage, Not the Ratio: A Canonical-Form Analysis of Cooperative Multi-Agent Policy Optimization",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "分析优势聚合与信用信号的合作多智能体策略优化",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.18597v3",
+      "route": "20260706-20260804/2607.18597v3-a-self-evolving-default-action-for-cooperative-tasks-with-continuous-action-space",
+      "title": "A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "面向连续动作协作多智能体强化学习的反事实信用分配方法",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.19809v1",
+      "route": "20260706-20260804/2607.19809v1-dreamer-cpc-message-learning-with-world-models-for-decentralized-multi-agent-reinforcement-learning",
+      "title": "Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "通过世界模型集成学习的智能体间通信消息",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.27967v1",
+      "route": "20260706-20260804/2607.27967v1-mars-ra-rank-aggregation-for-credit-assignment-via-multimodal-comparisons-in-embodied-multi-agent-cooperation",
+      "title": "MARS-RA: Rank Aggregation for Credit Assignment via Multimodal Comparisons in Embodied Multi-Agent Cooperation",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "通过成对比较的排序聚合解决合作MARL中的信用分配",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.09295v1",
+      "route": "20260706-20260804/2607.09295v1-multi-agent-reinforcement-learning-for-sla-aware-network-slicing-in-uav-enabled-mec",
+      "title": "Multi-Agent Reinforcement Learning for SLA-Aware Network Slicing in UAV-Enabled MEC",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "多智能体强化学习实现轨迹控制与资源分配协同以维持SLA稳定",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.17560v1",
+      "route": "20260706-20260804/2607.17560v1-reinforcement-learning-from-algorithms-to-foundation-models",
+      "title": "Reinforcement Learning: From Algorithms To Foundation Models",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "面向博弈中的多智能体强化学习，涵盖竞争与一般和博弈环境",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.18554v1",
+      "route": "20260706-20260804/2607.18554v1-scalable-policy-optimization-for-networked-multi-agent-reinforcement-learning-with-continuous-state-action-spaces",
+      "title": "Scalable Policy Optimization for Networked Multi-Agent Reinforcement Learning with Continuous State-Action Spaces",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "面向网络化合作MARL的连续分布式耦合策略梯度算法",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.18719v1",
+      "route": "20260706-20260804/2607.18719v1-strategy-following-multi-agent-deep-reinforcement-learning-considering-control-strategies-provided-to-other-agents",
+      "title": "Strategy-Following Multi-Agent Deep Reinforcement Learning Considering Control Strategies Provided to Other Agents",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "考虑人类指令与智能体间隐式协同的多智能体深度强化学习",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.19555v1",
+      "route": "20260706-20260804/2607.19555v1-chmas-a-coupled-hierarchical-framework-for-multi-agent-reinforcement-learning",
+      "title": "CHMAS: A Coupled Hierarchical Framework for Multi-Agent Reinforcement Learning",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "MARL中的中心化战略规划与分布式战术执行及双向信息流",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.21876v1",
+      "route": "20260706-20260804/2607.21876v1-variance-reduced-q-learning-over-static-and-time-varying-networks",
+      "title": "Variance-Reduced Q-Learning over Static and Time-Varying Networks",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "基于网络通信与共识的去中心化多智能体Q学习",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    },
+    {
+      "paper_id": "2607.25082v2",
+      "route": "20260706-20260804/2607.25082v2-plato-pointer-learner-for-agent-and-task-openness",
+      "title": "PLATO: Pointer Learner for Agent and Task Openness",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "使用指针网络演员和中心化图神经网络评论家的多智能体强化学习，应对开放智能体与任务",
+      "first_seen_at": "2026-08-04 03:24:45 UTC",
+      "updated_at": "2026-08-04 03:24:45 UTC"
+    }
+  ]
+}

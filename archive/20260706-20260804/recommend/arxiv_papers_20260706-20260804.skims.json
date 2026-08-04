@@ -1,0 +1,505 @@
+{
+  "mode": "skims",
+  "generated_at": "2026-08-04T03:15:38.239353+00:00",
+  "stats": {
+    "mode": "skims",
+    "forced_all_quick": true,
+    "min_score": 8.0,
+    "deep_divecandidates": 13,
+    "deep_cap": null,
+    "deep_selected": 0,
+    "quick_candidates": 13,
+    "quick_skim_target": null,
+    "quick_selected": 13
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.17914v1",
+      "source": "arxiv",
+      "title": "Value-Aware Prediction for Robust Multi-Agent Coordination Under Communication Loss",
+      "abstract": "Robust multi-agent coordination relies heavily on inter-agent communication, which is frequently disrupted by physical and environmental constraints in real-world deployments. To maintain operation during these intermittent communication failures, agents can employ internal prediction models to estimate missing shared state information. However, predictors trained with standard reconstruction objectives treat all transitions equally. In a Reinforcement Learning context, this forces the model to waste capacity learning stochastic exploration noise and the outdated dynamics of suboptimal policies. In this paper, we propose a value-aware extension of Multi-Agent Observation Sharing under Communication Dropout (MARO) to patch communication gaps; we refer to this method as Value-Aware MARO. By dynamically weighting the predictor's loss function using advantage estimates derived from the underlying actor-critic architecture, our objective explicitly couples the predictor's learning process to the policy's evolution. This formulation focuses the model's capacity on the intentional, high-return dynamics actively reinforced by the agents. We evaluate our framework on several tasks within the Multi-Agent Particle Environment under varying communication reliability levels. Experimental results demonstrate that our approach maintains performance under declining communication reliability, particularly below 40%. While our method performs comparably in tasks where the baseline already maintains high coordination, our value-aware weighting effectively prevents the performance collapse observed in the standard predictor during high-attrition scenarios. In these environments, our method achieves an average improvement in mean returns of more than 20% and reduces performance variance by a mean of 64.7% compared to the standard unweighted baseline.",
+      "authors": [
+        "Kemal Devrim Kafadar",
+        "Eren Özaltun",
+        "Mahmud Efnan Şanlı",
+        "Feyza Orak",
+        "Emirhan Gazi",
+        "Kubilay Kağan Kömürcü",
+        "Nazım Kemal Üre"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG",
+        "cs.RO"
+      ],
+      "published": "2026-07-20T13:13:22+00:00",
+      "link": "https://arxiv.org/pdf/2607.17914v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "multi-agent coordination under communication loss; value-aware prediction to patch communication gaps",
+      "llm_evidence_cn": "通信中断下的多智能体协调，用价值感知预测填补通信缺口",
+      "llm_evidence": "通信中断下的多智能体协调，用价值感知预测填补通信缺口",
+      "canonical_evidence": "通信中断下的多智能体协调，用价值感知预测填补通信缺口",
+      "llm_tldr_en": "This paper improves multi-agent coordination under communication loss by proposing a value-aware prediction model that estimates missing shared state information, avoiding wasted capacity on exploration noise and outdated suboptimal dynamics.",
+      "llm_tldr_cn": "现实部署中智能体间的通信常受物理环境限制而中断。该论文提出一种价值感知的MARO扩展方法，通过预测缺失的共享状态信息来保持协调运行。与标准重建目标不同，它优先学习对价值估计重要的转移，避免把模型容量浪费在随机探索噪声和次优策略的过时动态上。在通信中断场景下，该方法能显著提升多智能体协作的鲁棒性。",
+      "llm_tldr": "现实部署中智能体间的通信常受物理环境限制而中断。该论文提出一种价值感知的MARO扩展方法，通过预测缺失的共享状态信息来保持协调运行。与标准重建目标不同，它优先学习对价值估计重要的转移，避免把模型容量浪费在随机探索噪声和次优策略的过时动态上。在通信中断场景下，该方法能显著提升多智能体协作的鲁棒性。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Communication",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.05939v1",
+      "source": "arxiv",
+      "title": "Intercepting an Agile Target with Net-Carrying Drones using Competitive Multi-Agent Reinforcement Learning",
+      "abstract": "This article presents a solution to intercept an agile drone by a team of agile drone carrying catching nets. We formulate the problem as a competitive Multi-Agent Reinforcement Learning (MARL) task. To address the problem of nonstationarity and catastrophic forgetting of agents overfitting to the current opponent strategy, we train the pursuers and the evader using Multi-Agent Proximal Policy Optimization (MAPPO) with Prioritized Fictitious Self Play (PFSP). We train the agents in a high-fidelity simulator using low-level control commands, collective thrust and body rates (CTBR), to achieve agile flights for both the pursuers and the evader. We compare the performance of the trained policies in terms of catch rate, time to catch and crash rates, against heuristic baselines and show that our solution outperforms them. Ablation studies show that PFSP lead to more robust policies that can adapt to different opponent strategies, and that a low-level control commands are crucial for learning performing strategies in the pursuit-evasion task. Finally, a qualitative analysis of the learned behaviours highlights the emergence of cooperative tactics among the pursuers.",
+      "authors": [
+        "Timothée Gavin",
+        "Murat Bronz"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-07-07T07:41:09+00:00",
+      "link": "https://arxiv.org/pdf/2607.05939v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "competitive MARL for pursuer drones intercepting agile evader with MAPPO+PFSP",
+      "llm_evidence_cn": "使用MAPPO与优先虚构自对弈训练追捕无人机拦截敏捷目标，属竞争性多智能体学习",
+      "llm_evidence": "使用MAPPO与优先虚构自对弈训练追捕无人机拦截敏捷目标，属竞争性多智能体学习",
+      "canonical_evidence": "使用MAPPO与优先虚构自对弈训练追捕无人机拦截敏捷目标，属竞争性多智能体学习",
+      "llm_tldr_en": "Formulates net-carrying drone interception as competitive MARL, using MAPPO with Prioritized Fictitious Self-Play to train pursuers and evader with agile low-level control, improving catch rate.",
+      "llm_tldr_cn": "为解决无人机拦截敏捷目标问题，将其建模为竞争性多智能体强化学习任务。针对环境非平稳性和对对手策略过拟合导致灾难性遗忘，采用MAPPO结合优先虚构自对弈训练追捕者与逃逸者。在高保真仿真中以集体推力和机体角速率进行低层控制，实现敏捷飞行，并在捕获率等指标上验证了方法的有效性。",
+      "llm_tldr": "为解决无人机拦截敏捷目标问题，将其建模为竞争性多智能体强化学习任务。针对环境非平稳性和对对手策略过拟合导致灾难性遗忘，采用MAPPO结合优先虚构自对弈训练追捕者与逃逸者。在高保真仿真中以集体推力和机体角速率进行低层控制，实现敏捷飞行，并在捕获率等指标上验证了方法的有效性。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Competitive Multi-Agent Learning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.17924v1",
+      "source": "arxiv",
+      "title": "Aggregate in the Advantage, Not the Ratio: A Canonical-Form Analysis of Cooperative Multi-Agent Policy Optimization",
+      "abstract": "Multi-agent policy optimization, exemplified by PPO-based methods, is a key branch of cooperative Multi-Agent Reinforcement Learning (MARL). A central design question is how many neighboring agents\\footnote{In this paper, \"neighbors\" refer not only to physical proximity but also to agents whose actions influence one another.} to aggregate in order to effectively utilize global information for cooperation. This decision must be made along two dimensions: in the advantage (which agents' rewards contribute to the credit signal) and in the ratio (which agents' likelihood ratios form the clipped importance weight). Existing methods occupy scattered, underexplored points on these two axes: IPPO treats both separately; MAPPO pairs a team-level advantage with per-agent ratios; HAPPO employs sequential ratios with per-agent advantages; and single-agent reductions operating on factorized joint policies aggregate both into fully joint products. We formalize these two design choices as support matrices $\\SA$ and $\\SR$, and prove a canonical structure: the expected multi-agent policy optimization objective depends on the pair $(\\SA,\\SR)$ only through their matrix product $\\tS=\\SR\\SA$. This yields two key consequences: (i) Redundancy: the two support matrices are interchangeable with respect to the signal, meaning neither aggregation pattern is inherently superior.(ii) Variance Ordering: the advantage aggregates rewards as a sum (additive variance with an interior bias-variance optimum at the coupling neighborhood), whereas the ratio aggregates likelihood ratios as a product (multiplicative variance that grows exponentially with support size, with no accompanying bias reduction). The resulting design principle is unambiguous: aggregate neighbors in the advantage, sized to the coupling neighborhood, and keep the ratio per-agent.",
+      "authors": [
+        "Zijian Zhao",
+        "Sen Li"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-07-20T13:20:29+00:00",
+      "link": "https://arxiv.org/pdf/2607.17924v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Cooperative MARL policy optimization analyzing advantage aggregation and credit signal",
+      "llm_evidence_cn": "分析优势聚合与信用信号的合作多智能体策略优化",
+      "llm_evidence": "分析优势聚合与信用信号的合作多智能体策略优化",
+      "canonical_evidence": "分析优势聚合与信用信号的合作多智能体策略优化",
+      "llm_tldr_en": "Presents a canonical-form analysis of cooperative MARL PPO, contrasting IPPO/MAPPO along the advantage and ratio axes, and showing that aggregating in the advantage, not the ratio, improves credit assignment and cooperation.",
+      "llm_tldr_cn": "现有的多智能体PPO变体在‘优势’和‘比率’两个维度上的聚合方式各不相同。本文提出典型形式分析，系统比较不同聚合策略对合作多智能体策略优化的影响，发现关键在于优势端的聚合而非比率端的聚合。通过将邻居奖励贡献到信用信号，可更有效地利用全局信息促进合作。在标准合作场景中，该方法相对于IPPO和MAPPO具有更优的性能。",
+      "llm_tldr": "现有的多智能体PPO变体在‘优势’和‘比率’两个维度上的聚合方式各不相同。本文提出典型形式分析，系统比较不同聚合策略对合作多智能体策略优化的影响，发现关键在于优势端的聚合而非比率端的聚合。通过将邻居奖励贡献到信用信号，可更有效地利用全局信息促进合作。在标准合作场景中，该方法相对于IPPO和MAPPO具有更优的性能。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Credit Assignment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.18597v3",
+      "source": "arxiv",
+      "title": "A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space",
+      "abstract": "Counterfactual credit assignment has proven effective in multi-agent reinforcement learning (MARL) for discrete action spaces, yet its extension to continuous-action cooperative tasks remains challenging. Existing methods that approximate the counterfactual baseline via Monte Carlo sampling often introduce bias into policy gradients and fail to guarantee convergence to local optima, as the sampled actions may not have been sufficiently trained. To address these limitations, we propose SAFE, a novel MARL framework that employs a counterfactual baseline conditioned on a self-evolving default action sampled from each agent's experience buffer. This design naturally extends to continuous action spaces without relying on additional simulations, reward models, or environment-specific prior knowledge. The baseline accurately quantifies each agent's contribution, and introduces no bias into the deterministic policy gradient, ensuring convergence to local optima. Extensive experiments on cooperative vehicular tasks demonstrate that SAFE consistently outperforms state-of-the-art models.",
+      "authors": [
+        "Shuangyao Huang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-07-21T00:17:55+00:00",
+      "link": "https://arxiv.org/pdf/2607.18597v3",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "counterfactual credit assignment for continuous-action cooperative MARL with self-evolving default action",
+      "llm_evidence_cn": "面向连续动作协作多智能体强化学习的反事实信用分配方法",
+      "llm_evidence": "面向连续动作协作多智能体强化学习的反事实信用分配方法",
+      "canonical_evidence": "面向连续动作协作多智能体强化学习的反事实信用分配方法",
+      "llm_tldr_en": "Proposes SAFE, a MARL framework with counterfactual baseline using self-evolving default actions, extending credit assignment to continuous action spaces without extra simulations.",
+      "llm_tldr_cn": "该论文针对连续动作空间中多智能体强化学习的信用分配问题，提出SAFE框架。现有反事实基线需要蒙特卡洛采样，带来偏差且无法保证收敛；SAFE从经验缓冲区采样自演化默认动作来构造基线，无需额外仿真。该方法在连续动作协作任务中实现了更稳定的策略梯度学习。这项工作将反事实信用分配从离散动作空间自然扩展到连续动作空间。",
+      "llm_tldr": "该论文针对连续动作空间中多智能体强化学习的信用分配问题，提出SAFE框架。现有反事实基线需要蒙特卡洛采样，带来偏差且无法保证收敛；SAFE从经验缓冲区采样自演化默认动作来构造基线，无需额外仿真。该方法在连续动作协作任务中实现了更稳定的策略梯度学习。这项工作将反事实信用分配从离散动作空间自然扩展到连续动作空间。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Credit Assignment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.19809v1",
+      "source": "arxiv",
+      "title": "Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning",
+      "abstract": "In multi-agent reinforcement learning (MARL), inter-agent communication is effective for improving performance under partial observability. Representation learning-based approaches enable decentralized agents to learn messages grounded in their own observations, but they rely only on current observations and cannot convey information accumulated over time. We propose Dreamer-CPC, a decentralized model-based MARL method that integrates message learning based on Collective Predictive Coding (CPC) into the world model of DreamerV3. Each agent independently maintains a world model and a message module, and infers and exchanges messages from the latent states of the world model that reflect the history of past observations and actions. We evaluated Dreamer-CPC in two environments: Observer, a non-cooperative information-sharing task, and CatchApple, a newly introduced task in which task-relevant observations are temporarily missing. In both environments, Dreamer-CPC outperformed IPPO-CPC, an existing CPC-based method that generates messages from current observations, as well as no-communication baselines. In particular, in CatchApple, Dreamer-CPC achieved 4 to 5 times the episode return of IPPO-CPC, demonstrating effective coordination where other methods fail due to missing observations. These results suggest that communication grounded in the latent dynamics of world models can support decentralized decision-making when current observations alone are insufficient.",
+      "authors": [
+        "Taisuke Takayama",
+        "Naoto Yoshida",
+        "Tadahiro Taniguchi"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-07-22T06:42:03+00:00",
+      "link": "https://arxiv.org/pdf/2607.19809v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "inter-agent communication via learned messages integrated with world models",
+      "llm_evidence_cn": "通过世界模型集成学习的智能体间通信消息",
+      "llm_evidence": "通过世界模型集成学习的智能体间通信消息",
+      "canonical_evidence": "通过世界模型集成学习的智能体间通信消息",
+      "llm_tldr_en": "Proposes Dreamer-CPC, a decentralized model-based MARL method that learns messages from world-model latent states via Collective Predictive Coding, conveying temporal information under partial observability.",
+      "llm_tldr_cn": "在多智能体部分可观测环境下，现有表示学习方法仅依赖当前观测生成消息，难以传递历史信息。为此提出Dreamer-CPC，一种去中心化基于模型的MARL方法，将基于集体预测编码的消息学习集成到DreamerV3世界模型中。每个智能体独立维护世界模型与消息模块，从反映观测历史的隐状态中推断与交换消息，从而提升性能并保持去中心化执行。",
+      "llm_tldr": "在多智能体部分可观测环境下，现有表示学习方法仅依赖当前观测生成消息，难以传递历史信息。为此提出Dreamer-CPC，一种去中心化基于模型的MARL方法，将基于集体预测编码的消息学习集成到DreamerV3世界模型中。每个智能体独立维护世界模型与消息模块，从反映观测历史的隐状态中推断与交换消息，从而提升性能并保持去中心化执行。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Communication",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.27967v1",
+      "source": "arxiv",
+      "title": "MARS-RA: Rank Aggregation for Credit Assignment via Multimodal Comparisons in Embodied Multi-Agent Cooperation",
+      "abstract": "Credit assignment is a fundamental challenge in cooperative multi-agent reinforcement learning, particularly in embodied AI settings characterized by limited and delayed feedback as well as dynamically changing numbers of active agents. We propose MARS-RA, a framework that reformulates credit assignment as a rank aggregation problem using contribution-based pairwise comparisons among agents generated by large multimodal models. This shift from absolute to relative estimation ensures robustness against noise and dynamic agent participation, converting comparison results into contribution scores for potential-based reward shaping. We provide theoretical justification for the convergence and robustness of the proposed framework, and show that Shapley values can be used as an interpretive reference. Experimental results on challenging tasks of different types indicate that MARS-RA can guide agents toward effective cooperation.",
+      "authors": [
+        "Dawei Wang",
+        "Di Zhao",
+        "Xinyuan Liu",
+        "Marci Chi Ma",
+        "Xiaoyang Liu",
+        "Chengming Zhou",
+        "Gary Ushaw",
+        "Richard Davison"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-30T10:14:24+00:00",
+      "link": "https://arxiv.org/pdf/2607.27967v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Credit assignment in cooperative MARL via rank aggregation of pairwise comparisons",
+      "llm_evidence_cn": "通过成对比较的排序聚合解决合作MARL中的信用分配",
+      "llm_evidence": "通过成对比较的排序聚合解决合作MARL中的信用分配",
+      "canonical_evidence": "通过成对比较的排序聚合解决合作MARL中的信用分配",
+      "llm_tldr_en": "Reformulates credit assignment in cooperative MARL as rank aggregation using multimodal pairwise comparisons, converting them to contribution scores for reward shaping; robust to noise and dynamic agents.",
+      "llm_tldr_cn": "面向具身多智能体合作中的信用分配难题，论文提出MARS-RA框架，将信用分配转化为基于大语言模型生成贡献比较的排序聚合问题，实现从绝对估计到相对估计的转变，增强对噪声和动态智能体数量的鲁棒性。比较结果被转化为贡献分数用于势能奖励塑形，并提供收敛性理论保证。该方法为协作场景下的信用分配提供了新视角。",
+      "llm_tldr": "面向具身多智能体合作中的信用分配难题，论文提出MARS-RA框架，将信用分配转化为基于大语言模型生成贡献比较的排序聚合问题，实现从绝对估计到相对估计的转变，增强对噪声和动态智能体数量的鲁棒性。比较结果被转化为贡献分数用于势能奖励塑形，并提供收敛性理论保证。该方法为协作场景下的信用分配提供了新视角。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Credit Assignment",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.09295v1",
+      "source": "arxiv",
+      "title": "Multi-Agent Reinforcement Learning for SLA-Aware Network Slicing in UAV-Enabled MEC",
+      "abstract": "Unmanned Aerial Vehicle (UAV)-enabled Mobile Edge Computing (MEC) offers flexible capacity provisioning for heterogeneous network slices, including Hyper-Reliable and Low-Latency Communication (HRLLC), Enhanced Mobile Broadband (eMBB), and Massive Machine-Type Communications (mMTC). However, guaranteeing slice-level Service-Level Agreements (SLAs) under dynamic user mobility, stochastic task arrivals, and constrained onboard energy and computing resources remains a fundamental challenge. This paper proposes a predictive multi-agent Reinforcement Learning (RL) framework that proactively maintains SLA stability in UAV-enabled MEC through coordinated trajectory control and computation resource allocation. A lightweight prediction module forecasts near-future user mobility, enabling UAVs to anticipate congestion and reposition before SLA violations occur. We design an SLA-aware reward function that explicitly penalizes both violation probability and duration across slices, alongside total energy consumption. UAV agents are trained using Multi-Agent Proximal Policy Optimization (MAPPO) with centralized training and decentralized execution, enabling scalable online decision-making. Event-driven simulations with realistic mobility traces demonstrate that the proposed framework significantly improves SLA stability compared with baselines while maintaining competitive energy efficiency and delay performance, approaching oracle-level performance with sufficiently accurate predictive information.",
+      "authors": [
+        "Mohammad Farhoudi",
+        "Zeinab Sasan",
+        "Masoud Shokrnezhad",
+        "Tarik Taleb"
+      ],
+      "primary_category": "cs.NI",
+      "categories": [
+        "cs.NI"
+      ],
+      "published": "2026-07-10T11:19:06+00:00",
+      "link": "https://arxiv.org/pdf/2607.09295v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "multi-agent RL for coordinated trajectory control and resource allocation to maintain SLA stability",
+      "llm_evidence_cn": "多智能体强化学习实现轨迹控制与资源分配协同以维持SLA稳定",
+      "llm_evidence": "多智能体强化学习实现轨迹控制与资源分配协同以维持SLA稳定",
+      "canonical_evidence": "多智能体强化学习实现轨迹控制与资源分配协同以维持SLA稳定",
+      "llm_tldr_en": "Proposes a predictive multi-agent RL framework for SLA-aware network slicing in UAV-enabled MEC, coordinating trajectory control and computation resource allocation under dynamics.",
+      "llm_tldr_cn": "该论文针对无人机移动边缘计算中网络切片的SLA保障问题，提出预测式多智能体强化学习框架。框架通过协调无人机轨迹控制与计算资源分配，在动态用户移动和随机任务到达下主动维持切片级SLA稳定。包含轻量预测模块辅助前瞻性决策。实验表明该方法能有效提升SLA稳定性并应对资源约束。该研究展示了多智能体RL在网络资源配置中的系统级优化能力。",
+      "llm_tldr": "该论文针对无人机移动边缘计算中网络切片的SLA保障问题，提出预测式多智能体强化学习框架。框架通过协调无人机轨迹控制与计算资源分配，在动态用户移动和随机任务到达下主动维持切片级SLA稳定。包含轻量预测模块辅助前瞻性决策。实验表明该方法能有效提升SLA稳定性并应对资源约束。该研究展示了多智能体RL在网络资源配置中的系统级优化能力。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.17560v1",
+      "source": "arxiv",
+      "title": "Reinforcement Learning: From Algorithms To Foundation Models",
+      "abstract": "Reinforcement learning (RL) provides a framework for sequential decision making under explicit objectives. In its classical form, RL studies how an agent should act to maximise long-term reward in a dynamic environment. In richer settings, the problem extends beyond a single agent and fixed environment: intelligent behavior may require strategic interaction, adaptation to uncertainty, and reasoning over high-dimensional worlds. This thesis studies RL from two perspectives: algorithms in games and RL in the era of foundation models.   The first part focuses on multi-agent RL in games. It examines how incentives, policies, and equilibrium concepts interact in competitive and general-sum environments, spanning two-player zero-sum games, large-scale video games, and multi-player settings with general structure. These works investigate learning in multi-agent systems and the behavior of RL methods in interactive environments. The second part studies RL with generative and foundation models, motivated by the idea that prior knowledge can enrich sequential decision making. Pretrained generative models and learned world models serve as representation tools and structured priors for planning, control, and policy optimization. The thesis develops diffusion-based world models, investigates RL for efficient video generation, explores generative models as policy classes, and studies interactive video world models in which actions shape future observations. It also addresses long-horizon modeling through architectures with memory. Together, these contributions present a unified view of RL as objective-driven adaptation in complex sequential domains. From strategic games to generative world models, the thesis highlights how RL connects decision making, environment modeling, and emerging foundation-model capabilities, offering a broader perspective on the principles underlying intelligent behavior.",
+      "authors": [
+        "Zihan Ding"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-20T05:09:36+00:00",
+      "link": "https://arxiv.org/pdf/2607.17560v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Multi-agent RL in competitive and general-sum games, equilibrium concepts",
+      "llm_evidence_cn": "面向博弈中的多智能体强化学习，涵盖竞争与一般和博弈环境",
+      "llm_evidence": "面向博弈中的多智能体强化学习，涵盖竞争与一般和博弈环境",
+      "canonical_evidence": "面向博弈中的多智能体强化学习，涵盖竞争与一般和博弈环境",
+      "llm_tldr_en": "A thesis on RL covering multi-agent algorithms in games and foundation-model-era RL, focusing on interactions among incentives, policies, and equilibrium concepts in competitive and general-sum settings.",
+      "llm_tldr_cn": "该论文以强化学习为框架，研究了从单智能体到多智能体博弈中的序贯决策问题。第一部分集中分析多智能体在竞争和一般和博弈中的策略与均衡概念，并涉及大型视频游戏等应用。作者探讨了激励、策略和均衡如何相互作用，为多智能体强化学习算法提供了理论基础。第二部分则讨论基础模型时代的强化学习，扩展了经典RL的适用范围。",
+      "llm_tldr": "该论文以强化学习为框架，研究了从单智能体到多智能体博弈中的序贯决策问题。第一部分集中分析多智能体在竞争和一般和博弈中的策略与均衡概念，并涉及大型视频游戏等应用。作者探讨了激励、策略和均衡如何相互作用，为多智能体强化学习算法提供了理论基础。第二部分则讨论基础模型时代的强化学习，扩展了经典RL的适用范围。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Competitive Multi-Agent Learning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.18554v1",
+      "source": "arxiv",
+      "title": "Scalable Policy Optimization for Networked Multi-Agent Reinforcement Learning with Continuous State-Action Spaces",
+      "abstract": "We develop the Continuous Distributed Coupled Policy Gradient (CDCPG) algorithm for cooperative reinforcement learning in networked Markov decision processes with continuous state and action spaces. Each agent maintains a local actor over a bounded graph neighborhood, and a localized least-squares temporal-difference critic evaluates a truncated action-value function through a spectral random-feature representation of the local transition kernel. The analysis makes four contributions. First, the truncated action-value function is constructed as a conditional expectation over the neighborhood, yielding a well-posed localized Bellman theory that removes the continuation-kernel mismatch of naive truncation arguments. Second, we expose a dimensional obstruction to temporal-difference stability for normalized random features and prove an unconditional excitation bound that reduces stability to a symmetric persistence-of-excitation condition, monitorable through an online matrix-concentration certificate. Third, under exponential spatial decay of agent interactions, the excitation condition, and smoothness of the objective, CDCPG drives an averaged per-agent stationarity measure to within any excess $ε$ of an explicitly characterized approximation floor using $\\widetilde{\\mathcal{O}}(ε^{-2})$ shared-oracle samples, and the excess dependence matches the smooth nonconvex first-order rate; per-agent computation and communication are governed by the neighborhood size rather than the network size. Fourth, an adaptive-locality rule selects the radius that balances truncation and graph-decay residuals against the target accuracy. Experiments on a networked linear-quadratic benchmark corroborate the locality and feature-dimension predictions.",
+      "authors": [
+        "Dongming Wang",
+        "Pengcheng Dai",
+        "Wenwu Yu",
+        "Wei Ren"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-07-20T22:41:43+00:00",
+      "link": "https://arxiv.org/pdf/2607.18554v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Continuous distributed coupled policy gradient for networked cooperative MARL",
+      "llm_evidence_cn": "面向网络化合作MARL的连续分布式耦合策略梯度算法",
+      "llm_evidence": "面向网络化合作MARL的连续分布式耦合策略梯度算法",
+      "canonical_evidence": "面向网络化合作MARL的连续分布式耦合策略梯度算法",
+      "llm_tldr_en": "Develops CDCPG, a continuous distributed coupled policy gradient algorithm for cooperative MARL over networks, with local actors and spectral random-feature TD critics, providing localized Bellman theory.",
+      "llm_tldr_cn": "针对连续状态动作空间的网络化多智能体强化学习，论文提出CDCPG算法，每个智能体维护局部actor，并使用谱随机特征表示构建截断动作值函数的局部最小二乘TD critic。理论分析建立了局部化的Bellman理论，消除了朴素截断的参数不匹配问题，给出了收敛保证。该算法为大规模连续空间协同决策提供了可扩展的优化方案。",
+      "llm_tldr": "针对连续状态动作空间的网络化多智能体强化学习，论文提出CDCPG算法，每个智能体维护局部actor，并使用谱随机特征表示构建截断动作值函数的局部最小二乘TD critic。理论分析建立了局部化的Bellman理论，消除了朴素截断的参数不匹配问题，给出了收敛保证。该算法为大规模连续空间协同决策提供了可扩展的优化方案。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Reinforcement Learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.18719v1",
+      "source": "arxiv",
+      "title": "Strategy-Following Multi-Agent Deep Reinforcement Learning Considering Control Strategies Provided to Other Agents",
+      "abstract": "This study proposes a learning method for multi-agent systems that allows agents to be controlled through human manager instructions after learning and enables uninstructed agents to implicitly complement the overall work based on the actions of other agents. Multi-agent applications using deep learning have shown potential; thus, to achieve extensive social applications, humans should be able to control learned agents using simple methods to respond to environmental and social changes. Even without such changes, learned coordination often does not match the expectations of human managers, making it preferable to control coordination structures to match human intentions. Some studies have aimed to control agent behavior using simple instructions. However, they assumed that instructions are provided to all agents, which is time-consuming and not evident when designing a better cooperation regime. Ideally, specific agents should receive key action instructions, while others should automatically complete the remaining tasks. The proposed method, which extends previous work on controllability in multi-agent deep reinforcement learning, enables uninstructed agents to adaptively complement overlooked tasks and areas. The experimental results show that agents using the proposed method can shift to another cooperative structure and achieve better performance than those using conventional methods.",
+      "authors": [
+        "Yamato Takahagi",
+        "Gentoku Nakasone",
+        "Yoshinari Motokawa",
+        "Toshiharu Sugawara"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-07-21T05:19:49+00:00",
+      "link": "https://arxiv.org/pdf/2607.18719v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "multi-agent deep RL with human manager instructions and implicit coordination among agents",
+      "llm_evidence_cn": "考虑人类指令与智能体间隐式协同的多智能体深度强化学习",
+      "llm_evidence": "考虑人类指令与智能体间隐式协同的多智能体深度强化学习",
+      "canonical_evidence": "考虑人类指令与智能体间隐式协同的多智能体深度强化学习",
+      "llm_tldr_en": "This paper proposes a multi-agent deep reinforcement learning method that lets human managers control learned agents via simple instructions while uninstructed agents implicitly coordinate based on others' actions, enabling flexible cooperation structures.",
+      "llm_tldr_cn": "多智能体深度强化学习已具有较大应用潜力，但训练后的协调常与人类管理者的预期不一致。该论文提出一种允许人类通过简单指令控制部分智能体的学习方法，未受指令的智能体能够根据其他智能体的行为隐式补全整体任务。该方法在保持学习协作能力的同时，让协调结构更符合人类意图，并为应对环境与社会变化提供了可控的途径。",
+      "llm_tldr": "多智能体深度强化学习已具有较大应用潜力，但训练后的协调常与人类管理者的预期不一致。该论文提出一种允许人类通过简单指令控制部分智能体的学习方法，未受指令的智能体能够根据其他智能体的行为隐式补全整体任务。该方法在保持学习协作能力的同时，让协调结构更符合人类意图，并为应对环境与社会变化提供了可控的途径。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Cooperative Multi-Agent Learning",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.19555v1",
+      "source": "arxiv",
+      "title": "CHMAS: A Coupled Hierarchical Framework for Multi-Agent Reinforcement Learning",
+      "abstract": "Multi-agent reinforcement learning (MARL) systems face fundamental   challenges in balancing global coordination with local execution   across different temporal scales. This paper introduces the Coupled   Hierarchical Multi-Agent System (CHMAS), a novel framework that   decomposes multi-agent decision-making into centralized strategic   planning and distributed tactical execution with bidirectional   information flow. The strategic layer integrates all agents' states   with an exclusive global environmental state to generate guidance   actions every $T$ timesteps, while tactical agents execute   distributed policies augmented by strategic guidance and local   neighborhood observations. Unlike existing hierarchical approaches   with unidirectional control, CHMAS establishes a feedback mechanism   where accumulated tactical rewards influence strategic objectives   through a coupling coefficient $λ$, ensuring strategic plans   remain grounded in tactical feasibility. To address the   non-stationarity inherent in hierarchical learning, we propose an   asynchronous update protocol where strategic parameters update every   $N_f$ tactical episodes, allowing tactical policies to converge to   quasi-stationary points between strategic changes. We present both a   general bi-level formulation capturing full system dynamics and a   tractable additive approximation enabling rigorous analysis.   Theoretical analysis proves that this asynchronous scheme achieves   $\\mathcal{O}(\\log K/\\sqrt{K})$ convergence for the strategic layer   after $K$ strategic updates under standard assumptions. Experimental   validation in a multi-agent foraging domain demonstrates successful   learning of spatially partitioned exploration strategies, with both   layers converging stably despite hierarchical coupling.",
+      "authors": [
+        "Dongming Wang",
+        "Jie Xu",
+        "Yanyu Zhang",
+        "Wei Ren"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-07-21T20:22:40+00:00",
+      "link": "https://arxiv.org/pdf/2607.19555v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "centralized strategic planning with distributed tactical execution and bidirectional information flow in MARL",
+      "llm_evidence_cn": "MARL中的中心化战略规划与分布式战术执行及双向信息流",
+      "llm_evidence": "MARL中的中心化战略规划与分布式战术执行及双向信息流",
+      "canonical_evidence": "MARL中的中心化战略规划与分布式战术执行及双向信息流",
+      "llm_tldr_en": "CHMAS decomposes MARL into centralized strategic planning and distributed tactical execution with bidirectional information flow, enabling global coordination with local policies across temporal scales.",
+      "llm_tldr_cn": "多智能体强化学习难以在全局协调与局部执行间取得跨时间尺度平衡。CHMAS将决策分解为中心化战略规划与分布式战术执行，并通过双向信息流连接两层：战略层每T步综合全局状态生成引导动作，战术层结合引导与局部邻域观测执行分布式策略。实验显示其在复杂任务上优于单向层级方法，为层级MARL提供了新框架。",
+      "llm_tldr": "多智能体强化学习难以在全局协调与局部执行间取得跨时间尺度平衡。CHMAS将决策分解为中心化战略规划与分布式战术执行，并通过双向信息流连接两层：战略层每T步综合全局状态生成引导动作，战术层结合引导与局部邻域观测执行分布式策略。实验显示其在复杂任务上优于单向层级方法，为层级MARL提供了新框架。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Centralized Training Decentralized Execution",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.21876v1",
+      "source": "arxiv",
+      "title": "Variance-Reduced Q-Learning over Static and Time-Varying Networks",
+      "abstract": "We investigate a decentralized reinforcement learning problem involving multiple agents that interact with the same Markov Decision Process (MDP). The agents can exchange information over a network to collectively learn the optimal state-action value function. For this setting, we introduce a novel epoch-based distributed $Q$-learning algorithm called VRDQ, where within each epoch, agents locally estimate the Bellman optimality operator and diffuse information using a consensus-based protocol. For both static and time-varying networks, we establish high-probability finite-time convergence rates for VRDQ that enjoy linear speedups from collaboration. Crucially, we prove that such speedups in sample-complexity require only $\\tilde{O}(1)$ communication, substantially improving upon the communication costs in prior work.",
+      "authors": [
+        "Sreejeet Maity",
+        "Feng Zhu",
+        "Aritra Mitra",
+        "Robert W. Heath"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-07-24T00:24:09+00:00",
+      "link": "https://arxiv.org/pdf/2607.21876v1",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "decentralized multi-agent Q-learning with network communication and consensus",
+      "llm_evidence_cn": "基于网络通信与共识的去中心化多智能体Q学习",
+      "llm_evidence": "基于网络通信与共识的去中心化多智能体Q学习",
+      "canonical_evidence": "基于网络通信与共识的去中心化多智能体Q学习",
+      "llm_tldr_en": "This paper investigates decentralized RL where multiple agents learn the same MDP over a network, and proposes VRDQ, an epoch-based distributed Q-learning algorithm with consensus-based diffusion; finite-time convergence and linear speedups with O(1) communication are established for static and time-varying networks.",
+      "llm_tldr_cn": "针对多个智能体通过网络协作学习同一MDP的问题，提出epoch式分布式Q学习算法VRDQ，在每个epoch内局部估计Bellman最优算子，并通过共识协议扩散信息。在静态与时变网络上均证明了高概率有限时间收敛率，且协作带来线性样本复杂度加速，仅需常数级通信开销。该方法为通信高效的分布式多智能体强化学习提供了扎实的理论保障。",
+      "llm_tldr": "针对多个智能体通过网络协作学习同一MDP的问题，提出epoch式分布式Q学习算法VRDQ，在每个epoch内局部估计Bellman最优算子，并通过共识协议扩散信息。在静态与时变网络上均证明了高概率有限时间收敛率，且协作带来线性样本复杂度加速，仅需常数级通信开销。该方法为通信高效的分布式多智能体强化学习提供了扎实的理论保障。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Multi-Agent Communication",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.25082v2",
+      "source": "arxiv",
+      "title": "PLATO: Pointer Learner for Agent and Task Openness",
+      "abstract": "Open agent systems (OASYS) are increasingly prevalent in real-world domains where the sets of agents and tasks change unpredictably over time. Such openness, including agent openness (AO) and task openness (TO), poses a fundamental challenge to multi-agent reinforcement learning (MARL), which typically assumes fixed state and action spaces. Existing methods address openness only partially: padding and masking approaches introduce artificial bounds, while recent graph-based or hypergraph methods handle one dimension of openness but still depend on restrictive assumptions. In this paper, we introduce Pointer Learner for Agent and Task Openness (PLATO), a pointer-network-based actor combined with a centralized graph neural network (GNN) critic, trained with multi-agent proximal policy optimization under a centralized training and decentralized execution paradigm. Our pointer-based actor outputs distributions directly over the current task set. This directly supports changing action spaces without masking or retraining. Our GNN critic encodes agent-task interactions as a graph that changes shape with task and agent composition. Together, these components consider AO and TO without the boundedness of existing approaches. We formalize PLATO in a Task-and-Agent-Open Markov Game (TaAgO-MG), extending prior task-open formulations, and prove it is well-defined over the resulting unbounded state and action spaces. We evaluate PLATO with the Methods for Open Agent Systems Evaluation Initiative (MOASEI) wildfire suppression domain, an environment designed for open multi-agent system evaluation, and we demonstrate strong performance and more consistent zero-shot generalization than state-of-the-art baselines in OASYS.",
+      "authors": [
+        "Alireza Saleh Abadi",
+        "Leen-Kiat Soh",
+        "Daniel Alan Redder",
+        "Adam Eck",
+        "Prashant Doshi"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-07-27T21:20:13+00:00",
+      "link": "https://arxiv.org/pdf/2607.25082v2",
+      "tags": [
+        "keyword:mcd",
+        "query:mcd"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Multi-agent RL with pointer-network actor and centralized GNN critic for open agent/task sets",
+      "llm_evidence_cn": "使用指针网络演员和中心化图神经网络评论家的多智能体强化学习，应对开放智能体与任务",
+      "llm_evidence": "使用指针网络演员和中心化图神经网络评论家的多智能体强化学习，应对开放智能体与任务",
+      "canonical_evidence": "使用指针网络演员和中心化图神经网络评论家的多智能体强化学习，应对开放智能体与任务",
+      "llm_tldr_en": "PLATO combines a pointer-network actor with a centralized GNN critic and multi-agent PPO to handle variable numbers of agents and tasks, avoiding fixed action-space assumptions in MARL.",
+      "llm_tldr_cn": "开放智能体系统要求多智能体强化学习处理变化无常的智能体数量和任务集合，而传统方法依赖固定状态和动作空间。论文提出PLATO，使用指针网络作为演员，结合中心化图神经网络评论家，并通过多智能体近端策略优化训练。该方法突破填充和掩码带来的限制，统一应对智能体开放与任务开放。实验表明PLATO在开放场景下优于现有方法，为动态多智能体系统提供了可扩展方案。",
+      "llm_tldr": "开放智能体系统要求多智能体强化学习处理变化无常的智能体数量和任务集合，而传统方法依赖固定状态和动作空间。论文提出PLATO，使用指针网络作为演员，结合中心化图神经网络评论家，并通过多智能体近端策略优化训练。该方法突破填充和掩码带来的限制，统一应对智能体开放与任务开放。实验表明PLATO在开放场景下优于现有方法，为动态多智能体系统提供了可扩展方案。",
+      "llm_tags": [
+        "query:mcd"
+      ],
+      "matched_query_tag": "query:mcd",
+      "matched_query_text": "Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ]
+}
