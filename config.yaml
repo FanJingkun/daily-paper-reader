@@ -81,6 +81,62 @@ subscriptions:
           source: manual
           note: ''
       updated_at: '2026-08-04T02:48:30.899Z'
+    - tag: maspd
+      description: MAPF、LMAPF、导航、运动规划、路由及隐式空间移动与协同决策研究。
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: Multi-Agent Routing
+          keyword_cn: ''
+          query: Multi-Agent Routing
+        - keyword: Multi-Robot Motion Planning
+          keyword_cn: ''
+          query: Multi-Robot Motion Planning
+        - keyword: Cooperative Path Planning
+          keyword_cn: ''
+          query: Cooperative Path Planning
+        - keyword: Multi-Agent Navigation
+          keyword_cn: ''
+          query: Multi-Agent Navigation
+        - keyword: Multi-Agent Path Finding
+          keyword_cn: ''
+          query: Evolutionary Policy Search
+        - keyword: Lifelong Multi-Agent Path Finding
+          keyword_cn: ''
+          query: Evolutionary Reinforcement Learning
+      intent_queries:
+        - query: >-
+            Find multi agent spatial decision making methods addressing dynamic interactions, congestion, bottlenecks,
+            collision avoidance, task throughput, or long term coordination in discrete or continuous environments.
+          query_cn: 查找在离散或连续环境中解决动态交互、拥堵、瓶颈、避碰、任务吞吐量或长期协调问题的方法。
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            Find learning methods that incorporate heuristic planning, reference paths, path priors, search guidance, or
+            global goal information into decentralized multi agent policies.
+          query_cn: 查找将启发式规划、参考路径、路径先验、搜索引导或全局目标信息融入去中心化多智能体策略的方法。
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            Find studies in which multiple agents make spatial movement, route selection, goal selection, collision
+            avoidance, pursuit, coverage, formation, or transportation decisions, even when the task is not explicitly
+            called path planning.
+          query_cn: 查找多个智能体需要进行空间移动、路线选择、目标选择、避碰、追踪、覆盖、编队或运输决策的研究，即使任务没有明确称为路径规划。
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            Find reinforcement learning, imitation learning, or planning based methods for multi agent path finding,
+            lifelong multi agent path finding, cooperative navigation, and motion planning.
+          query_cn: 查找用于 MAPF、LMAPF、协作导航和运动规划的强化学习、模仿学习或规划方法。
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-08-04T02:55:38.652Z'
 source_backends:
   arxiv:
     papers_table: arxiv_papers
