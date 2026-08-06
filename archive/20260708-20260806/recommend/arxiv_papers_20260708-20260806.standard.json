@@ -1,0 +1,674 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-06T02:49:20.301977+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 17,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 25,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2608.03833v1",
+      "source": "arxiv",
+      "title": "History Matters: Meta-policy Delegation with Heterogeneous Multi-agent Reinforcement Learning",
+      "abstract": "AI agents are expected to play an increasingly important role in future decision-making systems. In this paper, we consider collaborative systems composed of heterogeneous multi-agent systems (MAS), where their members have different capabilities and operating costs. We study how agents can delegate tasks to one another so that certain research tasks can be completed effectively under resource-constrained scenarios. We first develop a multi-agent reinforcement learning-based (MARL) delegation training that enables agents to make sequential delegation decisions while minimizing the total execution cost. We then extend this approach to MARL with prescribed delegation topologies. Furthermore, we introduce two new frameworks for collaboration and delegation in multi-agent systems. The first framework proposes that an agent's policy depends not only on the current state of the underlying Markov decision process but also on the interaction history, including previous joint actions. This history-dependent formulation can improve coordination even in fully observable environments, where conventional MARL methods typically restrict policies to depend only on the current state. The second framework proposes a novel, potentially multi-dimensional monetary mechanism to facilitate the collaboration and delegation for MAS.",
+      "authors": [
+        "Ziqing Lu",
+        "Avinash Reddy Mudireddy",
+        "Sarra Alqahtani",
+        "Weiyu Xu"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-08-04T15:39:40+00:00",
+      "link": "https://arxiv.org/pdf/2608.03833v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "explicitly studies heterogeneous multi-agent RL with delegation and meta-policy",
+      "llm_evidence_cn": "明确提出异构多智能体强化学习与元策略委派",
+      "llm_evidence": "明确提出异构多智能体强化学习与元策略委派",
+      "canonical_evidence": "明确提出异构多智能体强化学习与元策略委派",
+      "llm_tldr_en": "This paper develops MARL delegation training and meta-policy frameworks for heterogeneous agents with different capabilities and costs, minimizing total execution cost.",
+      "llm_tldr_cn": "针对异构多智能体系统中成员能力与运行成本不同的问题，研究智能体间的任务委派机制，使研究任务在资源受限下有效完成。提出了基于多智能体强化学习的委派训练方法，支持顺序委派决策并最小化总执行成本，并扩展至带预设委派拓扑的MARL。还引入两个新的协作框架。该方法直接面向异构能力与成本差异，是异构MARL的代表性工作。",
+      "llm_tldr": "针对异构多智能体系统中成员能力与运行成本不同的问题，研究智能体间的任务委派机制，使研究任务在资源受限下有效完成。提出了基于多智能体强化学习的委派训练方法，支持顺序委派决策并最小化总执行成本，并扩展至带预设委派拓扑的MARL。还引入两个新的协作框架。该方法直接面向异构能力与成本差异，是异构MARL的代表性工作。",
+      "llm_tags": [
+        "query:hetero-marl"
+      ],
+      "matched_query_tag": "query:hetero-marl",
+      "matched_query_text": "reinforcement learning for heterogeneous multi-agent systems",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.18597v3",
+      "source": "arxiv",
+      "title": "A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space",
+      "abstract": "Counterfactual credit assignment has proven effective in multi-agent reinforcement learning (MARL) for discrete action spaces, yet its extension to continuous-action cooperative tasks remains challenging. Existing methods that approximate the counterfactual baseline via Monte Carlo sampling often introduce bias into policy gradients and fail to guarantee convergence to local optima, as the sampled actions may not have been sufficiently trained. To address these limitations, we propose SAFE, a novel MARL framework that employs a counterfactual baseline conditioned on a self-evolving default action sampled from each agent's experience buffer. This design naturally extends to continuous action spaces without relying on additional simulations, reward models, or environment-specific prior knowledge. The baseline accurately quantifies each agent's contribution, and introduces no bias into the deterministic policy gradient, ensuring convergence to local optima. Extensive experiments on cooperative vehicular tasks demonstrate that SAFE consistently outperforms state-of-the-art models.",
+      "authors": [
+        "Shuangyao Huang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-07-21T00:17:55+00:00",
+      "link": "https://arxiv.org/pdf/2607.18597v3",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "counterfactual credit assignment for continuous-action cooperative MARL",
+      "llm_evidence_cn": "针对连续动作协作MARL的反事实信用分配",
+      "llm_evidence": "针对连续动作协作MARL的反事实信用分配",
+      "canonical_evidence": "针对连续动作协作MARL的反事实信用分配",
+      "llm_tldr_en": "SAFE builds a counterfactual baseline from a self-evolving default action sampled from each agent's experience buffer, extending credit assignment to continuous action spaces.",
+      "llm_tldr_cn": "针对反事实信用分配在连续动作协作任务中难以扩展、蒙特卡洛采样带来偏差的问题，提出SAFE框架。该框架以每个智能体经验缓冲区中采样的自演化默认动作作为条件，构建反事实基线，从而自然地扩展到连续动作空间且无需额外模拟。该方法为连续动作多智能体协作提供了无偏的信用分配新机制，可提升策略梯度学习的稳定性。",
+      "llm_tldr": "针对反事实信用分配在连续动作协作任务中难以扩展、蒙特卡洛采样带来偏差的问题，提出SAFE框架。该框架以每个智能体经验缓冲区中采样的自演化默认动作作为条件，构建反事实基线，从而自然地扩展到连续动作空间且无需额外模拟。该方法为连续动作多智能体协作提供了无偏的信用分配新机制，可提升策略梯度学习的稳定性。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.19809v1",
+      "source": "arxiv",
+      "title": "Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning",
+      "abstract": "In multi-agent reinforcement learning (MARL), inter-agent communication is effective for improving performance under partial observability. Representation learning-based approaches enable decentralized agents to learn messages grounded in their own observations, but they rely only on current observations and cannot convey information accumulated over time. We propose Dreamer-CPC, a decentralized model-based MARL method that integrates message learning based on Collective Predictive Coding (CPC) into the world model of DreamerV3. Each agent independently maintains a world model and a message module, and infers and exchanges messages from the latent states of the world model that reflect the history of past observations and actions. We evaluated Dreamer-CPC in two environments: Observer, a non-cooperative information-sharing task, and CatchApple, a newly introduced task in which task-relevant observations are temporarily missing. In both environments, Dreamer-CPC outperformed IPPO-CPC, an existing CPC-based method that generates messages from current observations, as well as no-communication baselines. In particular, in CatchApple, Dreamer-CPC achieved 4 to 5 times the episode return of IPPO-CPC, demonstrating effective coordination where other methods fail due to missing observations. These results suggest that communication grounded in the latent dynamics of world models can support decentralized decision-making when current observations alone are insufficient.",
+      "authors": [
+        "Taisuke Takayama",
+        "Naoto Yoshida",
+        "Tadahiro Taniguchi"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-07-22T06:42:03+00:00",
+      "link": "https://arxiv.org/pdf/2607.19809v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "decentralized MARL with world-model message learning under partial observability",
+      "llm_evidence_cn": "部分可观测下基于世界模型的消息学习与去中心化MARL",
+      "llm_evidence": "部分可观测下基于世界模型的消息学习与去中心化MARL",
+      "canonical_evidence": "部分可观测下基于世界模型的消息学习与去中心化MARL",
+      "llm_tldr_en": "Dreamer-CPC integrates collective predictive coding into DreamerV3 world models so decentralized agents exchange history-rich messages, improving cooperative MARL.",
+      "llm_tldr_cn": "针对部分可观测环境下多智能体通信仅依赖当前观测、无法传递历史信息的问题，提出Dreamer-CPC方法。该方法将集体预测编码（CPC）消息学习集成到DreamerV3世界模型中，每个智能体独立维护世界模型与消息模块，从隐状态推断并交换消息，以反映历史观测和动态。该方法为去中心化模型基MARL提供了新的通信学习机制，有望提升协作策略的长期决策能力。",
+      "llm_tldr": "针对部分可观测环境下多智能体通信仅依赖当前观测、无法传递历史信息的问题，提出Dreamer-CPC方法。该方法将集体预测编码（CPC）消息学习集成到DreamerV3世界模型中，每个智能体独立维护世界模型与消息模块，从隐状态推断并交换消息，以反映历史观测和动态。该方法为去中心化模型基MARL提供了新的通信学习机制，有望提升协作策略的长期决策能力。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.27967v1",
+      "source": "arxiv",
+      "title": "MARS-RA: Rank Aggregation for Credit Assignment via Multimodal Comparisons in Embodied Multi-Agent Cooperation",
+      "abstract": "Credit assignment is a fundamental challenge in cooperative multi-agent reinforcement learning, particularly in embodied AI settings characterized by limited and delayed feedback as well as dynamically changing numbers of active agents. We propose MARS-RA, a framework that reformulates credit assignment as a rank aggregation problem using contribution-based pairwise comparisons among agents generated by large multimodal models. This shift from absolute to relative estimation ensures robustness against noise and dynamic agent participation, converting comparison results into contribution scores for potential-based reward shaping. We provide theoretical justification for the convergence and robustness of the proposed framework, and show that Shapley values can be used as an interpretive reference. Experimental results on challenging tasks of different types indicate that MARS-RA can guide agents toward effective cooperation.",
+      "authors": [
+        "Dawei Wang",
+        "Di Zhao",
+        "Xinyuan Liu",
+        "Marci Chi Ma",
+        "Xiaoyang Liu",
+        "Chengming Zhou",
+        "Gary Ushaw",
+        "Richard Davison"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-30T10:14:24+00:00",
+      "link": "https://arxiv.org/pdf/2607.27967v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Credit assignment in cooperative MARL via multimodal comparisons",
+      "llm_evidence_cn": "通过多模态比较解决合作多智能体强化学习中的信用分配",
+      "llm_evidence": "通过多模态比较解决合作多智能体强化学习中的信用分配",
+      "canonical_evidence": "通过多模态比较解决合作多智能体强化学习中的信用分配",
+      "llm_tldr_en": "MARS-RA reformulates credit assignment in embodied cooperative MARL as a rank aggregation problem, using LLM-generated pairwise comparisons to build contribution scores for potential-based reward shaping, robust to noise and dynamic agent participation.",
+      "llm_tldr_cn": "针对具身多智能体强化学习中反馈稀疏延迟且活跃智能体数量动态变化的信用分配难题，MARS-RA将信用分配重构为排名聚合问题，利用多模态大模型生成智能体间成对比较，再把比较结果转化为基于势能的奖励塑形分数。理论上证明了其收敛性和鲁棒性，实验表明该方法对噪声和动态参与具有鲁棒性，为合作多智能体信用分配提供了新范式。",
+      "llm_tldr": "针对具身多智能体强化学习中反馈稀疏延迟且活跃智能体数量动态变化的信用分配难题，MARS-RA将信用分配重构为排名聚合问题，利用多模态大模型生成智能体间成对比较，再把比较结果转化为基于势能的奖励塑形分数。理论上证明了其收敛性和鲁棒性，实验表明该方法对噪声和动态参与具有鲁棒性，为合作多智能体信用分配提供了新范式。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.00679v1",
+      "source": "arxiv",
+      "title": "HetGPS: Scalable Graph Multi-Agent Reinforcement Learning with Physics-Anchored Adaptive Safety for EV Charging",
+      "abstract": "Safety interventions for large populations of network-coupled agents must protect shared constraints without unnecessarily overriding task-oriented policy decisions. We present HetGPS, a hybrid graph-control framework synergizing learned graph risk with physics-anchored correction by separating intervention magnitude from corrective direction. An action-conditioned graph residual model schedules state-dependent intervention authority, while a physics model determines its direction. For electric vehicle (EV) charging, we couple this filter with a parameter-shared heterogeneous graph soft actor-critic policy, enabling topology-aware coordination with a learned model size independent of fleet size. Across five nested distribution networks with 200--3,218 EVs and 100 evaluation days, Adaptive Authority reduces bus--step voltage violations from 3.93--7.74\\% without filtering to 0.52--3.44\\%, while maintaining 99.06--100\\% departure success. Relative to the same physics-directed projection with fixed authority, it improves mean reward on all five networks and lowers the mean safety score on four. The deployed policy-and-risk model contains 383,702 learned parameters at every scale; at 3,218 EVs, a matched centralized SAC actor is about $170\\times$ larger. A policy trained on the eight-transformer system transfers zero-shot to the 16- and 32-transformer systems, attaining 0.57--0.75\\% violation rates and at least 99.99\\% departure success. These results show that learned graph risk can allocate intervention authority at scale while feeder physics anchors corrective action.",
+      "authors": [
+        "Xiangwei Wang",
+        "Nanduni Nimalsiri",
+        "Yu Xia",
+        "Peng Wang",
+        "Saman Halgamuge"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-08-01T13:59:49+00:00",
+      "link": "https://arxiv.org/pdf/2608.00679v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "heterogeneous graph multi-agent RL with parameter-shared policy for EV charging",
+      "llm_evidence_cn": "面向电动汽车充电的异构图多智能体强化学习与参数共享策略",
+      "llm_evidence": "面向电动汽车充电的异构图多智能体强化学习与参数共享策略",
+      "canonical_evidence": "面向电动汽车充电的异构图多智能体强化学习与参数共享策略",
+      "llm_tldr_en": "HetGPS couples a parameter-shared heterogeneous graph soft actor-critic with a physics-anchored safety filter, enabling scalable topology-aware coordination for EV charging fleets.",
+      "llm_tldr_cn": "大规模网络耦合智能体的安全干预需要保护共享约束，同时避免过度覆盖任务策略。本文提出HetGPS，将图风险学习与物理锚定修正相结合，分离干预幅度与修正方向。在电动汽车充电场景中，使用参数共享的异构图软演员-评论家策略实现拓扑感知协调，模型规模与车队规模无关。该方法在五个嵌套场景中验证了安全性和扩展性。",
+      "llm_tldr": "大规模网络耦合智能体的安全干预需要保护共享约束，同时避免过度覆盖任务策略。本文提出HetGPS，将图风险学习与物理锚定修正相结合，分离干预幅度与修正方向。在电动汽车充电场景中，使用参数共享的异构图软演员-评论家策略实现拓扑感知协调，模型规模与车队规模无关。该方法在五个嵌套场景中验证了安全性和扩展性。",
+      "llm_tags": [
+        "query:hetero-marl"
+      ],
+      "matched_query_tag": "query:hetero-marl",
+      "matched_query_text": "reinforcement learning for heterogeneous multi-agent systems",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.01745v1",
+      "source": "arxiv",
+      "title": "Heterogeneous Multi-Agent Reinforcement Learning for Radio Resource Management under Coupled Finite-Horizon Constraints",
+      "abstract": "Maximizing throughput under proportional fairness in dense wireless networks requires jointly managing user association, scheduling, base station (BS) activation, and handover control under hard finite-horizon energy and handover budgets, which induces a fundamental tension between BS-side energy management and user-side handover regulation. While multi-agent reinforcement learning (MARL) is a natural framework for such distributed sequential control, its application here faces two difficulties: finite-horizon budget constraints cannot be evaluated at each time slot, and the nonlinear proportional fairness utility admits no principled per-slot decomposition. We propose HeLyMARL, a Lyapunov-embedded heterogeneous MARL framework that resolves both via drift-plus-penalty decomposition with virtual queues. The energy and handover constraint pressures are internalized directly into a unified per-slot reward, converting the constrained finite-horizon problem into an unconstrained MARL problem. Comparison against two Lagrangian-based alternatives reveals a timescale separation: Lagrangian relaxation regulates constraints only across training episodes, whereas the virtual queues of HeLyMARL bound cumulative budget consumption at every partial horizon within an episode, a pacing guarantee beyond the reach of greedy Lyapunov-based control. Simulations show that HeLyMARL is the only method that sustains the throughput-fairness balance together with uninterrupted service throughout the horizon, outperforming conventional MARL, Lyapunov-based, and constrained MARL benchmarks without premature budget exhaustion.",
+      "authors": [
+        "Yeonseo Jeong",
+        "Wonhyeok Ko",
+        "Sungweon Hong",
+        "Songnam Hong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-03T06:11:38+00:00",
+      "link": "https://arxiv.org/pdf/2608.01745v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Heterogeneous MARL for distributed radio resource management under coupled finite-horizon constraints",
+      "llm_evidence_cn": "异构多智能体强化学习用于受耦合有限时域约束的无线资源管理",
+      "llm_evidence": "异构多智能体强化学习用于受耦合有限时域约束的无线资源管理",
+      "canonical_evidence": "异构多智能体强化学习用于受耦合有限时域约束的无线资源管理",
+      "llm_tldr_en": "HeLyMARL embeds Lyapunov techniques into heterogeneous MARL to jointly manage user association, scheduling, BS activation, and handover under coupled finite-horizon budgets in dense wireless networks.",
+      "llm_tldr_cn": "密集无线网络中，用户关联、调度、基站激活与切换控制相互耦合，且受有限时域能量和切换预算约束，传统按时刻分解的方法难以适用。本文提出HeLyMARL，将李雅普诺夫方法嵌入异构多智能体强化学习，以可分解方式处理有限时域约束，并学习分布式无线资源管理策略。实验表明该方法在满足硬性预算约束的同时取得接近最优的比例公平吞吐，为异构多智能体在耦合约束下的协同决策提供了有效工具。",
+      "llm_tldr": "密集无线网络中，用户关联、调度、基站激活与切换控制相互耦合，且受有限时域能量和切换预算约束，传统按时刻分解的方法难以适用。本文提出HeLyMARL，将李雅普诺夫方法嵌入异构多智能体强化学习，以可分解方式处理有限时域约束，并学习分布式无线资源管理策略。实验表明该方法在满足硬性预算约束的同时取得接近最优的比例公平吞吐，为异构多智能体在耦合约束下的协同决策提供了有效工具。",
+      "llm_tags": [
+        "query:hetero-marl"
+      ],
+      "matched_query_tag": "query:hetero-marl",
+      "matched_query_text": "reinforcement learning for heterogeneous multi-agent systems",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.09587v1",
+      "source": "arxiv",
+      "title": "CoDiMAD: Diffusion-Based Privileged Distillation for Communication-Free Multi-Robot Coordination",
+      "abstract": "Decentralized multi-robot coordination under partial observability remains challenging, especially in communication-free settings where agents must act solely from local sensor observations. Privileged policy distillation provides a promising approach by transferring knowledge from a globally informed oracle to sensor-constrained students. However, in multi-agent systems, the same local observation may correspond to multiple global configurations requiring qualitatively different cooperative actions, making the conditional action distribution inherently multi-modal. Standard deterministic distillation collapses these modes to their mean, often yielding invalid or hesitant actions. To address this issue, we propose CoDiMAD, a three-stage framework that trains a privileged oracle with MAPPO, constructs an offline dataset of local-observation-oracle-action pairs, and distills the oracle into decentralized students parameterized as conditional denoising diffusion probabilistic models. By approximating the conditional oracle-action distribution through the diffusion reverse process, CoDiMAD samples decisive actions from coherent coordination modes rather than averaging across them. Theoretical analysis characterizes the mode-averaging failure of deterministic distillation and the distributional recovery property of diffusion-based distillation. Experiments on three cooperative tasks show that CoDiMAD consistently outperforms direct local MARL and deterministic distillation baselines. The source code will be made publicly available upon acceptance.",
+      "authors": [
+        "Jiyue Tao",
+        "Shunheng Xin",
+        "Tongsheng Shen",
+        "Dexin Zhao",
+        "Feitian Zhang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-07-10T16:36:45+00:00",
+      "link": "https://arxiv.org/pdf/2607.09587v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "communication-free multi-robot coordination via privileged distillation for cooperative policies",
+      "llm_evidence_cn": "通过特权蒸馏实现无通信多机器人协作策略学习",
+      "llm_evidence": "通过特权蒸馏实现无通信多机器人协作策略学习",
+      "canonical_evidence": "通过特权蒸馏实现无通信多机器人协作策略学习",
+      "llm_tldr_en": "CoDiMAD uses diffusion-based privileged distillation to handle multi-modal action distributions, transferring oracle knowledge to sensor-constrained multi-robot students.",
+      "llm_tldr_cn": "针对无通信多机器人协调中局部观测对应多种全局配置、条件动作分布多模态的问题，提出CoDiMAD方法。该方法采用基于扩散的特权蒸馏，将全局先知知识迁移到仅依赖局部传感器观测的学生策略，避免标准确定性蒸馏对多模态分布取均值导致动作失效。此方法为部分可观测多机器人系统提供了新颖的协作策略学习途径。",
+      "llm_tldr": "针对无通信多机器人协调中局部观测对应多种全局配置、条件动作分布多模态的问题，提出CoDiMAD方法。该方法采用基于扩散的特权蒸馏，将全局先知知识迁移到仅依赖局部传感器观测的学生策略，避免标准确定性蒸馏对多模态分布取均值导致动作失效。此方法为部分可观测多机器人系统提供了新颖的协作策略学习途径。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2607.09295v1",
+      "source": "arxiv",
+      "title": "Multi-Agent Reinforcement Learning for SLA-Aware Network Slicing in UAV-Enabled MEC",
+      "abstract": "Unmanned Aerial Vehicle (UAV)-enabled Mobile Edge Computing (MEC) offers flexible capacity provisioning for heterogeneous network slices, including Hyper-Reliable and Low-Latency Communication (HRLLC), Enhanced Mobile Broadband (eMBB), and Massive Machine-Type Communications (mMTC). However, guaranteeing slice-level Service-Level Agreements (SLAs) under dynamic user mobility, stochastic task arrivals, and constrained onboard energy and computing resources remains a fundamental challenge. This paper proposes a predictive multi-agent Reinforcement Learning (RL) framework that proactively maintains SLA stability in UAV-enabled MEC through coordinated trajectory control and computation resource allocation. A lightweight prediction module forecasts near-future user mobility, enabling UAVs to anticipate congestion and reposition before SLA violations occur. We design an SLA-aware reward function that explicitly penalizes both violation probability and duration across slices, alongside total energy consumption. UAV agents are trained using Multi-Agent Proximal Policy Optimization (MAPPO) with centralized training and decentralized execution, enabling scalable online decision-making. Event-driven simulations with realistic mobility traces demonstrate that the proposed framework significantly improves SLA stability compared with baselines while maintaining competitive energy efficiency and delay performance, approaching oracle-level performance with sufficiently accurate predictive information.",
+      "authors": [
+        "Mohammad Farhoudi",
+        "Zeinab Sasan",
+        "Masoud Shokrnezhad",
+        "Tarik Taleb"
+      ],
+      "primary_category": "cs.NI",
+      "categories": [
+        "cs.NI"
+      ],
+      "published": "2026-07-10T11:19:06+00:00",
+      "link": "https://arxiv.org/pdf/2607.09295v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "MARL framework coordinating UAV trajectory and computation allocation for SLA-aware heterogeneous network slicing",
+      "llm_evidence_cn": "面向异构网络切片的多智能体强化学习协同轨迹与资源分配，兼顾系统级SLA目标",
+      "llm_evidence": "面向异构网络切片的多智能体强化学习协同轨迹与资源分配，兼顾系统级SLA目标",
+      "canonical_evidence": "面向异构网络切片的多智能体强化学习协同轨迹与资源分配，兼顾系统级SLA目标",
+      "llm_tldr_en": "A predictive MARL framework coordinates UAV trajectory and computation allocation to maintain SLA stability for heterogeneous network slices in UAV-enabled MEC, addressing dynamic mobility and resource constraints.",
+      "llm_tldr_cn": "针对无人机边缘计算中异构网络切片的SLA保障问题，提出基于预测的多智能体强化学习框架，通过协同控制无人机轨迹与计算资源分配来主动维持切片级服务质量。该方法采用轻量级预测模块应对用户移动和任务随机到达。实验验证了其在动态环境下对SLA稳定性的提升，为资源受限的异构网络切片管理提供了有效方案。",
+      "llm_tldr": "针对无人机边缘计算中异构网络切片的SLA保障问题，提出基于预测的多智能体强化学习框架，通过协同控制无人机轨迹与计算资源分配来主动维持切片级服务质量。该方法采用轻量级预测模块应对用户移动和任务随机到达。实验验证了其在动态环境下对SLA稳定性的提升，为资源受限的异构网络切片管理提供了有效方案。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.13359v1",
+      "source": "arxiv",
+      "title": "Learning Latency-Aware Orchestration for Multi-Agent Systems",
+      "abstract": "Multi-agent systems (MAS) coordinate multiple LLM-powered agents through structured workflows, gaining reasoning power but incurring high inference latency from multi-step execution and repeated model invocations. Existing orchestration methods primarily optimize task performance and inference cost, leaving latency largely unaddressed. In MAS, end-to-end latency is governed by the critical execution path, so reducing total cost alone does not reliably reduce latency. Moreover, optimizing latency while preserving accuracy remains non-trivial: naive latency optimization can misassign operator-level credit and degrade task accuracy. To address this gap, we propose Latency-Aware Multi-agent System (LAMaS), a latency-aware orchestration framework for learning-based multi-agent systems. LAMaS addresses this challenge at two levels: at training time, it learns latency-aware execution graphs through constrained optimization with critical-path-aware credit assignment; at inference time, since a graph committed at training time cannot exploit runtime evidence, it complements graph construction with a lightweight controller that adaptively eliminates redundant future agent interactions as execution unfolds. Experiments on four benchmarks show that LAMaS achieves the best latency among evaluated learning-based MAS baselines, reducing end-to-end latency by over 50\\% while maintaining competitive or better accuracy. LAMaS is also modular and transfers to other MAS with minimal changes, consistently yielding latency reductions.",
+      "authors": [
+        "Xi Shi",
+        "Mengxin Zheng",
+        "Qian Lou"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-07-15T00:49:50+00:00",
+      "link": "https://arxiv.org/pdf/2607.13359v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "learning-based latency-aware orchestration with operator-level credit assignment",
+      "llm_evidence_cn": "基于学习的时延感知编排与算子级信用分配",
+      "llm_evidence": "基于学习的时延感知编排与算子级信用分配",
+      "canonical_evidence": "基于学习的时延感知编排与算子级信用分配",
+      "llm_tldr_en": "LAMaS learns latency-aware orchestration for LLM multi-agent systems, using critical-path operator-level credit assignment to cut end-to-end latency while preserving accuracy.",
+      "llm_tldr_cn": "多智能体系统中的LLM代理通过结构化工作流协调虽增强推理，但带来高推理时延。现有编排主要优化性能和成本，忽略端到端时延。本文提出LAMaS框架，通过关键路径感知的算子级信用分配来优化时延，避免朴素时延优化导致的精度下降。该工作为多智能体系统的通信与信用分配提供了新的可学习方法。",
+      "llm_tldr": "多智能体系统中的LLM代理通过结构化工作流协调虽增强推理，但带来高推理时延。现有编排主要优化性能和成本，忽略端到端时延。本文提出LAMaS框架，通过关键路径感知的算子级信用分配来优化时延，避免朴素时延优化导致的精度下降。该工作为多智能体系统的通信与信用分配提供了新的可学习方法。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.10836v1",
+      "source": "arxiv",
+      "title": "Route, Communicate, and Reason: Gated Routing and Adaptive Depth for Efficient Multi-Agent Reasoning",
+      "abstract": "Multi-agent ensembling multiplies active parameters and inference cost without answering three basic questions: which agents to consult, how deeply a query should traverse a hierarchy of agents, and when inter-agent communication is worth its cost. We present GRADE (Gated Routing and Adaptive Depth for Efficient Reasoning), a hierarchical multi-agent system in which four lightweight learned gates jointly govern agent selection, hierarchy depth, inter-agent communication, and branch pruning. Training uses CoGRPO (Collaborative Group-Relative Policy Optimization), a novel critic-free recipe that adapts GRPO to multi-agent hierarchies and assigns a shared advantage signal to every gate and agent that participated in a rollout. Agent models are drawn from a hot-swappable Expert Registry; per-agent calibration maps allow experts to be replaced at inference time without retraining. At $\\sim$17B average active parameters, GRADE outperforms all baselines on GSM8K, MMLUPro, and GPQA, surpassing the strongest baseline by 4.8 points on MMLUPro at half the active compute. On AIME-2025, where model depth dominates, GRADE remains competitive to existing frameworks. Ablations isolate the hierarchy and masked cross-attention as the largest contributors to accuracy, and show that per-agent calibration is necessary for safe hot-swapping.",
+      "authors": [
+        "Sudipto Ghosh",
+        "Tanmoy Chakraborty"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-07-12T16:58:21+00:00",
+      "link": "https://arxiv.org/pdf/2607.10836v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Multi-agent reinforcement learning with gated routing and adaptive communication for hierarchical multi-agent reasoning",
+      "llm_evidence_cn": "用于分层多智能体推理的门控路由与自适应通信多智能体强化学习",
+      "llm_evidence": "用于分层多智能体推理的门控路由与自适应通信多智能体强化学习",
+      "canonical_evidence": "用于分层多智能体推理的门控路由与自适应通信多智能体强化学习",
+      "llm_tldr_en": "GRADE uses four lightweight learned gates and CoGRPO collaborative group-relative policy optimization to jointly control agent selection, hierarchy depth, communication, and pruning, improving efficiency of multi-agent reasoning.",
+      "llm_tldr_cn": "多智能体集成推理会成倍增加参数与推理成本，且没有回答该咨询哪些智能体、查询多深、以及通信何时值得等问题。本文提出GRADE分层多智能体系统，用四个轻量级学习门联合控制智能体选择、层级深度、智能体间通信和分支剪枝。训练采用免评论家的CoGRPO算法，为所有参与的门和智能体分配共享优势信号。实验表明GRADE在保持推理质量的同时显著降低计算开销，为高效多智能体推理提供了一种可学习的通信与路由框架。",
+      "llm_tldr": "多智能体集成推理会成倍增加参数与推理成本，且没有回答该咨询哪些智能体、查询多深、以及通信何时值得等问题。本文提出GRADE分层多智能体系统，用四个轻量级学习门联合控制智能体选择、层级深度、智能体间通信和分支剪枝。训练采用免评论家的CoGRPO算法，为所有参与的门和智能体分配共享优势信号。实验表明GRADE在保持推理质量的同时显著降低计算开销，为高效多智能体推理提供了一种可学习的通信与路由框架。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2607.09330v1",
+      "source": "arxiv",
+      "title": "Communication-Efficient Digital-Twin Coordination for Heterogeneous LLM Embodied Agents over Computing Power Networks",
+      "abstract": "Embodied agent teams powered by heterogeneous large language models (LLMs) are being widely deployed in physical artificial intelligence such as smart factories, warehouses, and service robotics. To enable collaboration among such an agent team, efficient coordination mechanisms that operate reliably under limited network resources are required. However, existing heterogeneous LLM-agent coordination frameworks that rely on multi-round natural-language-based conversations introduce three coupled challenges. First, inter-agent dialogue incurs communication overhead that grows rapidly with team size. Second, the quality of coordination is constrained by the heterogeneous capabilities of the agent team's LLMs. Third, agents may suffer from action delays due to iterative negotiation. To address these challenges, we propose LDT-Coord, a networked coordination framework built upon a lightweight digital twin (DT). Specifically, each agent independently selects its intended action and reports both the action decision and a structured temporal constraint over shared resources to the DT server, thereby decoupling coordination performance from natural-language reasoning ability. Then, DT executes a training-free, rule-based orchestrator algorithm to resolve cross-agent conflicts and returns coordination instructions to prevent such conflicts. To further reduce communication overhead, we formulate agent reporting control as a constrained partially observable Markov decision process (C-POMDP) and solve it with the PPO-Lagrangian algorithm. Simulation results show that LDT-Coord achieves a task success rate comparable to conventional coordination methods while reducing communication overhead by more than 70x and maintaining robustness under LLM heterogeneity.",
+      "authors": [
+        "Nuocheng Yang",
+        "Sihua Wang",
+        "Zihan Chen",
+        "Tony Q. S. Quek",
+        "Changchuan Yin"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-07-10T12:10:31+00:00",
+      "link": "https://arxiv.org/pdf/2607.09330v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "communication-efficient digital-twin coordination for heterogeneous LLM embodied agents",
+      "llm_evidence_cn": "面向异构LLM具身智能体的通信高效数字孪生协调",
+      "llm_evidence": "面向异构LLM具身智能体的通信高效数字孪生协调",
+      "canonical_evidence": "面向异构LLM具身智能体的通信高效数字孪生协调",
+      "llm_tldr_en": "Presents a communication-efficient digital-twin coordination method for heterogeneous LLM embodied agents over computing power networks, reducing multi-round dialogue overhead under limited resources.",
+      "llm_tldr_cn": "异构大语言模型驱动的具身智能体团队在物理AI中广泛应用，但现有基于多轮自然语言对话的协调通信开销大且受异构能力制约。该文提出面向异构LLM具身智能体的通信高效数字孪生协调机制，在算力网络资源受限的条件下实现可靠协作。通过数字孪生与通信优化降低随团队规模增长的交互成本，并缓解能力差异带来的协调质量瓶颈。该框架为资源受限环境下的异构智能体协作提供了可行方案。",
+      "llm_tldr": "异构大语言模型驱动的具身智能体团队在物理AI中广泛应用，但现有基于多轮自然语言对话的协调通信开销大且受异构能力制约。该文提出面向异构LLM具身智能体的通信高效数字孪生协调机制，在算力网络资源受限的条件下实现可靠协作。通过数字孪生与通信优化降低随团队规模增长的交互成本，并缓解能力差异带来的协调质量瓶颈。该框架为资源受限环境下的异构智能体协作提供了可行方案。",
+      "llm_tags": [
+        "query:hetero-marl"
+      ],
+      "matched_query_tag": "query:hetero-marl",
+      "matched_query_text": "coordination and cooperation among heterogeneous agents",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.17311v1",
+      "source": "arxiv",
+      "title": "The Optimization Trilemma: Efficiency, Comfort and Fairness in Decentralized Multi-agent Coordination",
+      "abstract": "The problem of fair multi-agent coordination in decentralized settings is one of the most pressing challenges for building efficient collaborative systems. Resource allocation is based on optimized collective arrangements accounting for agents' needs. Such coordination should not only be computationally efficient but also account for fairness, i.e., equitable redistribution of costs incurred by all agents. Recent literature has proposed several algorithms that efficiently determine optimal plan combinations balancing system-wide efficiency and individual discomfort of agents in a centralized setting. However, these works do not address equitable resource optimization in fully decentralized scenarios, specifically, the optimized redistribution of discomfort among coordinating agents so that none experiences a discomfort level that could lead to loss of incentive or polarization that can disrupt planned operations. In this work, we study the problem of optimizing three objectives: (i) system-wide efficiency, (ii) individuals' comfort and (iii) fairness (i.e., balancing of incurred discomfort costs) in decentralized multi-agent coordination. We design a novel model to optimize those three orthogonal objectives, without any substantial increase in communication and computational overhead. Through experiments on two real-world datasets, we validate the model and demonstrate that it can achieve fairer optimization outcomes, while satisfying agents' preferences and system goals.",
+      "authors": [
+        "Jovan Nikolic",
+        "Maciej Krzysztof Zuziak",
+        "Evangelos Pournaras"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI",
+        "cs.CY",
+        "cs.DC",
+        "eess.SY"
+      ],
+      "published": "2026-07-19T15:51:33+00:00",
+      "link": "https://arxiv.org/pdf/2607.17311v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "decentralized multi-agent coordination with efficiency, comfort and fairness trade-offs",
+      "llm_evidence_cn": "去中心化多智能体协调在效率、舒适与公平间的权衡",
+      "llm_evidence": "去中心化多智能体协调在效率、舒适与公平间的权衡",
+      "canonical_evidence": "去中心化多智能体协调在效率、舒适与公平间的权衡",
+      "llm_tldr_en": "This work tackles fair decentralized multi-agent coordination, jointly optimizing system efficiency, individual discomfort, and equitable cost redistribution without centralization.",
+      "llm_tldr_cn": "公平的多智能体协调是构建高效协作系统的关键挑战。本文聚焦完全去中心化场景下的公平资源优化，综合考虑系统效率、个体不舒适度与成本公平再分配，弥补了现有中心化方法无法处理分散式公平问题的不足。该工作为去中心化多智能体协调提供了效率-舒适-公平三难权衡的优化视角。",
+      "llm_tldr": "公平的多智能体协调是构建高效协作系统的关键挑战。本文聚焦完全去中心化场景下的公平资源优化，综合考虑系统效率、个体不舒适度与成本公平再分配，弥补了现有中心化方法无法处理分散式公平问题的不足。该工作为去中心化多智能体协调提供了效率-舒适-公平三难权衡的优化视角。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.11250v1",
+      "source": "arxiv",
+      "title": "Multi-Agent LLMs Fail to Explore Each Other",
+      "abstract": "Exploration is essential for reliable autonomy in multi-agent systems, yet it remains unclear whether large language model (LLM) agents can explore effectively when interacting with one another. We show that modern LLM agents fail to do so, often exhibiting myopic and polarized interaction patterns that lead to suboptimal coordination and increased regret. We formalize this challenge as the Multi-Agent Exploration problem, modeling it as a partially observable stochastic game (POSG) problem in which agents must probe peers to infer their capabilities and identify effective interaction strategies. To address this, we introduce Multi- Agent Contextual Exploration (MACE), a lightweight framework that explicitly promotes exploration through structured peer selection. Across both contextual and parametric diversity settings, MACE substantially improves exploration behavior and downstream task performance. We further show theoretically that the value of exploration increases with agent diversity. Overall, our results highlight a fundamental limitation of current LLM agents and underscore the importance of explicitly guided exploration for reliable multi-agent autonomy. Code will be released in https://github.com/deeplearning-wisc/mace",
+      "authors": [
+        "Hyeong Kyu Choi",
+        "Jiatong Li",
+        "Wendi Li",
+        "Xin Eric Wang",
+        "Sharon Li"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-07-13T08:34:05+00:00",
+      "link": "https://arxiv.org/pdf/2607.11250v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "multi-agent exploration to infer peer capabilities in POSG",
+      "llm_evidence_cn": "部分可观测随机博弈中推断同伴能力的多智能体探索",
+      "llm_evidence": "部分可观测随机博弈中推断同伴能力的多智能体探索",
+      "canonical_evidence": "部分可观测随机博弈中推断同伴能力的多智能体探索",
+      "llm_tldr_en": "MACE formalizes multi-agent exploration as a POSG where agents probe peers to infer capabilities, promoting structured peer selection to overcome LLM agents' myopic exploration.",
+      "llm_tldr_cn": "多智能体系统中探索对自主性至关重要，但LLM智能体在相互交互时往往探索不足，表现出短视和极化模式。本文将多智能体探索建模为部分可观测随机博弈，智能体需试探同伴以推断其能力并找到有效交互策略。提出的MACE框架通过结构化同伴选择显式促进探索，改善了多智能体协调效果。",
+      "llm_tldr": "多智能体系统中探索对自主性至关重要，但LLM智能体在相互交互时往往探索不足，表现出短视和极化模式。本文将多智能体探索建模为部分可观测随机博弈，智能体需试探同伴以推断其能力并找到有效交互策略。提出的MACE框架通过结构化同伴选择显式促进探索，改善了多智能体协调效果。",
+      "llm_tags": [
+        "query:hetero-marl"
+      ],
+      "matched_query_tag": "query:hetero-marl",
+      "matched_query_text": "cooperative decision making among multiple agents with heterogeneous capabilities",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2607.12861v1",
+      "source": "arxiv",
+      "title": "Unveiling Complex Collective Behaviors from Simple Rewards",
+      "abstract": "Multi-agent Reinforcement Learning (MARL) holds great potential for robot swarms, but the black-box nature of neural policies complicates strategic analysis, limiting multi-robot applications. Furthermore, complex swarm behaviors can surprisingly emerge from simple rewards without explicit aggregation incentives. Unveiling the mechanisms behind this emergence is critical, but the disconnection between simple rewards and collective behaviors exacerbates interpretability challenges. This paper aims to reveal the hidden mechanisms in this process. We propose a two-stage EEC (\\LinkIII) explanatory framework. This includes a novel analytical tool called the Agent Response Map (ARM), which reveals agents' decision-making patterns across space and identifies regions of aggregation and avoidance. ARM reveals that the robots implicitly learn the geometric fields of the environment and utilize these structures as desired targets for coordinated movement. We validate this finding across two distinct tasks: a cooperative multi-robot shape assembly and a competitive predator-prey pursuit-evasion. 1) In the cooperative task, ARM identifies the unoccupied target interior as the desired destination for robot navigation. As the center becomes occupied, this target region automatically shifts toward the boundary, demonstrating the robots' capacity to autonomously explore unoccupied areas. 2) In the competitive task, ARM surprisingly identifies the boundary of the predators' Voronoi diagram as the convergence destination for prey agents. Together, these two tasks demonstrate the capability of ARM to discover the hidden geometric structures underlying MARL policies in robot swarms.",
+      "authors": [
+        "Yize Mi",
+        "Jianan Li",
+        "Liang Li",
+        "Shiyu Zhao"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "eess.SY"
+      ],
+      "published": "2026-07-14T15:11:26+00:00",
+      "link": "https://arxiv.org/pdf/2607.12861v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "MARL interpretability framework revealing how simple rewards produce complex collective behaviors in robot swarms",
+      "llm_evidence_cn": "MARL可解释性框架揭示简单奖励如何涌现机器人集群的复杂集体行为",
+      "llm_evidence": "MARL可解释性框架揭示简单奖励如何涌现机器人集群的复杂集体行为",
+      "canonical_evidence": "MARL可解释性框架揭示简单奖励如何涌现机器人集群的复杂集体行为",
+      "llm_tldr_en": "Two-stage EEC explanatory framework with Agent Response Map reveals the hidden mechanisms by which simple rewards lead to complex collective behaviors in multi-robot MARL policies.",
+      "llm_tldr_cn": "多智能体强化学习在机器人集群中潜力巨大，但神经策略的黑箱特性限制了战略分析，简单奖励如何涌现出复杂集体行为尤其难以解释。本文提出两阶段EEC解释框架，并设计Agent Response Map工具，从空间上揭示智能体的决策模式和对奖励的关键响应区域。通过该工具，作者成功拆解了简单奖励诱发复杂集群行为的隐藏机制，为多机器人系统的策略可解释性提供了新方法。",
+      "llm_tldr": "多智能体强化学习在机器人集群中潜力巨大，但神经策略的黑箱特性限制了战略分析，简单奖励如何涌现出复杂集体行为尤其难以解释。本文提出两阶段EEC解释框架，并设计Agent Response Map工具，从空间上揭示智能体的决策模式和对奖励的关键响应区域。通过该工具，作者成功拆解了简单奖励诱发复杂集群行为的隐藏机制，为多机器人系统的策略可解释性提供了新方法。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.18719v1",
+      "source": "arxiv",
+      "title": "Strategy-Following Multi-Agent Deep Reinforcement Learning Considering Control Strategies Provided to Other Agents",
+      "abstract": "This study proposes a learning method for multi-agent systems that allows agents to be controlled through human manager instructions after learning and enables uninstructed agents to implicitly complement the overall work based on the actions of other agents. Multi-agent applications using deep learning have shown potential; thus, to achieve extensive social applications, humans should be able to control learned agents using simple methods to respond to environmental and social changes. Even without such changes, learned coordination often does not match the expectations of human managers, making it preferable to control coordination structures to match human intentions. Some studies have aimed to control agent behavior using simple instructions. However, they assumed that instructions are provided to all agents, which is time-consuming and not evident when designing a better cooperation regime. Ideally, specific agents should receive key action instructions, while others should automatically complete the remaining tasks. The proposed method, which extends previous work on controllability in multi-agent deep reinforcement learning, enables uninstructed agents to adaptively complement overlooked tasks and areas. The experimental results show that agents using the proposed method can shift to another cooperative structure and achieve better performance than those using conventional methods.",
+      "authors": [
+        "Yamato Takahagi",
+        "Gentoku Nakasone",
+        "Yoshinari Motokawa",
+        "Toshiharu Sugawara"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-07-21T05:19:49+00:00",
+      "link": "https://arxiv.org/pdf/2607.18719v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Strategy-following multi-agent deep RL allowing human instructions and implicit complementary coordination among agents",
+      "llm_evidence_cn": "多智能体深度强化学习，通过人类管理者指令控制智能体并实现未受指令智能体的隐式互补协作",
+      "llm_evidence": "多智能体深度强化学习，通过人类管理者指令控制智能体并实现未受指令智能体的隐式互补协作",
+      "canonical_evidence": "多智能体深度强化学习，通过人类管理者指令控制智能体并实现未受指令智能体的隐式互补协作",
+      "llm_tldr_en": "Proposes a strategy-following MARL method enabling human managers to control learned agents after training, while uninstructed agents implicitly complement overall work based on others' actions.",
+      "llm_tldr_cn": "为了使学习后的多智能体系统能够响应人类管理者的简单指令，提出一种策略跟随式多智能体深度强化学习方法。该方法允许人类在训练后通过指令控制部分智能体，并使未受指令的智能体依据其他智能体动作隐式互补整体工作，从而协调协作结构以符合人类预期。实验表明其能够按照人类意图调整智能体间的协调方式，促进多智能体系统的实际应用。",
+      "llm_tldr": "为了使学习后的多智能体系统能够响应人类管理者的简单指令，提出一种策略跟随式多智能体深度强化学习方法。该方法允许人类在训练后通过指令控制部分智能体，并使未受指令的智能体依据其他智能体动作隐式互补整体工作，从而协调协作结构以符合人类预期。实验表明其能够按照人类意图调整智能体间的协调方式，促进多智能体系统的实际应用。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.17924v1",
+      "source": "arxiv",
+      "title": "Aggregate in the Advantage, Not the Ratio: A Canonical-Form Analysis of Cooperative Multi-Agent Policy Optimization",
+      "abstract": "Multi-agent policy optimization, exemplified by PPO-based methods, is a key branch of cooperative Multi-Agent Reinforcement Learning (MARL). A central design question is how many neighboring agents\\footnote{In this paper, \"neighbors\" refer not only to physical proximity but also to agents whose actions influence one another.} to aggregate in order to effectively utilize global information for cooperation. This decision must be made along two dimensions: in the advantage (which agents' rewards contribute to the credit signal) and in the ratio (which agents' likelihood ratios form the clipped importance weight). Existing methods occupy scattered, underexplored points on these two axes: IPPO treats both separately; MAPPO pairs a team-level advantage with per-agent ratios; HAPPO employs sequential ratios with per-agent advantages; and single-agent reductions operating on factorized joint policies aggregate both into fully joint products. We formalize these two design choices as support matrices $\\SA$ and $\\SR$, and prove a canonical structure: the expected multi-agent policy optimization objective depends on the pair $(\\SA,\\SR)$ only through their matrix product $\\tS=\\SR\\SA$. This yields two key consequences: (i) Redundancy: the two support matrices are interchangeable with respect to the signal, meaning neither aggregation pattern is inherently superior.(ii) Variance Ordering: the advantage aggregates rewards as a sum (additive variance with an interior bias-variance optimum at the coupling neighborhood), whereas the ratio aggregates likelihood ratios as a product (multiplicative variance that grows exponentially with support size, with no accompanying bias reduction). The resulting design principle is unambiguous: aggregate neighbors in the advantage, sized to the coupling neighborhood, and keep the ratio per-agent.",
+      "authors": [
+        "Zijian Zhao",
+        "Sen Li"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-07-20T13:20:29+00:00",
+      "link": "https://arxiv.org/pdf/2607.17924v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Canonical-form analysis of cooperative multi-agent policy optimization on advantage aggregation and credit signal design",
+      "llm_evidence_cn": "合作式多智能体策略优化中优势聚合与信用分配的核心分析，直接服务PPO类MARL方法设计",
+      "llm_evidence": "合作式多智能体策略优化中优势聚合与信用分配的核心分析，直接服务PPO类MARL方法设计",
+      "canonical_evidence": "合作式多智能体策略优化中优势聚合与信用分配的核心分析，直接服务PPO类MARL方法设计",
+      "llm_tldr_en": "Provides a canonical-form analysis of cooperative multi-agent policy optimization, revealing how aggregating neighbors in the advantage vs. the ratio dimension affects credit signal and cooperation, guiding PPO-based MARL design.",
+      "llm_tldr_cn": "针对合作式多智能体策略优化中PPO类方法如何聚合邻居信息的问题，提出按优势维度和比率维度进行规范形式分析。现有IPPO等方法在这两个维度上仅占据分散且未被充分探索的点。通过系统分析，该工作阐明了在优势中聚合邻居（信用信号）与在比率中聚合邻居（重要性权重）的不同作用，为设计更有效的合作式多智能体策略优化算法提供了规范指导。",
+      "llm_tldr": "针对合作式多智能体策略优化中PPO类方法如何聚合邻居信息的问题，提出按优势维度和比率维度进行规范形式分析。现有IPPO等方法在这两个维度上仅占据分散且未被充分探索的点。通过系统分析，该工作阐明了在优势中聚合邻居（信用信号）与在比率中聚合邻居（重要性权重）的不同作用，为设计更有效的合作式多智能体策略优化算法提供了规范指导。",
+      "llm_tags": [
+        "query:mcd:composite"
+      ],
+      "matched_query_tag": "query:mcd:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习、协同决策、通信交互、信用分配与长期策略优化。, especially work that connects or combines: Multi-Agent Communication; Multi-Agent Credit Assignment; Centralized Training Decentralized Execution; Competitive Multi-Agent Learning; Cooperative Multi-Agent Learning; Multi-Agent Reinforcement Learning; Find transferable multi agent reinforcement learning methods evaluated in navigation, control, games, routing, task allocation, traffic, robotics, or combinatorial decision making tasks.; Find multi agent reinforcement learning methods addressing credit assignment, coordination, reward design, long horizon optimization, or system level objectives.; Find multi agent learning methods involving communication, message passing, graph neural networks, attention mechanisms, neighbor interaction, or shared policy representations.; Find general multi agent reinforcement learning methods for cooperative, competitive, or mixed decision making under partial observability..",
+      "matched_requirement_id": "req-composite-mcd",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2607.16745v1",
+      "source": "arxiv",
+      "title": "RELIC: Revealed Principles for Learning Interpretable Composable Skills in Multi-Agent Planning",
+      "abstract": "Multi-agent planning becomes substantially harder when agents must improve specialized decision-making skills while keeping their internal implementations private. This regime arises when agents are developed independently, expose different interfaces and capabilities, and must nevertheless coordinate without sharing executable policies. Prior research has largely assumed centralized optimization, shared policy access, or common skill representations, making it poorly suited to privacy-constrained cooperation. We introduce RELIC, a framework for learning interpretable and composable skills via revealed principles. Each agent refines its own programmatic skill through private LLM-guided search, while a trusted orchestrator evaluates proposed updates solely through team-level performance. Successful behaviors are not broadcast as code; instead, they are abstracted into portable principles that other agents can instantiate within their own interfaces and recombine with local strategies. This separates coordination from implementation sharing, enabling cross-agent transfer under heterogeneous skill signatures. RELIC thus introduces a new paradigm for privacy-preserving skill learning and coordination in multi-agent planning.",
+      "authors": [
+        "Nguyen Viet Tuan Kiet",
+        "Bui Dinh Pham",
+        "Duong Quoc Chinh",
+        "Dao Van Tung",
+        "Tran Cong Dao",
+        "Huynh Thi Thanh Binh"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-07-18T10:08:54+00:00",
+      "link": "https://arxiv.org/pdf/2607.16745v1",
+      "tags": [
+        "keyword:hetero-marl",
+        "query:hetero-marl"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Agents with different interfaces and capabilities coordinate through interpretable composable skills without sharing policies",
+      "llm_evidence_cn": "异构能力智能体在不共享策略情况下通过可解释组合技能进行协同决策，研究场景直接对应异构多智能体协作",
+      "llm_evidence": "异构能力智能体在不共享策略情况下通过可解释组合技能进行协同决策，研究场景直接对应异构多智能体协作",
+      "canonical_evidence": "异构能力智能体在不共享策略情况下通过可解释组合技能进行协同决策，研究场景直接对应异构多智能体协作",
+      "llm_tldr_en": "RELIC lets independently developed agents with different interfaces and capabilities learn interpretable composable programmatic skills via private LLM-guided search, coordinated by a trusted orchestrator, enabling privacy-preserving multi-agent planning.",
+      "llm_tldr_cn": "针对多智能体规划中智能体独立开发、接口与能力各异且不能共享策略的问题，提出RELIC框架。每个智能体通过私有LLM引导搜索精炼程序化技能，由可信任编排者评估与组合显露的协作原则。实验表明该方法能在保护策略隐私的同时实现可解释、可组合的协作技能学习，为隐私约束下的多智能体协同决策提供新途径。",
+      "llm_tldr": "针对多智能体规划中智能体独立开发、接口与能力各异且不能共享策略的问题，提出RELIC框架。每个智能体通过私有LLM引导搜索精炼程序化技能，由可信任编排者评估与组合显露的协作原则。实验表明该方法能在保护策略隐私的同时实现可解释、可组合的协作技能学习，为隐私约束下的多智能体协同决策提供新途径。",
+      "llm_tags": [
+        "query:hetero-marl"
+      ],
+      "matched_query_tag": "query:hetero-marl",
+      "matched_query_text": "cooperative decision making among multiple agents with heterogeneous capabilities",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

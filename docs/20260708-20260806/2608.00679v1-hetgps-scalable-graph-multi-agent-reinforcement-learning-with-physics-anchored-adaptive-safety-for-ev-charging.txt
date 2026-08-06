@@ -1,0 +1,1873 @@
+Title: HetGPS: Scalable Graph Multi-Agent Reinforcement Learning with Physics-Anchored Adaptive Safety for EV Charging
+
+URL Source: https://arxiv.org/pdf/2608.00679v1
+
+Published Time: Tue, 04 Aug 2026 00:42:21 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# HetGPS: Scalable Graph Multi-Agent Reinforcement Learning with Physics-Anchored Adaptive Safety for EV Charging 
+
+## Xiangwei Wang 1, Nanduni Nimalsiri 2, Yu Xia 1, Peng Wang 3, Saman Halgamuge 1
+
+> 1
+
+The University of Melbourne, Australia 
+
+> 2
+
+CSIRO, Australia 
+
+> 3
+
+Shanghai Jiao Tong University, China 
+
+Abstract 
+
+Safety interventions for large populations of network-coupled agents must protect shared constraints without unnecessarily overriding task-oriented policy decisions. We present Het-GPS, a hybrid graph-control framework synergizing learned graph risk with physics-anchored correction by separating in-tervention magnitude from corrective direction. An action-conditioned graph residual model schedules state-dependent intervention authority, while a physics model determines its direction. For electric vehicle (EV) charging, we couple this filter with a parameter-shared heterogeneous-graph soft actor-critic policy, enabling topology-aware coordination with a learned model size independent of fleet size. Across five nested distribution networks with 200–3,218 EVs and 100 evaluation days, Adaptive Authority reduces bus–step voltage violations from 3.93–7.74% without filtering to 0.52–3.44%, while maintaining 99.06–100% departure success. Relative to the same physics-directed projection with fixed author-ity, it improves mean reward on all five networks and lowers the mean safety score on four. The deployed policy-and-risk model contains 383,702 learned parameters at every scale; at 3,218 EVs, a matched centralized SAC actor is about 170 ×
+
+larger. A policy trained on the eight-transformer system trans-fers zero-shot to the 16- and 32-transformer systems, attaining 0.57–0.75% violation rates and at least 99.99% departure suc-cess. These results show that learned graph risk can allocate intervention authority at scale while feeder physics anchors corrective action. 
+
+## 1 Introduction 
+
+Coordinating residential EV charging presents intercon-nected challenges in scalability and network safety. Many locally controlled EV chargers have heterogeneous private states, yet their actions remain coupled through distribution-grid voltages (Ma, Callaway, and Hiskens 2013; Yan et al. 2022). Uncoordinated charging overlooks the electrical interac-tions that couple the charging decisions of multiple EV agents. In contrast, centralized coordination becomes in-creasingly complex as the number of EVs and the size of the network grow. Graph-based parameter sharing offers a scal-able middle ground by applying a shared policy to topology-aware local information (Rampasek et al. 2022; Yan, Xing, and Xu 2024). Scalability alone, however, does not make the resulting actions safe. 
+
+Figure 1: End-to-end EV-control pipeline. Offline, the shared MARL policy and action-conditioned graph residual model learn from power-flow interactions. At deployment, the pol-icy proposes joint EV actions; before grid actuation, the safety filter evaluates their predicted voltage consequences and corrects them when needed. Learned residual risk sets the maximum correction magnitude ∆t, while feeder physics determines its direction. Training-time reward penalties or expected-cost con-straints can reduce violations on average, but they do not ensure that every realized joint charging action is acceptable under changing demand, PV generation, and EV availability. A predictive safety filter is a runtime layer placed between a learned policy and the physical system. Before an action is executed, it uses current measurements and a model to pre-dict the action’s constraint consequences; it leaves the pro-posal unchanged when no correction is needed and otherwise returns a nearby corrected action (Wabersich and Zeilinger 2021). Here, the predicted quantity is the post-action bus-voltage profile. The filter therefore protects network voltage while the MARL policy continues to optimize charging cost and departure readiness (Li, Wan, and He 2020). The remaining design question is how much correction the filter should be allowed to apply. A weak fixed limit may be insufficient under high voltage risk, whereas a worst-case limit can unnecessarily distort useful actions in benign con-ditions. Rather than asking one learned model to infer both this magnitude and the physically appropriate direction, we separate the two roles. We propose HetGPS, a scalable graph MARL framework with an adaptive-authority safety filter, arXiv:2608.00679v1 [cs.AI] 1 Aug 2026 summarized in Figure 1. A graph-based risk model sched-ules a state-dependent authority ∆t, defined as the maximum permitted change to the proposed EV actions, while a feeder-physics model determines the voltage-corrective direction. Thus, learning decides how strongly the filter may intervene, whereas physics decides how the intervention should modify the actions. The EV instantiation uses a heterogeneous bus–agent graph and a shared GraphGPS-derived policy (Rampasek et al. 2022). Bus message passing exposes each charger to topology-aware electrical context without pooling ev-ery household’s private EV state in a fleet-sized centralized critic. An action-conditioned voltage residual head is su-pervised by power-flow labels during training and reused as the deployment risk model. HetGPS reuses the same graph-encoder and residual-risk-head weights across buses, and the same soft actor-critic (SAC) policy weights across EVs (Haarnoja et al. 2018). Expanding the graph therefore applies the same learned modules to more nodes and agents rather than creating new parameters. It increases compu-tation and topology-dependent physical buffers, while the deployed policy-and-risk model remains at 383,702 learned parameters across all evaluated scales. For scale, the largest tested CRE21 instance contains 32 distribution transform-ers and 3,218 EVs (Team Nando 2023). On this instance, a fully centralized SAC policy that concatenates all EV obser-vations and jointly outputs all actions contains 65.2 million parameters, about 170 × as many. Matched deployment- and training-model accounting is reported in Appendix E. To fur-ther assess generalization, we keep the learned weights fixed, rebuild the graph and physical-sensitivity buffers for each tar-get feeder, and evaluate the controller on unseen topologies. Our contributions are: 
+
+• We introduce a hybrid safety-filter factorization in which a learned graph risk model schedules state-dependent in-tervention authority, while a physics model determines the corrective direction. 
+
+• We instantiate this principle as HetGPS, combining a parameter-shared graph MARL policy, an action-conditioned voltage-residual model, and a physics-anchored projection. Its learned parameter count remains fixed across fleet sizes. During operator-mediated execu-tion, household-level EV states remain local: each agent receives topology-aware bus context without direct access to neighboring agents’ private features. 
+
+• We demonstrate the resulting reward–safety trade-off on distribution networks with 200–3,218 EVs through con-trolled no-filter, fixed-authority, and adaptive-authority comparisons, and further evaluate zero- and few-shot transfer to larger and cross-family network topologies. 
+
+## 2 Related Work 
+
+Safe and constrained RL. Constrained policy optimization and decentralized primal–dual safe RL regulate expected cu-mulative costs (Achiam et al. 2017; Lu et al. 2021; Stooke, Achiam, and Abbeel 2020), whereas shields, learned editors, and predictive filters intervene on individual actions (Al-shiekh et al. 2018; Yu, Xu, and Zhang 2022; Wabersich and Zeilinger 2021). Adaptive regularization can vary reliance on a hard-coded safety component (Tian et al. 2024). HetGPS instead adapts only deployment-time intervention authority; feeder physics retains the correction direction. 
+
+Graph learning for networked control. Graph policies exploit relational structure for control and dynamic cooper-ation (Wang et al. 2018; Jiang et al. 2020); selective aggre-gation and factor graphs address large populations (Fu et al. 2022; Fan et al. 2025). Power-system graph models learn optimal power flow or voltage control (Owerko, Gama, and Ribeiro 2020; Cao et al. 2024; Yan, Xing, and Xu 2024), while recent AI work poses active voltage control as Dec-POMDP MARL or a constrained Markov game (Wang et al. 2021; Qu, Ma, and Wu 2024). HetGPS separates graph co-ordination from action-conditioned risk estimation and tests shared weights directly on unseen scales and feeder families. 
+
+EV coordination. AI work spans distributed smart charg-ing, multi-agent EV benchmarks under distribution shift, and optimization-guided heterogeneous vehicle-to-building con-trol (Valogianni et al. 2014; Yeh et al. 2023; Liu et al. 2025). Power-system studies treat price-responsive scheduling and constrained service objectives (Ma, Callaway, and Hiskens 2013; Silva et al. 2020; Wan et al. 2019; Li, Wan, and He 2020). Distributed and privacy-aware controllers reduce in-formation pooling (Liu et al. 2019; Nimalsiri et al. 2024; Qin et al. 2021). HetGPS adds topology-scalable coordination and deployment-time physics-anchored voltage correction. Each actor uses local EV state and operator-derived bus con-text, not neighboring EVs’ raw features; this is information locality, not formal privacy. 
+
+## 3 Methodology 
+
+Problem Setting 
+
+We model the graph-coupled cooperative system as a con-strained Dec-POMDP over an agent set A of Na = |A| 
+
+agents, with state xt, transition kernel P , reward and cost discounts γ, γ c, and a finite horizon of T = 24 hourly decisions. Observations are a deterministic function of the state, oti = hi(xt). Let χti denote agent i’s private observa-tion component. An operator-side graph encoder aggregates serving-bus, neighboring-bus, and feeder-level global con-text from feeder topology and bus-level measurements into an agent-specific context ci(Gt) that carries no neighboring EV’s raw private state. The complete policy observation is 
+
+oti = [ χti∥ci(Gt)] , and every executed action passes through three stages: 
+
+aRL  
+
+> i,t
+
+∼ πθ (· | oti) learned proposal ,aproj  
+
+> t
+
+= F∆t (aRL  
+
+> t
+
+) voltage projection ,aexec  
+
+> t
+
+= Gsvc (xt, a proj  
+
+> t
+
+) service map ,
+
+(1) with aRL  
+
+> t
+
+= ( aRL  
+
+> i,t
+
+)i∈A . The projection F∆t is the safety filter studied here, bounded by the authority ∆t; the service map Gsvc deterministically enforces availability, SoC, and departure rules and is always active. Only F∆t is optional: policy training sets it to the identity, so training optimizes 
+
+Πtr  
+
+> θ
+
+= Gsvc ◦πθ while deployment runs Πdep  
+
+> θ
+
+= Gsvc ◦F∆t ◦πθ . The normative system-level criterion for an executed controller Πθ is 
+
+max  
+
+> θ
+
+JR(Π θ ) = EΠθ ,P 
+
+"T −1X
+
+> t=0
+
+γtR(xt, a t)
+
+#
+
+,
+
+s.t. JC,b (Π θ ) = EΠθ ,P 
+
+"T −1X
+
+> t=0
+
+γtcCb(xt, a t)
+
+#
+
+≤ ϵb, ∀b ∈ B mon .
+
+(2) Here at = aexec  
+
+> t
+
+inside R and Cb, which is a nonnegative post-action AC-voltage cost at monitored bus b with pre-scribed expected cumulative budget ϵb. The shared critics introduced below approximate this expectation-constrained objective for Πtr  
+
+> θ
+
+; the deployment projection is a post-training action interface rather than part of their Bellman targets. The objective does not assert pointwise feasibility for every real-ization. The implementation uses γc = γ for Bellman train-ing, whereas all reported voltage metrics and deployment decisions use undiscounted stepwise AC voltages. Replay stores the raw SAC proposal, while rewards and post-action AC-voltage labels are generated after Gsvc . Deployment in-serts the voltage projection between the proposal and the same service map. The executed EV action aexec  
+
+> i,t
+
+∈ [−1, 1] maps to demand-positive charging ( aexec  
+
+> i,t
+
+> 0) or V2G discharge (aexec  
+
+> i,t
+
+< 0), with presence, charger-rating, and state-of-charge (SoC) limits enforced by the transition model. The re-ward combines real-time energy cost, throughput-based bat-tery wear (Ortega-Vazquez 2014; Farzin, Fotuhi-Firuzabad, and Moeini-Aghtaie 2016), a continuous readiness service cost, and departure shortfall. The readiness term is part of the optimized task reward, not potential-based policy-invariant shaping. We assume a balanced positive-sequence network; pandapower AC power flow evaluates the operating band 
+
+[V min , V max ] = [0 .95 , 1.05] p.u. (Thurner et al. 2018). The heterogeneous graph has bus nodes, EV nodes, physi-cal line/transformer edges, and EV-to-bus attachment edges. Bus nodes expose measured voltage and aggregate power features, while an EV’s SoC, availability, target, departure, and histories remain private EV features. Attachment edges deliver the serving-bus embedding to the shared actor. EV dynamics, power flow, and full feature definitions are given in Appendices B and C. 
+
+Graph-Guided Authority, Physics-Anchored Direction 
+
+Figure 1 summarizes the offline-training and online-deployment pipeline while separating policy, learned author-ity, and physical direction. Here y is the monitored voltage and Jt is its nominal physical sensitivity to the EV actions. 
+
+Shared Graph Policy and Risk Model. Two bus message-passing layers encode measured electrical state and feeder edge attributes into operator-side embeddings. The graph encoder compresses the variable-size, operator-visible elec-trical state into a fixed-dimensional context for each agent, avoiding fleet-wide state concatenation and thereby miti-gating the associated curse of dimensionality in central-ized control. One Gaussian SAC actor is shared across agents (Haarnoja et al. 2018); different observations still yield individual actions. Shared mean-field reward and voltage-cost critics condition additionally on the mean and standard deviation of the raw fleet action proposals. Together with PID-updated bus multipliers, they provide a scalable ap-proximation to Eq. (2) (Stooke, Achiam, and Abbeel 2020). For each bus v, the action-conditioned residual head takes the raw policy proposal as input and is supervised to predict the safety output after the environment’s common determin-istic service transformation: 
+
+ey(τ ) 
+
+> t,v
+
+(aRL  
+
+> t
+
+) = yfb  
+
+> t,v
+
++ [ JtaRL  
+
+> t
+
+]v + br(τ ) 
+
+> ϕ,v
+
+(Gt, a RL  
+
+> t
+
+), (3) Here, yfb  
+
+> t
+
+= V obs  
+
+> t−1
+
+is the latest pre-decision voltage mea-surement, and Jt is the nominal physics sensitivity derived from LinDistFlow, a linearized radial power-flow model that maps nodal power injections to approximate voltage changes (Baran and Wu 1989). AC power-flow labels su-pervise the residual head. The joint action is not concate-nated into a fleet-sized dense input: a shared encoder maps each agent embedding and proposal, and these representa-tions are sum-pooled at the serving buses before shared bus processing. A pinball loss trains a median head together with a lower/upper pair that defines an uncalibrated interval; we write eyt,v for the median used below. The three quantile out-puts share one trunk and are counted together in the deployed parameter total, although deployment evaluates only the me-dian. Authority scheduling evaluates that median at aRL  
+
+> t
+
+; the separate calibration audit re-evaluates all three heads with 
+
+aexec  
+
+> t
+
+as their input. The head neither predicts ∆t directly nor supplies the projection direction. 
+
+Risk-to-Authority Scheduler. Let bi be the serving bus of agent i, and for a predicted voltage field y let zv (y) = [V min + δm − yv ]+ + [ yv − V max + δm]+ be its exceedance of the operating band at bus v, tightened by an internal margin 
+
+δm. We evaluate this exceedance both on the learned median 
+
+eyt and on a fixed-gain physics guard yguard  
+
+> t
+
+= yfb  
+
+> t
+
++ βJ taRL  
+
+> t
+
+,aggregate each over agents by a high quantile, and keep the more conservative value: 
+
+¯rt = max Q.95 {zbi (eyt) : i ∈ A} , Q .95 {zbi (yguard  
+
+> t
+
+) : i ∈ A} .
+
+(4) Calibrating β against the measured AC sensitivity yields 
+
+β < 1, so the guard attenuates rather than amplifies; LinDist-Flow overstates action sensitivity on these feeders. The quan-tile runs over agent–bus incidences, which coincide with dis-tinct buses whenever the serving map is injective, as it is throughout CRE21. This risk sets the authority but does not decide when the filter acts. A monotone map turns it into the intervention budget: 
+
+∆t = ∆ min + (∆ max − ∆min ) clip 
+
+ ¯rt − rlow 
+
+rhigh − rlow 
+
+, 0, 1
+
+
+
+.
+
+(5) The filter is triggered when any physics-guard incidence lies outside the internally margined operating band; the unscaled physical sensitivity Jt then defines the correction below. De-tection and budgeting use different aggregators by design: detection must react to any exceedance, whereas the bud-get should follow the magnitude of widespread risk rather than a single outlier. This does not collapse the schedule onto ∆min , because the learned exceedance field is dense rather than sparse when the feeder is loaded; on our traces the scheduled authority never reaches its floor on a triggered step. The monitored set is the distinct EV-hosting buses, and the deepest excursion is never observed at a non-monitored bus, whose violation rate the filter also reduces. 
+
+Physics-Anchored Projection. The projection deliber-ately excludes the learned residual from its correction di-rection, predicting voltage from physics alone as byphys  
+
+> t
+
+(a) = 
+
+yfb  
+
+> t
+
++ Jta. When the guard flags a set Kt of buses, the small-est correction d = a − aRL  
+
+> t
+
+that restores them is the convex quadratic program 
+
+min  
+
+> d
+> 12
+
+∥d∥2
+
+> W
+
+s.t. c⊤ 
+
+> j
+
+d ≥ hj , j ∈ K t,ℓi,t ≤ di ≤ ui,t , i ∈ A ,
+
+(6) where W is a fixed positive definite metric, cj is the row of Jt at the flagged bus signed by the violated side, hj is its band deficit, and ℓi,t = max {− 1 − aRL  
+
+> i,t
+
+, −∆t}, ui,t =min {1 − aRL  
+
+> i,t
+
+, ∆t} form the authority box through which the scheduled budget enters. Solving Eq. (6) exactly every hour for thousands of agents is too costly, so the deployed controller applies a fixed number of projection-onto-convex-sets sweeps: each flagged constraint is relaxed in turn along its own cj , in decreasing order of deficit, and the iterate is projected back onto the box. Every correction direction is therefore physical, while the learned model only sizes the box. The tested learned-direction alternatives produced no consistent Pareto improvement; equal-cap diagnostics are reported in Appendix E.4. Because the sweeps are truncated, the result respects the action and authority limits but need not satisfy every voltage constraint. The service map then has the last word. It zeroes an un-available EV whatever the projection commanded, so part of the authority budget can be spent on agents that Gsvc 
+
+removes, and departure overrides can reverse a correction outright. Guarantees are therefore stated for the executed ac-tion rather than the projected one. Algorithm 1 makes the intervention factorization explicit. The learned path is evaluated once to set a scalar budget; it never changes the physical sensitivity or the constraint nor-mals. For Kproj projection sweeps and |K t| active one-sided constraints, the dense projection cost is O(Kproj |K t|Na),while the learned parameter count is independent of Na.
+
+## 4 Experiments 
+
+Networks, Data, and Splits 
+
+The primary benchmark uses five nested selections from CRE21, an open model of a real Australian urban distri-bution feeder with synthesised LV networks (Team Nando 2023), containing 200, 664, 1236, 2239, and 3,218 EVs (K=1,4,8,16,32). Every household hosts an EV, so charg-ing demand dominates the residential base load and drives the voltage excursions we study. IEEE 13/33/69 feeders pro-vide secondary cross-family tests. Feeder settings are listed in Appendix E. 
+
+Algorithm 1 Graph-Guided Authority with Physics-Anchored Direction                                                       
+
+> Require: Graph state Gt, policy observations {oti}, feedback yfb
+> t,sensitivity Jt, operating limits 1: Sample aRL
+> tfrom the shared graph policy 2: Predict eyt(aRL
+> t)using Eq. (3) 3: Compute learned and guard risks using Eq. (4) 4: Schedule authority ∆tusing Eq. (5) 5: Form active constraint set Ktfrom the physics guard 6: if no guard incidence is active then
+> 7: aproj
+> t←aRL
+> t
+> 8: else
+> 9: Initialize d←0and the authority box [ℓt, u t]
+> 10: for each projection sweep and j∈ K tdo
+> 11: Relax constraint j, then reproject donto [ℓt, u t]
+> 12: end for
+> 13: aproj
+> t←clip( aRL
+> t+d, −1,1)
+> 14: end if
+> 15: aexec
+> t←Gsvc (xt, a proj
+> t)
+> 16: return aexec
+> t
+
+Each episode contains 24 hourly decisions. Demand/PV profiles come from the 2012–2013 Ausgrid data (Ratnam et al. 2017); the price signal is the absolute value of hourly averaged 2022–2023 AEMO VIC1 real-time whole-sale price (Australian Energy Market Operator 2023); EV mobility follows VISTA-derived distributions (Department of Transport and Planning, Victoria 2020). Chargers are het-erogeneous in battery capacity and rating; the fleet compo-sition and profile preprocessing are detailed in Appendix F. Of the 365 days, 240 are used for training, 100 for evalua-tion, and 25 for topology transfer adaptation. All evaluation arms see the same days in the same order, so comparisons are paired. All experiments are implemented in PyTorch, and every reported result is produced on a single NVIDIA A100 80GB GPU. 
+
+Controlled Comparisons and Metrics 
+
+We run two comparisons, each varying one component while holding the other fixed. The controlled backbone comparison fixes the safety interface across HetGPS, ISAC, centralized SAC (Haarnoja et al. 2018), and MADDPG (Lowe et al. 2017). We additionally report PI-LP, a non-learning perfect-information reference that schedules bidirectional EV power over the full horizon using a linearized network model. The second fixes the policy and varies the safety interface: (i) No Filter ; (ii) Fixed Authority , the physics projection with 
+
+∆t ≡ ∆max ; and (iii) Adaptive Authority , the same projec-tion with ∆t from Eq. (5). All three arms retain the same post-projection service guard; “No Filter” therefore means no voltage projection, not the removal of physical availabil-ity or departure-feasibility logic. All metrics are computed on the executed action. The unified filter configuration is (∆ min , ∆max ) =(0 .20 , 0.35) , (rlow , r high ) = (0 .005 , 0.080) p.u., guard gain β = 0.31 , internal margin δm = 0, quantile lev-els τ ∈ { 0.05 , 0.50 , 0.95 }, Euclidean metric W = I, and 
+
+Kproj = 10 projection sweeps. The residual head’s interval outputs characterize predictive risk; they do not certify the −400                           
+
+> −300
+> −200
+> −100 aCRE21-K1
+> −400
+> −350
+> −300
+> −250
+> −200
+> −150
+> −100 bCRE21-K4
+> −400
+> −350
+> −300
+> −250
+> −200
+> −150
+> −100 cCRE21-K8
+> −400
+> −350
+> −300
+> −250
+> −200
+> −150
+> −100 dCRE21-K16
+> 0500 1000
+> −500
+> −400
+> −300
+> −200
+> −100 eCRE21-K32
+> 0500 1000
+> −2500
+> −2000
+> −1500
+> −1000
+> −500
+> fIEEE13
+> 0500 1000
+> −3000
+> −2500
+> −2000
+> −1500
+> −1000
+> −500
+> gIEEE33
+> 0500 1000
+> −3000
+> −2500
+> −2000
+> −1500
+> −1000
+> −500
+> hIEEE69
+> Training episode
+> Reward per agent
+> HetGPS-Hybrid HetGPS pure MASAC MADDPG ISAC Centralized
+
+Figure 2: Policy-training reward per agent (EV) over 1,000 episodes for the five nested CRE21 systems and three IEEE feeders. deployed controller. For episode e, step t, and monitored EV-hosting bus v,define 
+
+de,t,v = [ V min − Ve,t,v ]+ + [ Ve,t,v − V max ]+. (7) The bus–step violation rate is the total count of de,t,v > 0
+
+divided by P
+
+e Te|B EV ,e |; distinct EV-hosting buses, not all graph buses or EV agents, form the denominator. The episode safety score is 
+
+ms,e = 1
+
+Te
+
+X
+
+t
+
+1{max 
+
+v de,t,v > 0} + max t,v de,t,v 
+
+V max − V min , (8) and we report its mean over days. Reward per EV and departure-target success measure utility and service; a depar-ture is counted successful when its SoC is within an absolute tolerance of 0.10 below the requested target. Lower violation rate and ms are safer; higher (less negative) reward is better. 
+
+Topology-transfer protocol. We evaluate a K=8-trained controller zero-shot on K=16, K=32, and IEEE33, with a 25-episode K=32 adaptation arm. K16 and K32 retain the source feeder settings, whereas IEEE33 tests a topology and operating-distribution shift. Target electrical buffers are re-built from each feeder, while learned shared weights are copied without target training in the zero-shot arm. 
+
+## 5 Results 
+
+Policy Training Dynamics 
+
+Figure 2 shows optimization behaviour across all eight eval-uated network scenarios. The HetGPS backbone converges faster than the baselines in most scenarios and reaches a strong final reward across all eight. Checkpoints are selected on service quality rather than by taking the final iterate. Ta-ble 1 compares the four learned backbones and PI-LP on all eight scenarios without a voltage filter. HetGPS gives the highest feasible reward on all five CRE21 scales and on IEEE33 and IEEE69, with its largest advantage at K=32; MADDPG retains a small reward margin only on IEEE13. The centralized controller’s low voltage metrics coincide with only 72–80% departure success and therefore do not 
+
+Scenario Method Reward/EV ↑ Viol. (%) ↓ ms ↓
+
+CRE21 K=1 HetGPS −100 .31 ± 2.60 0.043 ± 0.033 0.015 ± 0.010 
+
+ISAC −104 .42 ± 1.08 0.001 ± 0.001 0 .001 ± 0.001 
+
+MADDPG −138 .90 ± 25 .36 0.103 ± 0.002 0.030 ± 0.001 
+
+C-SAC −353 .67 ± 17 .96 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −135 .46 1.409 0.133 
+
+CRE21 K=4 HetGPS −103 .51 ± 1.20 0.058 ± 0.012 0.059 ± 0.007 
+
+ISAC −108 .38 ± 2.11 0.017 ± 0.002 0 .019 ± 0.002 
+
+MADDPG −115 .04 ± 4.21 0.133 ± 0.002 0.105 ± 0.001 
+
+C-SAC −382 .75 ± 15 .81 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −136 .31 1.288 0.184 
+
+CRE21 K=8 HetGPS −103 .62 ± 2.63 0.019 ± 0.010 0.033 ± 0.014 
+
+ISAC −121 .89 ± 3.14 0.002 ± 0.002 0 .005 ± 0.005 
+
+MADDPG −126 .76 ± 23 .53 0.083 ± 0.005 0.096 ± 0.004 
+
+C-SAC −383 .91 ± 2.29 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −136 .88 1.171 0.183 
+
+CRE21 K=16 HetGPS −107 .22 ± 5.43 0.007 ± 0.012 0.020 ± 0.032 
+
+ISAC −127 .33 ± 6.49 0.005 ± 0.006 0 .016 ± 0.020 
+
+MADDPG −136 .31 ± 30 .35 0.072 ± 0.020 0.109 ± 0.015 
+
+C-SAC −389 .18 ± 7.60 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −136 .85 1.137 0.204 
+
+CRE21 K=32 HetGPS −108 .45 ± 8.21 0 .001 ± 0.001 0 .003 ± 0.003 
+
+ISAC −126 .78 ± 4.97 0.002 ± 0.002 0.012 ± 0.014 
+
+MADDPG −153 .99 ± 0.02 0.061 ± 0.001 0.122 ± 0.001 
+
+C-SAC −389 .56 ± 4.51 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −137 .69 1.010 0.201 
+
+IEEE13 HetGPS −190 .65 ± 0.01 0.000 ± 0.000 0 .000 ± 0.000 
+
+ISAC −213 .91 ± 5.11 0.000 ± 0.000 0 .000 ± 0.000 
+
+MADDPG −189 .80 ± 0.01 0 .000 ± 0.000 0 .000 ± 0.000 
+
+C-SAC −1874 .91 ± 128 .20 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −592 .47 0.125 0.017 
+
+IEEE33 HetGPS −191 .29 ± 0.07 3 .529 ± 0.001 0.441 ± 0.001 
+
+ISAC −214 .20 ± 2.14 3.646 ± 0.019 0.425 ± 0.003 
+
+MADDPG −192 .06 ± 0.04 3.650 ± 0.001 0.441 ± 0.001 
+
+C-SAC −2014 .02 ± 75 .71 0.227 ± 0.063 0.039 ± 0.011 
+
+PI-LP −479 .94 3.814 0.336 
+
+IEEE69 HetGPS −188 .75 ± 0.01 0 .320 ± 0.001 0.065 ± 0.001 
+
+ISAC −219 .68 ± 2.81 0.409 ± 0.003 0.050 ± 0.001 
+
+MADDPG −189 .63 ± 0.07 0.410 ± 0.000 0.065 ± 0.001 
+
+C-SAC −2029 .39 ± 43 .36 0.000 ± 0.000 0.000 ± 0.000 
+
+PI-LP −570 .14 2.101 0.197 
+
+Table 1: Backbone comparison on all eight scenarios. Learned entries are mean ± sample standard deviation across three runs, each averaged over the same 100 evaluation days; PI-LP is deterministic. Bold marks the best value in each metric among controllers with at least 95% departure suc-cess. Full service results are in Appendix E. represent a usable operating point. Complete numerical re-sults, including departure success for every method and sce-nario, are provided in Appendix E. 
+
+Reward–Safety Trade-offs of Adaptive Authority 
+
+Figure 3 separates the protection benefit of filtering from the value of adapting its authority. Relative to matched fixed au-thority, adaptive authority improves reward and ms jointly on six of the seven nontrivial networks. K1 instead recovers re-ward with a modest safety trade-off, while all configurations tie on IEEE13. On the raw metrics, adaptive authority lowers the CRE21 bus–step violation rate from 3.93–7.74% without filtering to 0.52–3.44%, and lowers mean ms in every case. This protec-tion has a utility cost relative to no filter, which is expected because the projection requests additional V2G support or delays charging. Across the filtered configurations, mean de-parture success remains between 98.93% and 100%. Com-plete three-run results are provided in Appendix E. 0 20 40 60               
+
+> Reward loss vs. No Filter (%)
+> 0
+> 25
+> 50
+> 75
+> 100
+> ms reduction vs. No Filter (%)
+> No Filter
+> ideal direction
+> (a) Safety–reward shifts
+> K1
+> K4 K8
+> K16
+> K32
+> IEEE33
+> IEEE69
+> 01234
+> Adaptive reward gain over Fixed (%)
+> −20
+> 0
+> 20
+> 40
+> Adaptive  ms improvement over Fixed (%)  (b) Dominance landscape
+> K1
+> K4
+> K8 K16
+> K32
+> IEEE13 tie IEEE33
+> IEEE69
+> 8 scenarios: 6 joint wins ·1 trade-off ·1 tie
+> Fixed Adaptive shift
+
+Figure 3: Reward–safety comparison using the three-run means. (a) Fixed and adaptive authority relative to No Filter; each arrow points from Fixed to Adaptive, with upward and leftward shifts indicating more ms reduction and less reward loss. (b) Adaptive improvement over Fixed; the upper-right region indicates joint improvement. Against fixed authority, the adaptive scheduler improves mean reward on all five CRE21 networks. It also reduces both voltage metrics on K=8 and K=32. K=4 and K=16 have similar mean safety under the two budgets, while K=1 moves along the trade-off by recovering reward at moderately higher voltage risk. This scale dependence motivates feeder-aware calibration of the authority map. 
+
+Across-run robustness. Across three independently trained policies for every scenario, adaptive authority re-duces both voltage metrics in every individual CRE21 run relative to no filtering, while departure success remains above 97% throughout the filtered runs. Full run-level statistics are provided in Appendix E. On the secondary IEEE tests, IEEE13 has no voltage vio-lations on the 100-day evaluation split, so filtering changes nothing. Relative to No Filter, adaptive authority reduces both voltage metrics on IEEE33 and IEEE69, at a substan-396 buses · 200 monitored                                          
+
+> (a) Unfiltered frequency
+> No filter − adaptive
+> (b) Adaptive reduction
+> 017% −17% 0+17%
+> No filter
+> Fixed
+> Adaptive
+> Bus–steps: 3,431 / 436 / 354
+> 56 773 1.4k 976 208
+> 40 48 176 8107 51 6
+> 29 20 194 111
+> (c) Hourly violating-bus count
+> 0
+> 1.4k
+> Fixed − adaptive +11 +28 -18 -103 +107 +51 +6
+> 0.20
+> 0.25
+> 0.30
+> 0.35
+> Δt
+> candidate Δt(inactive) active Δt
+> 0246810 12 14 16 18 20 22
+> Hour
+> 0
+> .125
+> .25
+> Mean  |Δ ai|
+> mean |Δ ai|EVs modified
+> 0
+> 50
+> 100
+> EVs modified (%)
+
+Figure 4: Spatial and temporal intervention on a represen-tative K32 evaluation day. (a) No Filter violation frequency on the transformer with the largest unfiltered bus–step count. (b) Reduction under Adaptive Authority (teal: fewer violat-ing hours). (c) Hourly violating-bus counts over 3,218 mon-itored buses, followed by the Fixed-minus-Adaptive differ-ence, candidate authority (dashed inactive; squares active), mean pre-service projection correction per EV (teal), and the share of EVs modified by the projection (rose). Bus–step totals are 3,431/436/354 for No Filter/Fixed/Adaptive. tial reward cost, while retaining 100% departure success. Adaptive authority also gives slightly better reward and volt-age metrics than the matched fixed budget on both feeders. These cross-family checks motivate feeder-specific threshold calibration. 
+
+Spatial and Temporal Intervention Patterns 
+
+Figure 4 illustrates how scheduled authority translates into spatially targeted projection corrections and voltage-risk re-duction on K32, combining topology-resolved exposure, spa-tial safety gain, and hourly intervention dynamics. The rep-resentative day is selected as the medoid of the three arms’ daily safety metrics over the evaluation set. On this day, candidate authority ranges from 0.259 to 0.285 and the filter is invoked on 9 of 24 steps. Before activation, both the mean pre-service projection correction and the frac-tion of EVs modified by the projection are zero; across trig-gered steps, they range from 0.011 to 0.251 and from 4.9% to 97.7%, respectively. Aggregating all 3,218 monitored K32 buses on this day, Adaptive Authority lowers bus–step vio-lations by 89.7% relative to No Filter and by 18.8% relative to Fixed Authority; the corresponding one-day ms values for No Filter, Fixed Authority, and Adaptive Authority are 0.625, −30 −20 −10 0 10          
+
+> Relative reward difference, ΔR(%)
+> −40
+> −20
+> 0
+> 10
+> Relative safety improvement,  ΔS (%)  (a) Transfer relative to target-trained policies
+> 25 target episodes
+> K16
+> K32
+> IEEE33 (cross-family)
+> K32, 25 episodes
+> Target-trained
+> 30 40 50
+> Reduction in ms, no filter →adaptive (%)
+> K16
+> K32
+> IEEE33
+> 39.6
+> (b) Adaptive-filter benefit after transfer
+> Target-trained Zero-shot 25 episodes
+> Source policy: K8 (1,236 EVs) · zero-shot targets: K16, K32, IEEE33 · K32 adaptation: 25 target episodes
+
+Figure 5: Target-normalized topology transfer from the K8 controller. Panel (a) uses ∆R = 100( Rtr − Rtgt )/|Rtgt | and 
+
+∆S = 100( ms, tgt − ms, tr )/m s, tgt , so higher values are preferred and the matched target-trained controller lies at the origin. The arrow traces 25-episode K32 adaptation. Panel (b) reports the ms reduction from No Filter to Adaptive Authority. Ellipses and whiskers are 95% paired-day bootstrap regions over the 100 evaluation days for the matched source checkpoint; they quantify day-level uncertainty. 0.461, and 0.289. The topology panels localize the dominant unfiltered exposure and show that the corrective benefit is concentrated along the affected radial branches. 
+
+Scalability and Topology Transfer 
+
+The HetGPS policy-and-risk model has 383,702 learned pa-rameters at deployment; adding the reward and voltage-cost critics and the auxiliary head used only during training gives 669,659. These counts are unchanged from K=1 (200 EVs) to K=32 (3,218 EVs) because the learned modules are shared; nodewise computation and nonlearned topology buffers still grow with the graph. At K=32, the fully centralized SAC policy has 65,153,316 parameters, about 170 × the deployed HetGPS model. Adding the two Q-networks used to train that policy gives 193,799,974 parameters, about 289 × the complete HetGPS training model. This makes the shared graph controller a compact large-population architecture. The transfer experiment below tests whether that shared pa-rameterization also supports inference on unseen graphs. The K8 controller transfers cleanly to the larger nested graphs. With adaptive authority, zero-shot K16 and K32 achieve violation rates of 0.75% and 0.57% and ms of 0.324 and 0.338, respectively, close to the corresponding target-trained operating points (0.94%/0.347 and 0.51%/0.305). Departure success remains 99.99–100%. On IEEE33, zero-shot adaptive authority reduces violations from 3.57% to 1.64%, with a larger reward cost under the shifted operating regime. Twenty-five K32 adaptation episodes recover reward from −105 .38 to −97 .45 relative to zero-shot adaptive con-trol, but increase ms from 0.338 under zero-shot transfer to 0.415, which is 36.41% above the target-trained value of 0.305. Figure 5 separates transfer fidelity from the filter bene-fit. Zero-shot K16 jointly improves normalized reward and safety relative to its matched target-trained reference, while zero-shot K32 preserves reward within 0.04%. The filter nev-ertheless retains an ms reduction of 52.25%, 50.04%, and 51.47% on zero-shot K16, K32, and IEEE33, respectively. The IEEE33 point isolates the harder cross-family utility gap. On K32, 25 target episodes move the operating point toward higher reward while trading safety, rather than uniformly improving both. Nevertheless, for the adapted policy itself, Adaptive Authority reduces ms from 0.687 without filtering to 0.415, a 39.6% reduction. 
+
+## 6 Limitations and Conclusion 
+
+HetGPS addresses a central tension in graph-coupled MARL: protecting shared constraints without erasing useful learned coordination. Across five CRE21 scales (200–3,218 EVs), Adaptive Authority reduces voltage violations while preserving departure service; against fixed authority, it im-proves mean reward on all five and lowers the mean safety score on four. Shared graph parameters also enable zero-shot transfer to larger topologies. Our evidence remains empirical: balanced power flow and 
+
+δm = 0 preclude a pointwise feasibility claim, and certi-fied deployment requires a validated model-error margin. Yet the learned-authority/physics-direction factorization ex-tends beyond EV charging to graph-coupled systems with tractable first-order action-to-constraint sensitivities: physics supplies corrective directions, while graph learning com-presses variable-size network state and assigns interven-tion authority. Candidate domains include coordinated in-verter/storage control, district heating, and water networks. Cross-domain validation and certified margins are important future work. These appendices provide the complete mathematical for-mulation, implementation and evaluation protocol, full ver-sions of the main-text result tables, and reproducibility de-tails. All reported controller comparisons use the operating configuration specified below. Primary learned results re-port the mean and sample standard deviation across three independent training runs, each evaluated on the same 100 reporting days. 
+
+## A Full Constrained Dec-POMDP and Information Assumptions 
+
+A.1 Tuple, global state, and transition 
+
+Let I = {1, . . . , N } denote EV agents, B physical buses, and Bmon ⊆ B the buses monitored by the controller. We write the finite-horizon constrained Dec-POMDP as 
+
+M =  I, S, {A i}i∈I , P, {O i}i∈I , Z, r 0,
+
+{gb}b∈B mon , p 0, γ, γ c, T . (9) Here T is the finite decision horizon; all reported episodes use T = 24 one-hour decisions. The exogenous process ξt
+
+contains the real-time electricity price, household demand, rooftop-PV generation, and EV arrival/departure events. One admissible global state is 
+
+xt = {qti , z ti , q tgt  
+
+> i
+
+, t dep  
+
+> i
+
+}Ni=1 , V t−1, ϑ t−1, ξ t, ζ t, (10) where qti is state of charge (SoC), zti is grid-connection avail-ability, and (V t−1, ϑ t−1) is the latest solved or measured network state. The cache ζt carries the finite histories and emitted boundary values used by the deterministic obser-vation map. The transition kernel combines the signed EV power map and SoC dynamics in Appendix B, balanced AC power flow, and an exogenous kernel pξ (ξt+1 | ξt). The ex-perimental simulator assumes the exogenous kernel is not causally affected by the charging action. The expectation in every return below is over p0, the exogenous process, the physical transition, and stochastic policy sampling. 
+
+A.2 Private observation and graph-mediated context 
+
+Let H be the history length and define 
+
+htρ = [ ρt, ρ t−1, . . . , ρ t−H+1 ]⊤,htℓ,i = [ ℓt−Hi , ℓ t−H+1  
+
+> i
+
+, . . . , ℓ t−1 
+
+> i
+
+]⊤,ht 
+
+> PV ,i
+
+= [ pPV ,t −Hi , p PV ,t −H+1  
+
+> i
+
+, . . . , p PV ,t −1 
+
+> i
+
+]⊤. (11) The price history includes the current price, whereas the load and PV histories end at the preceding sample. The private vector available to EV i is 
+
+sti = qobs ,t i , z obs ,t i , ¯t, q tgt  
+
+> i
+
+, ¯tdep  
+
+> i
+
+,
+
+(htρ)⊤, (htℓ,i )⊤, (ht
+
+> PV ,i
+
+)⊤⊤ ∈ R5+3 H , (12) where ¯t = t/T , ¯tdep  
+
+> i
+
+= tdep  
+
+> i
+
+/T , and ρt is the real-time price. The normalized time index is needed because a reactive pol-icy otherwise cannot distinguish equal instantaneous mea-surements occurring at different positions in the daily price, load, PV, and mobility cycles. The formulation is parameter-ized by H rather than tied to a numerical input dimension; the reported implementation uses H = 24 .The evaluated checkpoints append four deterministic fea-sibility descriptors, 
+
+χti = [ sti, τ ti , δq ti , ρ ch  
+
+> i
+
+, ρ dis  
+
+> i
+
+]⊤ ∈ R81 ,τ ti = ( tdep  
+
+> i
+
+− t)+/24 ,δq ti = ( qtgt  
+
+> i
+
+− qobs ,t i )+,ρch  
+
+> i
+
+= P ch ,max  
+
+> i
+
+/(10 kW) ,ρdis  
+
+> i
+
+= |P dis ,max  
+
+> i
+
+|/(10 kW) .
+
+(13) They are deterministic transforms of the current local state and static charger ratings; they introduce no other house-hold’s private state or future trajectory. The graph encoder receives operator-side bus measurements and public feeder parameters defined in Appendix C. It returns an electrical context cti ∈ R16 for the serving bus of agent i. The evalu-ated policy observation is 
+
+oti = [ χti ∥ cti] ∈ R97 , ati ∼ πi(· | oti). (14) With ζt included in Eq. (10), the observation model is the deterministic map oti = Zi(xt) collecting Eqs. (12)–(14). Its observation kernel is therefore the Dirac kernel 
+
+Zi(o | x) = δZi(x)(o), Z = {Z i}i∈I . (15) The policy is reactive because the finite histories are explicit in sti and χti is a deterministic current-state augmentation. Nothing in the Dec-POMDP requires parameter sharing. The proposed method sets πi = πθ for all EVs as a scalable architectural choice, while different private states and graph contexts still produce different actions. The information assumptions are therefore: 
+
+• a charger uses only its own SoC, availability, ser-vice target, departure time, charger ratings, and local price/load/PV history; 
+
+• the graph path uses feeder topology and bus-level volt-age/power measurements available to the network opera-tor; 
+
+• other households’ SoCs and departure schedules are not concatenated into an agent observation; and 
+
+• AC post-action voltages are training labels and evaluation measurements, not raw-candidate oracle calls made by the deployment filter. Action selection is therefore operator-mediated and information-local: the operator constructs graph context from feeder-side information, while each charger combines that context only with its own private state. This is not fully lo-cal decentralized execution. It avoids directly exposing one household’s raw EV state to another household, but is not a formal privacy guarantee. 
+
+A.3 Expected-cost constraints, shaping, and service 
+
+For bus b, define the nonnegative voltage-exceedance cost 
+
+gtb = [ V min − V tb ]2+ + [ V tb − V max ]2+. (16) The formal cooperative objective is 
+
+max  
+
+> π
+
+JR(π) = Eτ ∼pπ
+
+"T −1X
+
+> t=0
+
+γtNX
+
+> i=1
+
+rti, 0
+
+#
+
+, (17a) 
+
+s.t. JC,b (π) = Eτ ∼pπ
+
+"T −1X
+
+> t=0
+
+γtcgtb
+
+#
+
+≤ ϵb, b ∈ B mon .
+
+(17b) This is an expected cumulative-cost constraint, not the as-sertion V tb ∈ [V min , V max ] for every stochastic realiza-tion. Charger ratings, availability masks, and battery-energy bounds are transition feasibility conditions. Departure readi-ness remains a service objective: late arrival or low arrival SoC can make a pointwise departure target physically infea-sible. A fixed voltage-related reward signal may be used for learning, and an adaptive multiplier may act on a voltage-cost critic. They are not a second and third copy of a hard volt-age constraint. Appendix D separates the task reward, fixed shaping, cost-critic label, and evaluation metric. In particu-lar, the bus–step violation rate and ms are descriptive evalu-ation metrics; they are not optimized again inside Eq. (17). Equation (17) is the normative cooperative objective. The implemented learner uses parameter-shared mean-field re-ward and voltage-cost critics, conditioned on each agent’s private observation, graph context, and the fleet mean and standard deviation of raw action proposals, as a scalable ap-proximation to this team problem. Mapping each bus cost to its attached agents yields a parameter-shared mean-field learning approximation; it is not an exact centralized opti-mizer of Eq. (17) and does not by itself certify that every expected-cost constraint is met. 
+
+## B Signed EV Dynamics and Balanced AC Power Flow 
+
+B.1 Experimental signed-power surrogate 
+
+The reported experiments use ∆t = 1 hour and a demand-positive signed simulator power. With action ati ∈ [−1, 1] ,availability zti ∈ { 0, 1}, SoC qti ∈ [0 , 1] , and ηcmd = 0 .90 ,define 
+
+¯P ti =
+
+
+
+min 
+
+
+
+P ch ,rate  
+
+> i
+
+, (1 − qti )Ecap 
+
+> i
+
+∆t
+
+
+
+, ati ≥ 0,
+
+min 
+
+
+
+P dis ,rate  
+
+> i
+
+, qti Ecap 
+
+> i
+
+∆t
+
+
+
+, ati < 0,
+
+(18) and 
+
+P sim ,t i = zti ηcmd ati ¯P ti , qt+1  
+
+> i
+
+= qti + P sim ,t i ∆tEcap 
+
+> i
+
+. (19) Writing ∆t explicitly keeps the power and energy units clear; its numerical value is one in all reported experiments. The same P sim ,t i enters the demand-positive AC load and the SoC increment. Thus ηcmd is modeled as a symmet-ric command-to-power derating shared by every compared method; direction-dependent conversion losses are outside the present scope. A loss-aware extension with grid-side power P EV ,t i would instead use ηch  
+
+> i
+
+P EV ,t i while charging and P EV ,t i /η dis  
+
+> i
+
+while discharging in the SoC increment. Here the two coefficients are one-way efficiencies; if equal, the corresponding round-trip efficiency is η2 
+
+> i
+
+(Shafie-Khah et al. 2018). 
+
+B.2 Injection convention and network equations 
+
+We use the generator convention: positive P inj ,t b and Qinj ,t b
+
+inject power into the network. Let Ib = {i : bi = b} be households/EVs attached to bus b and define ℓti = P load ,t i +
+
+P sim ,t i − P PV ,t i . The implemented power-flow update is 
+
+P inj ,t b = − X
+
+> i∈I b
+
+ℓti, (20) 
+
+Qinj ,t b = − tan(arccos 0 .95) X
+
+> i∈I b
+
+[ℓti]+, (21) Thus positive household net demand, including EV power after netting local PV, is assigned power factor 0.95; a net-exporting household is represented as a unity-power-factor static generator. The simulator does not separately assign reactive power to base load, PV, and the EV. Charging reduces net injection; V2G discharge increases it. This convention is consistent with the balanced AC equations 
+
+P inj ,t b = V tb
+
+X
+
+> k∈B
+
+V tk
+
+ Gbk cos θtbk + Bbk sin θtbk 
+
+ , (22) 
+
+Qinj ,t b = V tb
+
+X
+
+> k∈B
+
+V tk
+
+ Gbk sin θtbk − Bbk cos θtbk 
+
+ , (23) for Y = G + j B and θtbk = θtb − θtk. Pandapower com-putes the AC operating points used for training labels and evaluation (Thurner et al. 2018). We use the operating band [0 .95 , 1.05] p.u. The model is a balanced positive-sequence equivalent: powers are three-phase aggregates, and the study does not resolve phase imbal-ance, neutral-conductor effects, or phase-specific customer voltages. Line and transformer parameters enter the power flow, but ampacity and thermal limits are not control con-straints. All safety statements must therefore be scoped to the reported positive-sequence voltage metric and monitored buses. 
+
+## C Heterogeneous Graph Features and Architecture 
+
+C.1 Node and relation types 
+
+The learning graph augments the electrical feeder with EV-agent nodes: 
+
+Gt = ( Vbus ∪ V EV , Eelec ∪ E attach ). (24) Electrical edges connect bus nodes and represent either a distribution line or a transformer connection. Attachment edges connect each EV to exactly one serving bus; several EVs may share a bus. Hence only the attachment subgraph is bipartite between bus and EV nodes. The full heterogeneous graph is not itself described as a bipartite electrical network because bus–bus electrical edges are also present. Figure 6: Full-network visualization of the heterogeneous graph extracted from two representative transformer areas of the CRE21 MV/LV network. The learning graph con-tains two node types (bus and EV-agent) and two relation types (electrical and attachment). Bus colours encode phys-ical roles—MV busbar (red), LV busbar (orange), customer bus (blue), and intermediate bus (grey)—rather than addi-tional node types. Line and transformer colours are physical roles within the electrical relation and are distinguished by 
+
+Itype in the edge feature. Green squares are EV agents, and dashed edges are constant-feature attachments. All experi-ments use the complete graph of the corresponding scenario. Figure 6 visualizes the complete heterogeneous graph for two representative CRE21 transformer areas. At decision step t, define the fixed-scale net-load and previous-EV features 
+
+¯vb,t −1 = clip 
+
+ Vb,t −1 − 10.05 , −2, 2
+
+
+
+, (25) 
+
+¯pnet  
+
+> b,t
+
+= X
+
+> i:bi=b
+
+P load  
+
+> i,t
+
+− P PV 
+
+> i,t
+
+10 kW , (26) 
+
+¯pEV  
+
+> b,t −1
+
+= X
+
+> i:bi=b
+
+P sim 
+
+> i,t −1
+
+P rate 
+
+> i
+
+. (27) The exact bus feature interface is 
+
+xbus  
+
+> b,t
+
+=
+
+
+
+¯vb,t −1, ¯pnet  
+
+> b,t
+
+, 0.33¯ pnet  
+
+> b,t
+
+, ¯pEV 
+
+> b,t −1
+
+, t
+
+24 
+
+⊤
+
+, (28) 
+
+xEV  
+
+> i,t
+
+= χti ∈ R9+3 H , (29) 
+
+eelec  
+
+> bk
+
+= [ Lbk , R bk , X bk , I type  
+
+> bk
+
+]⊤, (30) 
+
+eattach  
+
+> ib i
+
+= [1] ⊤. (31) The second coordinate uses a demand-positive convention, distinct from the generator convention in Eq. (20). The third coordinate is the fixed proxy 0.33¯ pnet , including its sign under net PV export; it is not the AC solver’s reactive-power injection. Previous EV power is normalized agent by agent by rated power before bus aggregation. For the slack node (MV_Busbar or bus 0), the voltage coordinate is set to zero and the three power coordinates are replaced by their mean over all non-slack buses. The type indicator is zero for a line and one for a transformer within the same electrical relation; it does not encode an attachment edge. Equation (31) separately defines the constant attachment feature. Equation (13) gives the four feasibility descriptors used by every reported HetGPS checkpoint. With H = 24 , the EV node has 81 coordinates and the actor receives 97 after concatenating its 16-dimensional graph context. 
+
+C.2 Bus encoder, EV readout, and shared actor 
+
+Bus features are projected to d dimensions and updated by L
+
+edge-aware message-passing layers, 
+
+hℓ+1  
+
+> b
+
+= Φ ℓ
+
+ hℓb, {(hℓk, e elec  
+
+> kb
+
+) : k ∈ N (b)} . (32) The large-feeder implementation uses the memory-efficient local-GPS path: the global token is refreshed by a graph-level mean summary rather than quadratic all-bus attention. The reported settings are d = 64 , L = 2 , and four heads in modules where multi-head attention is active. For EV i, cross-attention reads its serving-bus embedding, selected local neighbors, and a graph summary using the private vector as query: 
+
+hEV ,t i = fread (χti, h tbi , {htb : b ∈ N (bi)}, h t
+
+> glob
+
+). (33) Two learned projections form graph context cti =[WEV hEV ,t i ∥Wbhtbi ]. The same Gaussian actor maps [χti∥cti]
+
+to every agent’s action distribution. Shared parameters make model size independent of N ; they do not constrain the topology size, and transfer is evaluated separately. Train-ing samples from the tanh-squashed Gaussian policy. All reported policy evaluations instead use its deterministic ac-tion ati = tanh( μθ (oti)) , so filter comparisons do not include additional action-sampling noise. 
+
+C.3 Action-conditioned voltage residual and risk aggregation 
+
+The frozen LinDistFlow matrix is constructed once for the evaluation topology: 
+
+[JLDF ]bi = −Rsens 
+
+> b,b i
+
+P rate  
+
+> i
+
+10 −3
+
+(V kV base )2 . (34) This gives a static, rated-power nominal sensitivity in action coordinates. For topology transfer, the nonlearned matrix is rebuilt from the target feeder rather than copied from the source checkpoint. For a candidate joint action a, a shared per-agent action encoder first embeds each proposal together with its agent representation. The resulting embeddings are sum-pooled at the agents’ serving buses and processed by the shared bus residual model; the learned input dimension therefore does not grow with the fleet. The residual head predicts 
+
+eV tb (a) = V t−1 
+
+> b, obs
+
++ [ JLDF a]b + brψ,b (Gt, a ). (35) The residual head is trained from actor proposals and the corresponding post-action AC voltage labels returned by the environment. Its pinball loss at τ = 0 .50 estimates a condi-tional median. The lower and upper heads use τ = 0 .05 and 
+
+0.95 , respectively. These auxiliary quantile outputs share the median head’s trunk; deployment uses the median only, and none of the three heads supplies the correction Jacobian. The reported adaptive scheduler computes risk at the agent–bus incidences, not at distinct buses. The unified eval-uation uses internal projection margin δm = 0 and fixed physics-gain scale β = 0 .31 . Define 
+
+ztb,ψ = [ V min + δm − eV tb (aRL )] +
+
++ [ eV tb (aRL ) − V max + δm]+,V tb, guard = V t−1 
+
+> b, obs
+
++ β[JLDF aRL ]b,ztb, guard = [ V min + δm − V tb, guard ]+
+
++ [ V tb, guard − V max + δm]+,rtψ = Q.95 {ztbi,ψ : i ∈ I} ,rt 
+
+> guard
+
+= Q.95 {ztbi,guard : i ∈ I} ,
+
+¯rt = max {rtψ , r t
+
+> guard
+
+}.
+
+(36) The operator Q.95 uses linear quantile interpolation. Because the set is indexed by agents, a serving bus is weighted by its attached EV count. This weighting is vacuous on CRE21, where each household forms its own bus and the agent-to-bus map is injective, so the incidence percentile equals the distinct-bus percentile; it binds only on the IEEE feeders, which attach 10–15 households per customer bus. The eval-uation metrics in Appendix E count each distinct EV-hosting bus once throughout. The intervention budget is the monotone map 
+
+∆t = ∆ min + (∆ max − ∆min ) clip 
+
+ ¯rt − rlow 
+
+rhigh − rlow 
+
+, 0, 1
+
+
+
+.
+
+(37) The unified evaluation uses (∆ min , ∆max ) = (0 .20 , 0.35) 
+
+and (rlow , r high ) = (0 .005 , 0.080) p.u. The same β-guard identifies the triggered agent–bus incidences, but neither the learned residual nor βJ LDF supplies the correction Jacobian. Let bV phys (aRL ) = V t−1obs + JLDF aRL . For every triggered lower-side agent–bus incidence at bus b, form cj = JLDF  
+
+> b, :
+
+and 
+
+hj = V min + δm − bV phys  
+
+> b
+
+; for an upper-side incidence, form 
+
+cj = −JLDF  
+
+> b, :
+
+and hj = bV phys  
+
+> b
+
+− (V max − δm). Repeated agents at one bus therefore retain the incidence weighting used by the risk aggregation. The deployed projected solver is a finite sequential-sweep operator. The reported experiments use the fixed Euclidean metric W = I. Let d(k) denote the correction after k
+
+complete sweeps; constraints update d in-place within each sweep. Define 
+
+ℓi,t = max {− 1 − aRL  
+
+> i,t
+
+, −∆t},ui,t = min {1 − aRL  
+
+> i,t
+
+, ∆t},d(0) = 0 ,gj (d) = [hj − c⊤ 
+
+> j
+
+d]+
+
+c⊤ 
+
+> j
+
+W −1cj
+
+,d ← proj [ℓt,u t](d + gj (d)W −1cj ),aproj  
+
+> t
+
+= clip( aRL  
+
+> t
+
++ d(Kproj ), −1, 1) .
+
+(38) Here proj [ℓt,u t] is componentwise box projection. Con-straints are sorted by initial deficit and Kproj = 10 sequen-tial sweeps are used. When box clipping blocks a weighted update, remaining one-sided authority is allocated in de-scending sensitivity-gain order. The procedure computes the minimum weighted-norm correction for one unclipped half-space at a time, but is not an exact joint QP solver and may return a partial action with nonzero residual. Availability and SoC are handled by the physical action-to-power map and subsequent service guard. The action passed to the voltage filter and the command physically executed are distinct: 
+
+araw  
+
+> t
+
+= aRL  
+
+> t
+
+, aexec  
+
+> t
+
+= Gsvc (xt, a proj  
+
+> t
+
+). (39) No Filter uses aproj  
+
+> t
+
+= araw  
+
+> t
+
+but retains the same Gsvc . The matched fixed- and adaptive-authority arms share the same risk forward pass, physics guard, sensitivity model, projec-tion, and service map. They differ only in whether the trig-gered projection uses Eq. (37) or the constant ∆t = 0 .35 .The unified comparison is otherwise unchanged. 
+
+C.4 Directional monotonicity of the physics anchor 
+
+The correction geometry admits a simple sign property under the radial LinDistFlow approximation used to construct JLDF 
+
+(Baran and Wu 1989). 
+
+Proposition 1 (Voltage-corrective direction) Consider abalanced radial feeder with positive line resistances and the active-power LinDistFlow model used by the filter. Let pload 
+
+> i
+
+denote demand-positive power at the bus bi serving EV i,and let vb denote squared voltage magnitude. Then 
+
+∂v b
+
+∂p load 
+
+> i
+
+= −2 X
+
+> e∈P (b)∩P (bi)
+
+re ≤ 0, (40) 
+
+where P(b) is the root-to-b path. Because the implemented EV power map is nondecreasing in the normalized action, reducing charging or increasing discharge cannot decrease the LinDistFlow voltage at any bus whose root path overlaps that of the EV. The opposite action direction is therefore appropriate for an overvoltage. 
+
+Proof. For a radial feeder, LinDistFlow gives vb = v0 −
+
+2 P
+
+> e∈P (b)
+
+(rePe + xeQe). An incremental active load at bi
+
+appears in Pe exactly on the edges in P(bi), yielding Eq. (40). Every term in the shared-path sum is nonnegative. Away from action-map saturation, ∂p load  
+
+> i
+
+/∂a i ≥ 0; at saturation it is zero. The chain rule therefore gives ∂v b/∂a i ≤ 0. Thus a one-sided lower-voltage half-space update takes di ≤ 0,while a one-sided upper-voltage update takes di ≥ 0, for agents with nonzero shared-path sensitivity. □
+
+This proposition establishes the sign of the nominal cor-rection direction. It does not assert AC feasibility: finite projection sweeps, nonlinear losses, the service map, and balanced-model error can still leave residual voltage vio-lations. The empirical direction-fidelity diagnostic in Ap-pendix G.2 compares this first-order direction directly with AC counterfactual voltage changes. 
+
+## D Reward, SAC, Voltage Cost, and PID Multiplier 
+
+D.1 Task reward and unit conventions 
+
+The primary policy-training loop does not include the de-ployment voltage projection. Its action chain is 
+
+araw  
+
+> t
+
+= aRL  
+
+> t
+
+,aexec ,tr  
+
+> t
+
+= Gsvc (xt, a raw  
+
+> t
+
+),
+
+ rt
+
+> 0
+
+, V AC  
+
+> t
+
+, egt ← ACStep( xt, a exec ,tr  
+
+> t
+
+).
+
+(41) Replay stores the raw SAC proposal araw  
+
+> t
+
+, while the reward and voltage-cost label are generated after the service map and the ensuing post-action AC power-flow solve. Deployment inserts aproj  
+
+> t
+
+between araw  
+
+> t
+
+and Gsvc , as shown in Eq. (39). The primary CRE21 runs use the following exact reward decomposition: 
+
+rti, 0 = −sr
+
+ Cti,E + Cti,D + Cti,S + Cti,A 
+
+ − Cti,V . (42) The energy term uses real-time pricing, not a time-of-use tariff: 
+
+Cti,E = 10 ρt 
+
+P load ,t i + P sim ,t i − P PV ,t i
+
+
+
+∆t. (43) A first-order throughput degradation surrogate is 
+
+Cti,D = cdeg |P sim ,t i |∆t, (44) Here sr = 0 .1 in Eq. (42), and cdeg = 100 × 0.00015 = 0.015 : 100 is the configured battery replacement-cost scale and 0.00015 is the configured fractional wear-per-throughput factor. With the one-hour step, the resulting coefficient is 0.015 cost units/kWh. This is a linear training surrogate, not an electrochemical aging model; throughput surrogates are common in tractable EV/V2G scheduling (Ortega-Vazquez 2014; Farzin, Fotuhi-Firuzabad, and Moeini-Aghtaie 2016). For a connected EV, let dti = [ qtgt  
+
+> i
+
+− qt+1  
+
+> i
+
+]+, Hti, raw =max( tdep  
+
+> i
+
+−t, 0) , and Hti = max( Hti, raw , 1) . When Hti, raw >
+
+0, define 
+
+uti = dtiEcap 
+
+> i
+
+Hti, raw P ch ,rate  
+
+> i
+
+ηcmd , ϕ(u) = 
+
+u, u ≤ 1,
+
+2u − 1, u > 1.
+
+(45) The continuous and departure-event service costs are 
+
+Cti, cont =
+
+
+
+0, dti = 0 ,Ecap  
+
+> i
+
+(dti)2, dti > 0, H ti, raw ≤ 0,
+
+0.2Ecap  
+
+> i
+
+dtiϕ(uti), dti > 0, H ti, raw > 0,
+
+(46) 
+
+Cti, dep = 2 Ecap  
+
+> i
+
+(dti)21{t + 1 = tdep  
+
+> i
+
+}, (47) 
+
+Cti,S =
+
+
+
+10 + 10 0.001 + Hti
+
++ 20 dti
+
+  Cti, cont + Cti, dep 
+
+ .
+
+(48) Thus the implementation does not apply a departure penalty at every step; it does apply continuous readiness shaping before departure. This readiness term is not potential-based shaping; it is part of the optimized task reward. The remain-ing terms are 
+
+Cti,A = 45( areg ,t i )2, (49) 
+
+Cti,V = 100  [V min − V tbi ]2+ + [ V tbi − V max ]2+
+
+ . (50) The transformer-overload reward coefficient is zero in these runs. Here areg ,t i is the command seen by the sub-environment after any connected-EV clamp or emergency override. For a disconnected EV it remains the incoming projected command, so the regularizer can be nonzero even though the physical EV power is zero; it is therefore distinct from the diagnostic physical-command trace aexec ,t i , which zeros disconnected EVs. For a connected EV, the guard first replaces a by max( a, 0) only when Hti, raw ≤ 2 and qti < q tgt  
+
+> i
+
+.It then forces a = 1 when Hti, raw > 0 and 
+
+dpre ,t i Ecap  
+
+> i
+
+≥ 0.9Hti, raw P ch ,rate  
+
+> i
+
+ηcmd , (51) where dpre ,t i is the deficit before executing the current com-mand. Disconnected EV power is zeroed by the physical map. The guard is part of the executed action interface and must be included when interpreting departure success and action-conditioned diagnostic traces. The fixed voltage shaping signal is Cti,V in Eq. (50); it is already included in rti, 0 and is not subtracted a second time. Voltage labels are mapped from serving buses to agents. When the team loss averages over agents, a bus with sev-eral EVs consequently has several incidences unless explic-itly deduplicated. This incidence weighting must be distin-guished from the one-bus-one-count evaluation denominator. 
+
+D.2 Twin reward and voltage-cost critics 
+
+For raw fleet proposals, define the mean-field statistic 
+
+¯at = 1
+
+N
+
+> N
+
+X
+
+> k=1
+
+araw ,t k ,sta =
+
+vuut 1
+
+N
+
+> N
+
+X
+
+> k=1
+
+ araw ,t k − ¯at2,ωta = [¯ at, s ta]⊤.
+
+(52) For replay transition (oti, a raw ,t i , ω ta, r ti, 0, egti , o t+1  
+
+> i
+
+), define the unclipped twin-SAC reward target and its implemented floor by 
+
+eytR,i = rti, 0 + γ(1 − done ti)
+
+h
+
+min 
+
+> j=1 ,2
+
+¯QR,j (ot+1  
+
+> i
+
+, a ′
+
+> i
+
+, ω ′
+
+> a
+
+)
+
+− αent log πθ (a′ 
+
+> i
+
+| ot+1  
+
+> i
+
+)
+
+i
+
+, (53) 
+
+ytR,i = max {− 500 , eytR,i }, (54) with a′ 
+
+> i
+
+∼ πθ (· | ot+1  
+
+> i
+
+) and ω′ 
+
+> a
+
+formed from the correspond-ing fleet of next raw proposals. The cost target is 
+
+eytC,i = egti + γ(1 − done ti) min 
+
+> j=1 ,2
+
+¯QC,j (ot+1  
+
+> i
+
+, a ′
+
+> i
+
+, ω ′
+
+> a
+
+), (55) 
+
+ytC,i = min {50 , eytC,i }. (56) Thus the reported learner sets the formal cost discount γc =
+
+γ; the asymmetric floor/cap are numerical stabilizers. The critics minimize squared Bellman errors. The bus-level cost surrogate used by the current phase-2 learner is 
+
+egtb = 100 
+
+
+
+[V min − V t, AC  
+
+> b
+
+]2+ + [ V t, AC  
+
+> b
+
+− V max ]2+
+
+
+
++ 10[ V min + 0 .01 − V t, AC  
+
+> b
+
+]+
+
++ 10[ V t, AC  
+
+> b
+
+− (V max − 0.01)] +.
+
+(57) The replay label is egti = egtbi , evaluated from the instantaneous post-action AC voltage produced after the service-mapped training command. The proximity term supplies signal near the boundary. Because Eq. (57) is not identical to the for-mal cost in Eq. (16), the multiplier is best described as an adaptive training penalty for a voltage-cost surrogate, not as a numerical certificate that Eq. (17) has been solved to dual optimality. For sampled action ai ∼ πθ (· | oi), the evaluated 
+
+scale_all phase-2 actor loss has the form 
+
+Lπ = E[( ℓR,i + ℓC,i )/s Q], (58) 
+
+ℓR,i = αent log πθ (ai | oi) − min  
+
+> j
+
+QR,j (oi, a i, ω a), (59) 
+
+ℓC,i = βeλbi min  
+
+> j
+
+QC,j (oi, a i, ω a), (60) where sQ ≥ 1 is the moving reward-value scale. The imple-mentation computes βe = min {1, e/E ann }, and the evalu-ated checkpoints are past the saturation horizon. Graph fea-tures are detached in this actor update; the graph encoder and residual head receive their voltage-supervision loss. This keeps the actor conditioned on the electrical representation while preserving its supervised voltage objective. 
+
+D.3 Per-bus PID update 
+
+The PID does not average the magnitudes in Eq. (57). Its feedback is the per-bus episode event rate 
+
+bceb = 1
+
+TeTe−1X
+
+> t=0
+
+1{ege,t b > 0}, (61) where Te = 24 in the reported runs and ege,t b > 0 denotes either a hard voltage violation or entry into the 0.01 -p.u. proximity band in Eq. (57). Let eeb = bceb − clim . After the configured warm-up, the PID-style controller is 
+
+Ieb = clip( νI e−1 
+
+> b
+
++ KI eeb , −Imax , I max ), (62) 
+
+Deb = KD (eeb − ee−1 
+
+> b
+
+), (63) 
+
+λe+1  
+
+> b
+
+= clip( λeb + KP eeb + Ieb + Deb , λ min , λ max ). (64) The reported CRE21 graph runs use (KP , K I , K D ) =(0 .5, 0.01 , 0.05) , integral decay ν = 0.99 , Imax = 1,
+
+(λmin , λ max ) = (0 , 3) , clim = 0 .01 , and a 50-episode phase-2 warm-up. Adaptive cost-limit calibration is disabled. The fixed voltage reward term Cti,V and the adaptive bus multi-plier λb have different roles. Neither converts the deployment filter into an almost-sure safe controller. 
+
+## E Evaluation Metrics and Complete Results 
+
+E.1 Metrics and denominator 
+
+Let BEV ,e be the distinct physical buses serving at least one EV in episode e. Define 
+
+de,t,b = [ V min − Ve,t,b ]+ + [ Ve,t,b − V max ]+. (65) The aggregate bus–step violation rate is 
+
+rviol =
+
+P
+
+> e
+
+PTe−1
+
+> t=0
+
+P 
+
+> b∈B EV ,e
+
+1{de,t,b > 0}
+
+P 
+
+> e
+
+Te|B EV ,e | . (66) Each serving bus is counted once per hour, irrespective of EV multiplicity. The per-episode safety score is 
+
+ms,e = 1
+
+TeTe−1X
+
+> t=0
+
+1{max  
+
+> b
+
+de,t,b > 0}+ max t,b de,t,b 
+
+V max − V min , (67) and reported ms is the arithmetic mean over episodes. Strict exceedance is used; an exact boundary value is not counted. These definitions monitor distinct EV-hosting buses, not ev-ery graph node and not agent–bus incidences. Departure suc-cess is counted when the departure SoC plus an absolute tol-erance of 0.10 reaches the requested target; it is not an exact-target indicator. The 100 reporting episodes are run in sched-uler order, with battery SoC carried from one episode reset to the next after initialization. Successive days are therefore statefully linked. All compared arms use the same ordered days, and each learned run is first averaged over those days before the mean and sample standard deviation are computed across the three independent runs. 
+
+E.2 Complete backbone results 
+
+Table 2 expands the main-text comparison with departure-success results. 
+
+E.3 Detailed authority-filter results 
+
+Table 3 reports the exact operating points used by the main reward–safety analysis. The backbone and authority comparisons use the same feeder scales, exogenous profiles, EV fleet, action and ser-vice maps, and 100-day reporting set. They answer different controlled questions and use their respective three-run policy cohorts; consequently, the HetGPS backbone row and the No Filter authority row are not the same checkpoint realization. Within every authority-comparison run, however, the policy is held fixed and only the deployment filter changes. Scenario Method Reward/EV ↑ Viol. (%) ↓ ms ↓ Dep. (%) ↑
+
+CRE21 K=1 HetGPS −100 .31 ± 2.60 0.043 ± 0.033 0.015 ± 0.010 99 .85 ± 0.05 
+
+ISAC −104 .42 ± 1.08 0.001 ± 0.001 0.001 ± 0.001 97 .09 ± 1.92 
+
+MADDPG −138 .90 ± 25 .36 0.103 ± 0.002 0.030 ± 0.001 100 .00 ± 0.01 
+
+C-SAC −353 .67 ± 17 .96 0.000 ± 0.000 0.000 ± 0.000 79 .94 ± 1.50 
+
+PI-LP −135 .46 1.409 0.133 100 .00 
+
+CRE21 K=4 HetGPS −103 .51 ± 1.20 0.058 ± 0.012 0.059 ± 0.007 100 .00 ± 0.01 
+
+ISAC −108 .38 ± 2.11 0.017 ± 0.002 0.019 ± 0.002 99 .47 ± 0.77 
+
+MADDPG −115 .04 ± 4.21 0.133 ± 0.002 0.105 ± 0.001 100 .00 ± 0.00 
+
+C-SAC −382 .75 ± 15 .81 0.000 ± 0.000 0.000 ± 0.000 78 .41 ± 0.86 
+
+PI-LP −136 .31 1.288 0.184 100 .00 
+
+CRE21 K=8 HetGPS −103 .62 ± 2.63 0.019 ± 0.010 0.033 ± 0.014 99 .89 ± 0.19 
+
+ISAC −121 .89 ± 3.14 0.002 ± 0.002 0.005 ± 0.005 100 .00 ± 0.00 
+
+MADDPG −126 .76 ± 23 .53 0.083 ± 0.005 0.096 ± 0.004 99 .79 ± 0.36 
+
+C-SAC −383 .91 ± 2.29 0.000 ± 0.000 0.000 ± 0.000 78 .06 ± 0.34 
+
+PI-LP −136 .88 1.171 0.183 100 .00 
+
+CRE21 K=16 HetGPS −107 .22 ± 5.43 0.007 ± 0.012 0.020 ± 0.032 99 .87 ± 0.22 
+
+ISAC −127 .33 ± 6.49 0.005 ± 0.006 0.016 ± 0.020 100 .00 ± 0.00 
+
+MADDPG −136 .31 ± 30 .35 0.072 ± 0.020 0.109 ± 0.015 99 .99 ± 0.02 
+
+C-SAC −389 .18 ± 7.60 0.000 ± 0.000 0.000 ± 0.000 77 .60 ± 0.87 
+
+PI-LP −136 .85 1.137 0.204 100 .00 
+
+CRE21 K=32 HetGPS −108 .45 ± 8.21 0.001 ± 0.001 0.003 ± 0.003 99 .89 ± 0.12 
+
+ISAC −126 .78 ± 4.97 0.002 ± 0.002 0.012 ± 0.014 100 .00 ± 0.00 
+
+MADDPG −153 .99 ± 0.02 0.061 ± 0.001 0.122 ± 0.001 100 .00 ± 0.00 
+
+C-SAC −389 .56 ± 4.51 0.000 ± 0.000 0.000 ± 0.000 77 .92 ± 0.75 
+
+PI-LP −137 .69 1.010 0.201 100 .00 
+
+IEEE13 HetGPS −190 .65 ± 0.01 0.000 ± 0.000 0.000 ± 0.000 100 .00 ± 0.00 
+
+ISAC −213 .91 ± 5.11 0.000 ± 0.000 0.000 ± 0.000 100 .00 ± 0.00 
+
+MADDPG −189 .80 ± 0.01 0.000 ± 0.000 0.000 ± 0.000 100 .00 ± 0.00 
+
+C-SAC −1874 .91 ± 128 .20 0.000 ± 0.000 0.000 ± 0.000 74 .46 ± 2.09 
+
+PI-LP −592 .47 0.125 0.017 100 .00 
+
+IEEE33 HetGPS −191 .29 ± 0.07 3.529 ± 0.001 0.441 ± 0.001 100 .00 ± 0.00 
+
+ISAC −214 .20 ± 2.14 3.646 ± 0.019 0.425 ± 0.003 100 .00 ± 0.00 
+
+MADDPG −192 .06 ± 0.04 3.650 ± 0.001 0.441 ± 0.001 100 .00 ± 0.00 
+
+C-SAC −2014 .02 ± 75 .71 0.227 ± 0.063 0.039 ± 0.011 72 .23 ± 1.37 
+
+PI-LP −479 .94 3.814 0.336 100 .00 
+
+IEEE69 HetGPS −188 .75 ± 0.01 0.320 ± 0.001 0.065 ± 0.001 100 .00 ± 0.00 
+
+ISAC −219 .68 ± 2.81 0.409 ± 0.003 0.050 ± 0.001 100 .00 ± 0.00 
+
+MADDPG −189 .63 ± 0.07 0.410 ± 0.000 0.065 ± 0.001 100 .00 ± 0.00 
+
+C-SAC −2029 .39 ± 43 .36 0.000 ± 0.000 0.000 ± 0.000 72 .66 ± 0.26 
+
+PI-LP −570 .14 2.101 0.197 100 .00 
+
+Table 2: Complete backbone and PI-LP comparison. Each learned run is first averaged over the same 100 reporting days; entries then report mean ± sample standard deviation across three training runs. PI-LP is deterministic. Bold marks the best reward or safety value among controllers with at least 95% departure success. 
+
+E.4 Learned-Direction Ablations 
+
+The learned-authority/physical-direction split was selected empirically rather than imposed a priori. We also tested a learned-surrogate-gradient path in which the graph voltage model selected both correction direction and magnitude, and a residual-Jacobian path in which the learned model aug-mented the physical sensitivity, 
+
+bJψ = JLDF + ∂brψ
+
+∂a . (68) The comparison matches the action box and per-action cap across the two projection implementations so that directional quality is not confounded by a larger intervention budget. The directional audit used finite-difference AC power-flow derivatives for 480 sampled action columns at each of three line-impedance multipliers. The median cosine similarity with the AC direction was 0.996 –0.999 for JLDF , compared with 0.775 –0.988 for bJψ . The corresponding median col-umn errors were 0.00440 –0.04366 and 0.00714 –0.04350 ,respectively. Thus, the residual Jacobian did not consistently improve either directional alignment or magnitude error. The paired closed-loop diagnostic below uses the same CRE21 K1 operating configuration and 100 reporting days. At each cap, both paths share the policy checkpoint, day order, action box, and maximum per-action deviation. The learned direction preserves more reward but leaves more violations at all three caps, so it does not give a consistent reward–safety advantage over the physics direction. Together with the AC derivative audit, this supports using graph learn-ing to schedule intervention authority while retaining feeder physics for the correction direction. Scenario Configuration Reward/EV Viol. (%) ms Dep. (%) CRE21 K = 1 No Filter −85 .58 ± 2.73 7.739 ± 0.687 0.591 ± 0.048 99 .80 ± 0.06                                                                                                                                                                                                                                                                                                                                        
+
+> CRE21 K= 1 Fixed Authority −99 .46 ±3.67 2.676 ±1.144 0.253 ±0.063 99 .20 ±0.11
+> CRE21 K= 1 Adaptive Authority −95 .57 ±3.03 3.438 ±1.194 0.281 ±0.062 99 .35 ±0.11
+> CRE21 K= 4 No Filter −88 .25 ±1.25 6.945 ±0.216 0.710 ±0.018 100 .00 ±0.00
+> CRE21 K= 4 Fixed Authority −101 .78 ±0.29 1.937 ±0.264 0.375 ±0.013 99 .92 ±0.07
+> CRE21 K= 4 Adaptive Authority −101 .18 ±0.49 1.949 ±0.302 0.372 ±0.016 99 .93 ±0.08
+> CRE21 K= 8 No Filter −87 .70 ±2.52 6.383 ±0.261 0.670 ±0.017 99 .80 ±0.34
+> CRE21 K= 8 Fixed Authority −101 .11 ±1.58 1.513 ±0.263 0.339 ±0.008 99 .10 ±1.44
+> CRE21 K= 8 Adaptive Authority −101 .09 ±1.58 1.498 ±0.280 0.332 ±0.016 99 .10 ±1.44
+> CRE21 K= 16 No Filter −91 .10 ±8.19 5.027 ±0.497 0.639 ±0.051 99 .78 ±0.38
+> CRE21 K= 16 Fixed Authority −109 .25 ±3.83 0.798 ±0.773 0.354 ±0.059 99 .06 ±1.62
+> CRE21 K= 16 Adaptive Authority −106 .32 ±2.89 0.885 ±0.710 0.346 ±0.067 99 .06 ±1.62
+> CRE21 K= 32 No Filter −89 .16 ±5.32 3.926 ±0.918 0.554 ±0.092 99 .73 ±0.26
+> CRE21 K= 32 Fixed Authority −109 .81 ±6.59 0.980 ±0.956 0.428 ±0.085 98 .93 ±1.08
+> CRE21 K= 32 Adaptive Authority −107 .87 ±6.93 0.516 ±0.225 0.364 ±0.056 99 .12 ±0.85
+> IEEE13 No Filter −190 .50 ±0.01 0.000 ±0.000 0.000 ±0.000 100 .00 ±0.00
+> IEEE13 Fixed Authority −190 .50 ±0.01 0.000 ±0.000 0.000 ±0.000 100 .00 ±0.00
+> IEEE13 Adaptive Authority −190 .50 ±0.01 0.000 ±0.000 0.000 ±0.000 100 .00 ±0.00
+> IEEE33 No Filter −192 .07 ±0.07 3.604 ±0.001 0.430 ±0.001 100 .00 ±0.00
+> IEEE33 Fixed Authority −298 .32 ±0.13 1.888 ±0.003 0.223 ±0.001 100 .00 ±0.00
+> IEEE33 Adaptive Authority −293 .74 ±1.22 1.868 ±0.004 0.220 ±0.001 100 .00 ±0.00
+> IEEE69 No Filter −189 .67 ±0.07 0.414 ±0.000 0.065 ±0.001 100 .00 ±0.00
+> IEEE69 Fixed Authority −260 .36 ±0.09 0.028 ±0.001 0.004 ±0.001 100 .00 ±0.00
+> IEEE69 Adaptive Authority −253 .37 ±10 .29 0.014 ±0.013 0.002 ±0.002 100 .00 ±0.00
+
+Table 3: Complete matched authority-filter results. Each run is first averaged over the same 100 reporting days; entries then report mean ± sample standard deviation across three independently trained runs. The three filter arms use the same trained policy within each run. 
+
+Cap Reward/EV ↑ Viol. (%) ↓
+
+Physics Learned Physics Learned 
+
+0.2 −98 .43 −85 .26 3.81 6.78 0.3 −113 .66 −86 .16 1.58 7.10 0.5 −151 .92 −116 .32 0.01 0.28 
+
+Table 4: Equal-cap learned-direction diagnostic. “Physics” uses JLDF ; “Learned” uses bJψ .
+
+E.5 Per-scenario feeder configuration 
+
+Table 5 lists the feeder settings behind every evaluated sce-nario. All scales multiply the corresponding quantity of the published network, so a value of 1.0 leaves it untouched. Full EV participation, rather than any of these scales, is what drives the voltage excursions: each household hosts an EV whose charging power exceeds its residential base load by roughly an order of magnitude. The scales retune the feeder around that fleet. Raising transformer capacity keeps thermal limits from binding before voltage; reducing base load and line impedance on the nested CRE21 feeders keeps violations material without making them unrecoverable, since those long low-voltage cables would otherwise collapse under full participation. The two smaller IEEE feeders are evaluated unmodified, and the elevated PV scale on the IEEE networks 
+
+Scenario Tx cap. PV Load Impedance CRE21 K1–K32 4.0 1.0 0.7 0.3 IEEE13, IEEE33 1.0 3.0 1.0 1.0 IEEE69 10.0 3.0 0.8 0.4 
+
+Table 5: Feeder scales used throughout the backbone, authority-filter, and transfer experiments, as multipliers of the published networks. EV participation is full in every sce-nario. IEEE feeders draw 10–15 households per customer bus with assignment seed 42. admits reverse-flow overvoltage in addition to undervoltage. The optimization reference is a perfect-information, V2G-enabled PI-LP with a linearized voltage model and soft volt-age slack. It enforces its own SoC and departure constraints but is neither an AC-feasible oracle nor a reward upper bound. Across CRE21 K1–K32 its reward/EV ranges from −137 .69 
+
+to −135 .46 , bus–step violation rate from 1.010% to 1.409%, and ms from 0.133 to 0.204, with 100% departure success. Because it uses full-day future profiles, it is an optimiza-tion feasibility reference rather than an information-matched online baseline. Learned path Parameters K1 Parameters K32 Proposed: deployed 383,702 383,702 Proposed: training 669,659 669,659 Centralized: actor 4,111,248 65,153,316 Centralized: training 12,231,058 193,799,974 
+
+Table 6: Matched parameter accounting at 200 and 3218 EVs. Proposed deployment counts the graph encoder/projections, actor, and active residual risk head; the training row addition-ally counts reward/cost critics and the trained counterfactual auxiliary head. Centralized rows use the corresponding ac-tor and actor-plus-twin-critic scopes. Frozen targets, SAC temperature, PID state, and nonlearned topology buffers are excluded. 
+
+E.6 Parameter and wall-clock accounting 
+
+This table compares learned parameters, not total deploy-ment memory. At K=32, the nonlearned dense LinDistFlow sensitivity has shape 6375 × 3218 (20,514,750 entries), ap-proximately 82 MB as float32, and its storage scales with the product of buses and agents. Sparse or feeder-local sensitiv-ities are therefore a natural direction for scaling beyond the reported network. The reported simulated timing measurements show 13– 390 ms additional wall-clock per hourly decision for fixed-authority filtering across the eight CRE21/IEEE scenarios (3.7–8.6% relative to the corresponding no-filter evaluation loop). The isolated percentile/guard/authority rule costs only aggregation and a scalar map after the common trigger; no separate micro-timing result is reported for this scalar rule. Timing is descriptive of the recorded software/hardware stack, not an algorithmic complexity theorem. The fixed and adaptive configurations use the same residual output and pro-jection; adaptive authority adds only incidence-risk aggrega-tion and a scalar map, but no second residual-head evaluation or raw-candidate pandapower solve. 
+
+## F Reproducibility Details 
+
+F.1 Software, data, and deterministic assignments 
+
+The reported implementation uses Python 3.10.14, PyTorch 2.1.1+cu121, PyTorch Geometric 2.4.0, pandapower 2.14.10, NumPy 1.26.4, SciPy 1.13.1, CVXPY 1.7.3, and CasADi 3.7.2. Every episode has 24 one-hour steps. Residential load/PV profiles, AEMO real-time prices, and VISTA-style trip records follow Ratnam et al. (2017), Australian Energy Market Operator (2023), and Department of Transport and Planning, Victoria (2020). The heterogeneous EV fleet is generated once with seed 2024: 40 kWh/7.4 kW (30%), 58 kWh/11 kW (40%), and 77 kWh/22 kW (30%). IEEE house-hold assignment uses seed 42. The day scheduler allocates 240 of 365 days to source-policy learning, 25 to the K32 few-shot topology-transfer adaptation block, and 100 to final evaluation. In a 100-day evaluation rollout, resets advance the scheduled day and mobility variables while retaining the preceding battery SoC after the first episode. 
+
+F.2 Protocol records 
+
+For every reported comparison, the experiment record in-cludes: 1. the exact command, code revision, checkpoint hash, topology list, data split, training seed, fleet seed, and household-assignment seed; 2. architecture compatibility between training and evalua-tion (embedding 64, four heads, two bus layers, shared parameters, simplified bus graph, MV busbar, GNN-Lite, and the global-attention setting); 3. the feature-mode input dimension and the action/SoC in-variant tests identified in Appendices B and C; 4. the denominator definition based on distinct monitored EV-hosting buses for Eq. (66), including the count for each topology; 5. the exact reward decomposition and units, including con-tinuous service shaping, action regularization, and degra-dation coefficient; 6. three aligned 100-day evaluation vectors, one per in-dependent run, across no-filter, fixed-authority, and adaptive-authority modes; and 7. the compute environment and anonymized reporting metadata. The experimental network is a balanced model and the online simulation uses cached previous-step voltage feed-back. A real deployment would require a measurement/state-estimation interface and would not query pandapower for the raw candidate action. 
+
+## G Topology Transfer and Physics Diagnostics 
+
+G.1 Zero-shot and few-shot protocol 
+
+The transfer source is the K8 source checkpoint trained with 1236 EVs. Zero-shot loading copies learned tensors but pre-serves target-topology buffers: the target electrical edge in-dex/attributes, attachment map, household-to-bus map, and LinDistFlow Jacobian are constructed from the target feeder and are not overwritten by the source checkpoint. A suc-cessful state-dictionary load is necessary but not sufficient evidence of transfer. The fixed evaluation targets are: 
+
+• K8 →K16 and K8 →K32 under the source-matched CRE21 source operating regime, isolating nested topol-ogy/fleet scale; 
+
+• K8 →IEEE33 under the IEEE target regime, an intention-ally harder topology plus operating-distribution shift; and 
+
+• K8 →K32 adaptation for exactly 25 target training episodes, initialized from the transferable weights of the same source checkpoint, with fresh optimizer and replay state and reset target-topology dual state. For each target, evaluate no filter and adaptive authority on the identical 100 held-out evaluation days. Only the K32 few-shot arm updates its weights on the separate 25-day adapta-tion block; these days do not enter the reported evaluation means. Report reward/EV, bus–step violation rate, ms, depar-ture success, strict transferable-tensor loading success with Target Adapt. Filter R/EV Viol. ms Dep. K16 ZS NF −90 .57 5.80 .678 100.00 K16 ZS AA −106 .29 .75 .324 99.99 K32 ZS NF −90 .78 5.17 .676 100.00 K32 ZS AA −105 .38 .57 .338 100.00 K32 25E NF −91 .41 5.38 .687 100.00 K32 25E AA −97 .45 2.04 .415 100.00 IEEE33 ZS NF −289 .25 3.57 .422 100.00 IEEE33 ZS AA −392 .89 1.64 .205 100.00 
+
+Table 7: K8-source topology transfer over 100 reporting days. Reward is per EV; violation and departure values are percent-ages. target buffers preserved, and wall-clock. The target-trained checkpoint is a reference, not part of zero-shot adaptation. Few-shot budgets count target environment episodes, not gra-dient steps. During the 25 target episodes, periodic evaluation and validation-based model selection are disabled; the pre-determined final iterate is evaluated. The reported intervals summarize paired-day variation for one source initialization. In Table 7, ZS denotes zero-shot transfer, 25E denotes 25 target-training episodes, and NF/AA denote No Filter and Adaptive Authority, respectively. Zero-shot K16 and K32 closely track the corresponding target-trained adaptive operating points: violation/ ms are .75%/.324 versus .94%/.347 on K16 and .57%/.338 versus .51%/.305 on K32. The cross-family IEEE33 transfer re-mains safe but incurs a larger reward penalty. On K32, 25 adaptation episodes move the policy toward higher reward and a less conservative safety operating point. 
+
+G.2 AC validation of the physical direction 
+
+The direction-fidelity analysis compares the voltage change predicted by the nominal physical anchor with the AC coun-terfactual change caused by the same EV actions. For each evaluated hour, define 
+
+∆V LDF  
+
+> t
+
+= JLDF aexec  
+
+> t
+
+,
+
+∆V AC  
+
+> t
+
+= V AC  
+
+> t
+
+(aexec  
+
+> t
+
+) − V AC  
+
+> t
+
+(0) ,st = (∆ V LDF  
+
+> t
+
+)⊤∆V AC 
+
+> t
+
+∥∆V LDF  
+
+> t
+
+∥2∥∆V AC  
+
+> t
+
+∥2
+
+,γt = (∆ V LDF  
+
+> t
+
+)⊤∆V AC 
+
+> t
+
+∥∆V LDF  
+
+> t
+
+∥22
+
+.
+
+(69) Here st measures directional alignment and γt is the least-squares AC-to-LinDistFlow gain along the nominal direc-tion. The zero-EV replay keeps the same non-EV load, PV, and network state. This is a diagnostic of correction geom-etry, not an additional controller arm or an AC-feasibility certificate. It uses 2,400 K8 hourly samples from the 100 re-porting days and 408 K32 samples from a 17-day diagnostic subset. 0.4 0.6 0.8 0.9 1.0            
+
+> Cosine similarity, cos( Ja , Δ VAC )
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Empirical cumulative probability
+> high agreement ( ≥ 0.9 )
+> median 0.939
+> median 0.973
+> (a) Directional fidelity
+> K8 — 100 reporting days
+> K32 — 17-day diagnostic subset
+> 0.00 0.25 0.50 0.75 1.00 1.25
+> Fitted AC-to-LinDistFlow gain, γt
+> K8
+> K32
+> median 0.293
+> median 0.463
+> unit gain
+> fixed guard β= 0.31
+> (b) Magnitude fidelity
+
+Figure 7: Physics-anchor validation on K8 and K32. Direc-tional alignment is positive throughout (median st = 0 .939 
+
+and 0.973 ), whereas fitted magnitude gain is feeder depen-dent (median γt = 0 .293 and 0.463 ), supporting physics-directed correction with learned authority scheduling. References 
+
+Achiam, J.; Held, D.; Tamar, A.; and Abbeel, P. 2017. Con-strained Policy Optimization. In Proc. Int. Conf. Mach. Learn. (ICML) , volume 70, 22–31. Alshiekh, M.; Bloem, R.; Ehlers, R.; Könighofer, B.; Niekum, S.; and Topcu, U. 2018. Safe Reinforcement Learn-ing via Shielding. In Proc. AAAI Conf. Artif. Intell. (AAAI) ,volume 32, 2669–2678. Australian Energy Market Operator. 2023. Aggregated price and demand data–Victoria (VIC1). [Online]. Available: https://aemo.com.au/energy-systems/electricity/national-electricity-market-nem/data-nem/aggregated-data. Ac-cessed: Jul. 3, 2026. Baran, M. E.; and Wu, F. F. 1989. Network reconfiguration in distribution systems for loss reduction and load balancing. 
+
+IEEE Trans. Power Deliv. , 4(2): 1401–1407. Cao, D.; Zhao, J.; Hu, J.; Pei, Y.; Huang, Q.; Chen, Z.; and Hu, W. 2024. Physics-informed graphical representation-enabled deep reinforcement learning for robust distribution system voltage control. IEEE Trans. Smart Grid , 15(1): 233– 246. Department of Transport and Planning, Victoria. 2020. Vic-torian Integrated Survey of Travel and Activity (VISTA). [Online]. Available: https://transport.vic.gov.au/about/data-and-research/vista. Accessed: Jul. 3, 2026. Fan, W.; Yu, Z.; Ma, C.; Li, C.; Yang, Y.; and Zhang, X. 2025. Towards Efficient Collaboration via Graph Modeling in Reinforcement Learning. In Proc. AAAI Conf. Artif. Intell. (AAAI) , volume 39, 16505–16513. Farzin, H.; Fotuhi-Firuzabad, M.; and Moeini-Aghtaie, M. 2016. A Practical Scheme to Involve Degradation Cost of Lithium-Ion Batteries in Vehicle-to-Grid Applications. IEEE Trans. Sustain. Energy , 7(4): 1730–1738. Fu, Q.; Qiu, T.; Yi, J.; Pu, Z.; and Wu, S. 2022. Concentration Network for Reinforcement Learning of Large-Scale Multi-Agent Systems. In Proc. AAAI Conf. Artif. Intell. (AAAI) ,volume 36, 9341–9349. Haarnoja, T.; Zhou, A.; Abbeel, P.; and Levine, S. 2018. Soft actor-critic: Off-policy maximum entropy deep rein-forcement learning with a stochastic actor. In Proc. Int. Conf. Mach. Learn. (ICML) , 1861–1870. Jiang, J.; Dun, C.; Huang, T.; and Lu, Z. 2020. Graph Convo-lutional Reinforcement Learning. In Proc. Int. Conf. Learn. Represent. (ICLR) .Li, H.; Wan, Z.; and He, H. 2020. Constrained EV charging scheduling based on safe deep reinforcement learning. IEEE Trans. Smart Grid , 11(3): 2427–2439. Liu, F.; Sen, R.; Talusan, J. P.; Pettet, A.; Kandel, A.; Suzue, Y.; Mukhopadhyay, A.; and Dubey, A. 2025. Reinforcement Learning-Based Approach for Vehicle-to-Building Charging with Heterogeneous Agents and Long-Term Rewards. In 
+
+Proc. Int. Conf. Auton. Agents Multiagent Syst. (AAMAS) ,1345–1353. Liu, M.; Phanivong, P. K.; Shi, Y.; and Callaway, D. S. 2019. Decentralized charging control of electric vehicles in res-idential distribution networks. IEEE Trans. Control Syst. Technol. , 27(1): 266–281. Lowe, R.; Wu, Y.; Tamar, A.; Harb, J.; Abbeel, P.; and Mordatch, I. 2017. Multi-agent actor-critic for mixed cooperative-competitive environments. In Proc. Adv. Neural Inf. Process. Syst. (NeurIPS) , 6379–6390. Lu, S.; Zhang, K.; Chen, T.; Başar, T.; and Horesh, L. 2021. Decentralized Policy Gradient Descent Ascent for Safe Multi-Agent Reinforcement Learning. In Proc. AAAI Conf. Artif. Intell. (AAAI) , volume 35, 8767–8775. Ma, Z.; Callaway, D. S.; and Hiskens, I. A. 2013. Decentral-ized charging control of large populations of plug-in electric vehicles. IEEE Trans. Control Syst. Technol. , 21(1): 67–78. Nimalsiri, N.; Ratnam, E.; Smith, D.; Mediwaththe, C.; and Halgamuge, S. 2024. A distributed coordination approach for the charge and discharge of electric vehicles in unbalanced distribution grids. IEEE Trans. Ind. Informat. , 20(3): 3551– 3562. Ortega-Vazquez, M. A. 2014. Optimal scheduling of electric vehicle charging and vehicle-to-grid services at household level including battery degradation and price uncertainty. 
+
+IET Gener., Transmiss. Distrib. , 8(6): 1007–1016. Owerko, D.; Gama, F.; and Ribeiro, A. 2020. Optimal power flow using graph neural networks. In Proc. IEEE Int. Conf. Acoust., Speech Signal Process. (ICASSP) , 5930–5934. Qin, Z.; Liu, D.; Hua, H.; and Cao, J. 2021. Privacy preserv-ing load control of residential microgrid via deep reinforce-ment learning. IEEE Trans. Smart Grid , 12(5): 4079–4089. Qu, Y.; Ma, J.; and Wu, F. 2024. Safety Constrained Multi-Agent Reinforcement Learning for Active Voltage Control. In Proc. Int. Joint Conf. Artif. Intell. (IJCAI) , 184–192. Rampasek, L.; Galkin, M.; Dwivedi, V. P.; Luu, A. T.; Wolf, G.; and Beaini, D. 2022. Recipe for a general, powerful, scalable graph transformer. In Proc. Adv. Neural Inf. Process. Syst. (NeurIPS) , volume 35, 14501–14515. Ratnam, E. L.; Weller, S. R.; Kellett, C. M.; and Murray, A. T. 2017. Residential load and rooftop PV generation: An Australian distribution network dataset. Int. J. Sustain. Energy , 36(8): 787–806. Shafie-Khah, M.; Siano, P.; Fitiwi, D. Z.; Mahmoudi, N.; and Catalão, J. P. S. 2018. An Innovative Two-Level Model for Electric Vehicle Parking Lots in Distribution Systems With Renewable Energy. IEEE Transactions on Smart Grid , 9(2): 1506–1520. Silva, F. L. D.; Nishida, C. E. H.; Roijers, D. M.; and Costa, A. H. R. 2020. Coordination of electric vehicle charging through multiagent reinforcement learning. IEEE Trans. Smart Grid ,11(3): 2347–2356. Stooke, A.; Achiam, J.; and Abbeel, P. 2020. Responsive safety in reinforcement learning by PID Lagrangian methods. In Proc. Int. Conf. Mach. Learn. (ICML) , 9133–9143. Team Nando. 2023. MV-LV-Networks: Open-source Australian MV-LV distribution network models. [On-line]. Available: https://github.com/Team-Nando/MV-LV-Networks. Accessed: Jul. 3, 2026. Thurner, L.; Scheidler, A.; Schafer, F.; Menke, J.-H.; Dolli-chon, J.; Meier, F.; Meinecke, S.; and Braun, M. 2018. Pan-dapower: An open-source Python tool for convenient mod-eling, analysis, and optimization of electric power systems. 
+
+IEEE Trans. Power Syst. , 33(6): 6510–6521. Tian, H.; Hamedmoghadam, H.; Shorten, R.; and Ferraro, P. 2024. Reinforcement Learning with Adaptive Regularization for Safe Control of Critical Systems. In Proc. Adv. Neural Inf. Process. Syst. (NeurIPS) , volume 37, 2528–2557. Valogianni, K.; Ketter, W.; Collins, J.; and Zhdanov, D. 2014. Effective Management of Electric Vehicle Storage Using Smart Charging. In Proc. AAAI Conf. Artif. Intell. (AAAI) ,volume 28, 472–478. Wabersich, K. P.; and Zeilinger, M. N. 2021. A predictive safety filter for learning-based control of constrained nonlin-ear dynamical systems. Automatica , 129: 109597. Wan, Z.; Li, H.; He, H.; and Prokhorov, D. 2019. Model-free real-time EV charging scheduling based on deep reinforce-ment learning. IEEE Trans. Smart Grid , 10(5): 5246–5257. Wang, J.; Xu, W.; Gu, Y.; Song, W.; and Green, T. C. 2021. Multi-Agent Reinforcement Learning for Active Volt-age Control on Power Distribution Networks. In Proc. Adv. Neural Inf. Process. Syst. (NeurIPS) , volume 34, 3271–3284. Wang, T.; Liao, R.; Ba, J.; and Fidler, S. 2018. NerveNet: Learning Structured Policy with Graph Neural Networks. In 
+
+Proc. Int. Conf. Learn. Represent. (ICLR) .Yan, L.; Chen, X.; Chen, Y.; and Wen, J. 2022. A coopera-tive charging control strategy for electric vehicles based on multiagent deep reinforcement learning. IEEE Trans. Ind. Informat. , 18(12): 8765–8775. Yan, R.; Xing, Q.; and Xu, Y. 2024. Multi-agent safe graph reinforcement learning for PV inverters-based real-time de-centralized Volt/Var control in zoned distribution networks. 
+
+IEEE Trans. Smart Grid , 15(1): 299–311. Yeh, C.; Li, V.; Datta, R.; Arroyo, J.; Christianson, N.; Zhang, C.; Chen, Y.; Hosseini, M. M.; Golmohammadi, A.; Shi, Y.; Yue, Y.; and Wierman, A. 2023. SustainGym: Reinforcement Learning Environments for Sustainable Energy Systems. In 
+
+Proc. Adv. Neural Inf. Process. Syst. (NeurIPS), Datasets and Benchmarks Track , volume 36, 59464–59476. Yu, H.; Xu, W.; and Zhang, H. 2022. Towards Safe Rein-forcement Learning with a Safety Editor Policy. In Proc. Adv. Neural Inf. Process. Syst. (NeurIPS) , volume 35, 2608–2621.

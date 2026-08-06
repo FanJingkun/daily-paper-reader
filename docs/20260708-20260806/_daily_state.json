@@ -1,0 +1,281 @@
+{
+  "date": "20260708-20260806",
+  "date_label": "2026-07-08 ~ 2026-08-06",
+  "generated_at": "2026-08-06 02:58:02 UTC",
+  "recommend_exists": true,
+  "run_count": 1,
+  "papers": [
+    {
+      "paper_id": "2608.03833v1",
+      "route": "20260708-20260806/2608.03833v1-history-matters-meta-policy-delegation-with-heterogeneous-multi-agent-reinforcement-learning",
+      "title": "History Matters: Meta-policy Delegation with Heterogeneous Multi-agent Reinforcement Learning",
+      "section": "deep",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "hetero-marl"
+        }
+      ],
+      "score": 10.0,
+      "evidence": "明确提出异构多智能体强化学习与元策略委派",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.18597v3",
+      "route": "20260708-20260806/2607.18597v3-a-self-evolving-default-action-for-cooperative-tasks-with-continuous-action-space",
+      "title": "A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space",
+      "section": "deep",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "针对连续动作协作MARL的反事实信用分配",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.19809v1",
+      "route": "20260708-20260806/2607.19809v1-dreamer-cpc-message-learning-with-world-models-for-decentralized-multi-agent-reinforcement-learning",
+      "title": "Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning",
+      "section": "deep",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "部分可观测下基于世界模型的消息学习与去中心化MARL",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.27967v1",
+      "route": "20260708-20260806/2607.27967v1-mars-ra-rank-aggregation-for-credit-assignment-via-multimodal-comparisons-in-embodied-multi-agent-cooperation",
+      "title": "MARS-RA: Rank Aggregation for Credit Assignment via Multimodal Comparisons in Embodied Multi-Agent Cooperation",
+      "section": "deep",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "通过多模态比较解决合作多智能体强化学习中的信用分配",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2608.00679v1",
+      "route": "20260708-20260806/2608.00679v1-hetgps-scalable-graph-multi-agent-reinforcement-learning-with-physics-anchored-adaptive-safety-for-ev-charging",
+      "title": "HetGPS: Scalable Graph Multi-Agent Reinforcement Learning with Physics-Anchored Adaptive Safety for EV Charging",
+      "section": "deep",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "hetero-marl"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "面向电动汽车充电的异构图多智能体强化学习与参数共享策略",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2608.01745v1",
+      "route": "20260708-20260806/2608.01745v1-heterogeneous-multi-agent-reinforcement-learning-for-radio-resource-management-under-coupled-finite-horizon-constraints",
+      "title": "Heterogeneous Multi-Agent Reinforcement Learning for Radio Resource Management under Coupled Finite-Horizon Constraints",
+      "section": "deep",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "hetero-marl"
+        }
+      ],
+      "score": 9.0,
+      "evidence": "异构多智能体强化学习用于受耦合有限时域约束的无线资源管理",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.09587v1",
+      "route": "20260708-20260806/2607.09587v1-codimad-diffusion-based-privileged-distillation-for-communication-free-multi-robot-coordination",
+      "title": "CoDiMAD: Diffusion-Based Privileged Distillation for Communication-Free Multi-Robot Coordination",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "通过特权蒸馏实现无通信多机器人协作策略学习",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.10836v1",
+      "route": "20260708-20260806/2607.10836v1-route-communicate-and-reason-gated-routing-and-adaptive-depth-for-efficient-multi-agent-reasoning",
+      "title": "Route, Communicate, and Reason: Gated Routing and Adaptive Depth for Efficient Multi-Agent Reasoning",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "用于分层多智能体推理的门控路由与自适应通信多智能体强化学习",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.11250v1",
+      "route": "20260708-20260806/2607.11250v1-multi-agent-llms-fail-to-explore-each-other",
+      "title": "Multi-Agent LLMs Fail to Explore Each Other",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "hetero-marl"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "部分可观测随机博弈中推断同伴能力的多智能体探索",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.17924v1",
+      "route": "20260708-20260806/2607.17924v1-aggregate-in-the-advantage-not-the-ratio-a-canonical-form-analysis-of-cooperative-multi-agent-policy-optimization",
+      "title": "Aggregate in the Advantage, Not the Ratio: A Canonical-Form Analysis of Cooperative Multi-Agent Policy Optimization",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 8.0,
+      "evidence": "合作式多智能体策略优化中优势聚合与信用分配的核心分析，直接服务PPO类MARL方法设计",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.09295v1",
+      "route": "20260708-20260806/2607.09295v1-multi-agent-reinforcement-learning-for-sla-aware-network-slicing-in-uav-enabled-mec",
+      "title": "Multi-Agent Reinforcement Learning for SLA-Aware Network Slicing in UAV-Enabled MEC",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 7.0,
+      "evidence": "面向异构网络切片的多智能体强化学习协同轨迹与资源分配，兼顾系统级SLA目标",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.09330v1",
+      "route": "20260708-20260806/2607.09330v1-communication-efficient-digital-twin-coordination-for-heterogeneous-llm-embodied-agents-over-computing-power-networks",
+      "title": "Communication-Efficient Digital-Twin Coordination for Heterogeneous LLM Embodied Agents over Computing Power Networks",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "hetero-marl"
+        }
+      ],
+      "score": 7.0,
+      "evidence": "面向异构LLM具身智能体的通信高效数字孪生协调",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.12861v1",
+      "route": "20260708-20260806/2607.12861v1-unveiling-complex-collective-behaviors-from-simple-rewards",
+      "title": "Unveiling Complex Collective Behaviors from Simple Rewards",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 7.0,
+      "evidence": "MARL可解释性框架揭示简单奖励如何涌现机器人集群的复杂集体行为",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.16745v1",
+      "route": "20260708-20260806/2607.16745v1-relic-revealed-principles-for-learning-interpretable-composable-skills-in-multi-agent-planning",
+      "title": "RELIC: Revealed Principles for Learning Interpretable Composable Skills in Multi-Agent Planning",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "hetero-marl"
+        }
+      ],
+      "score": 7.0,
+      "evidence": "异构能力智能体在不共享策略情况下通过可解释组合技能进行协同决策，研究场景直接对应异构多智能体协作",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.13359v1",
+      "route": "20260708-20260806/2607.13359v1-learning-latency-aware-orchestration-for-multi-agent-systems",
+      "title": "Learning Latency-Aware Orchestration for Multi-Agent Systems",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 6.0,
+      "evidence": "基于学习的时延感知编排与算子级信用分配",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.17311v1",
+      "route": "20260708-20260806/2607.17311v1-the-optimization-trilemma-efficiency-comfort-and-fairness-in-decentralized-multi-agent-coordination",
+      "title": "The Optimization Trilemma: Efficiency, Comfort and Fairness in Decentralized Multi-agent Coordination",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 6.0,
+      "evidence": "去中心化多智能体协调在效率、舒适与公平间的权衡",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    },
+    {
+      "paper_id": "2607.18719v1",
+      "route": "20260708-20260806/2607.18719v1-strategy-following-multi-agent-deep-reinforcement-learning-considering-control-strategies-provided-to-other-agents",
+      "title": "Strategy-Following Multi-Agent Deep Reinforcement Learning Considering Control Strategies Provided to Other Agents",
+      "section": "quick",
+      "tags": [
+        {
+          "kind": "query",
+          "label": "mcd"
+        }
+      ],
+      "score": 6.0,
+      "evidence": "多智能体深度强化学习，通过人类管理者指令控制智能体并实现未受指令智能体的隐式互补协作",
+      "first_seen_at": "2026-08-06 02:58:02 UTC",
+      "updated_at": "2026-08-06 02:58:02 UTC"
+    }
+  ]
+}
