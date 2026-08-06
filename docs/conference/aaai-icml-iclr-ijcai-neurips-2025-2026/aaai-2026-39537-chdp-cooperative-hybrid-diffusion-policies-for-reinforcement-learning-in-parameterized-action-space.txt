@@ -1,0 +1,331 @@
+Title: CHDP: Cooperative Hybrid Diffusion Policies for Reinforcement Learning in Parameterized Action Space
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/39537/43498
+
+Number of Pages: 9
+
+Markdown Content:
+# CHDP: Cooperative Hybrid Diffusion Policies for Reinforcement Learning in Parameterized Action Space 
+
+# Bingyi Liu 1,2 , Jinbo He 1, Haiyong Shi 1, Enshu Wang 3* , Weizhen Han 1* , Jingxiang Hao 3, Peixi Wang 1, Zhuangzhuang Zhang 4
+
+> 1
+
+School of Computer Science and Artificial Intelligence, Wuhan University of Technology 
+
+> 2
+
+Hubei Key Laboratory of Transportation Internet of Things (Wuhan University of Technology) 
+
+> 3
+
+School of Cyber Science and Engineering, Wuhan University 
+
+> 4
+
+Department of Computer Science, City University of Hong Kong 
+
+{byliu, jinbohe, shihaiyong, hanweizhen, wpx20101220 }@whut.edu.cn, {wanges17, haojingxiang }@whu.edu.cn, zhuangzhuangzhang@cityu.edu.hk 
+
+Abstract 
+
+Hybrid action space, which combines discrete choices and continuous parameters, is prevalent in domains such as robot control and game AI. However, efficiently modeling and op-timizing hybrid discrete-continuous action space remains a fundamental challenge, mainly due to limited policy expres-siveness and poor scalability in high-dimensional settings. To address this challenge, we view the hybrid action space problem as a fully cooperative game and propose a Coop-erative Hybrid Diffusion Policies (CHDP) framework to solve it. CHDP employs two cooperative agents that lever-age a discrete and a continuous diffusion policy, respectively. The continuous policy is conditioned on the discrete action’s representation, explicitly modeling the dependency between them. This cooperative design allows the diffusion policies to leverage their expressiveness to capture complex distribu-tions in their respective action spaces. To mitigate the update conflicts arising from simultaneous policy updates in this co-operative setting, we employ a sequential update scheme that fosters co-adaptation. Moreover, to improve scalability when learning in high-dimensional discrete action space, we con-struct a codebook that embeds the action space into a low-dimensional latent space. This mapping enables the discrete policy to learn in a compact, structured space. Finally, we design a Q-function-based guidance mechanism to align the codebook’s embeddings with the discrete policy’s represen-tation during training. On challenging hybrid action bench-marks, CHDP outperforms the state-of-the-art method by up to 19 .3% in success rate. 
+
+# 1 Introduction 
+
+Deep Reinforcement Learning (DRL) has excelled in domains with either purely discrete or continuous ac-tions (Duan et al. 2021, 2025; Liu et al. 2024a). However, extending these successes to real-world scenarios requires tackling hybrid action space. Such a space combines cate-gorical choices (e.g., selecting a specific tool in robotic ma-nipulation, choosing a movement mode in autonomous driv-ing) with fine-grained continuous adjustments (e.g., regulat-ing force magnitude, tuning speed parameters). 
+
+> *
+
+Corresponding author. Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+Existing works (Masson, Ranchod, and Konidaris 2016; Massaroli et al. 2020) face two primary challenges in tack-ling these hybrid action tasks. The first is that current poli-cies lack the expressiveness to handle the multi-modality of many hybrid-action tasks. This is because such multi-modality, where multiple action-pairs can be equally effec-tive, conflicts with the unimodal architectures (e.g., Gaus-sian or deterministic) on which most methods are built (Fan et al. 2019; Hausknecht and Stone 2016). For example, a soccer goal can be scored with a left- or right-foot shot—– distinct actions, each with unique continuous parameters (e.g., force, angle) (Masson, Ranchod, and Konidaris 2016). Consequently, such policies are forced to either average so-lutions into an ineffective compromise or collapse to a sin-gle mode, resulting in limited expressiveness and subopti-mal performance (Jain, Akhound-Sadegh, and Ravanbakhsh 2024; Wang, Jin, and Montana 2025; Huang et al. 2023). Second, existing methods (Xiong et al. 2018; Fan et al. 2019) face a scalability limitation, as they lack a strategy to overcome the combinatorial explosion in high-dimensional hybrid action space (Li et al. 2022). For instance, in non-prehensile manipulation, this challenge arises from select-ing among numerous discrete contact points, each defined by its own set of continuous parameters (Zhou et al. 2023; Le et al. 2025). The difficulty of exploring such vast hy-brid space leads to sample inefficiency, rendering most ap-proaches impractical for these tasks (Zhang et al. 2024). Ad-dressing these dual challenges of policy expressiveness and limited scalability is therefore crucial for unlocking DRL’s potential in complex hybrid-action environments. To address these challenges, we propose Cooperative Hybrid Diffusion Policies (CHDP) , a multi-agent rein-forcement learning (MARL) framework that views the hybrid-action problem as a fully cooperative game between two agents. CHDP consists of two cooperative agents that leverage a discrete and a continuous diffusion policy, respec-tively. These agents collaborate to generate a final hybrid action aimed at maximizing a shared objective. This collab-oration is implemented sequentially, where the continuous policy is conditioned on the discrete action representation to explicitly model the dependency between them. This design leverages the expressiveness of diffusion policies to capture The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+23640 complex, multi-modal distributions across their respective action spaces. However, this cooperative setting can lead to conflicts when policies are updated simultaneously, a chal-lenge empirically observed in MARL (Lowe et al. 2017; Yu et al. 2022). Our framework employs a sequential pol-icy update training scheme inspired by prior works (Wang et al. 2023; Liu et al. 2024c; Zhong et al. 2024). This mech-anism prevents the optimization of one policy from inad-vertently impairing the other, thus fostering co-adaptation and allowing CHDP to solve complex hybrid-action tasks. Moreover, to improve scalability when learning in high-dimensional discrete action space, we construct a codebook that embeds the high-dimensional discrete action space into a low-dimensional latent space. The discrete policy gener-ates a continuous latent vector, which is then quantized by mapping it to its nearest neighbor in the embedding code-book. This quantization process confines the discrete pol-icy’s learning to a compact, structured space, thereby mit-igating the curse of dimensionality. Subsequently, the se-lected embedding serves as a semantic condition to guide the continuous policy. Finally, we design a shared, Q-function-based guidance mechanism to align the codebook’s embed-dings with the latent representations generated by the dis-crete policy during training. Our main contributions are summarized as follows: • We propose CHDP, a MARL framework that solves the hybrid action space problem by fully leveraging two co-operative agents with diffusion policies. This design un-leashes the expressiveness of the diffusion policies to capture multi-modal distributions in hybrid action space. • We propose two key mechanisms: a sequential update scheme to mitigate policy conflicts and a Q-guided code-book to address scalability limitations through a compact action representation. • CHDP demonstrates state-of-the-art (SOTA) perfor-mance on challenging hybrid action benchmarks, im-proving upon the prior SOTA method by up to 19 .3% .
+
+# 2 Related Work 
+
+The Challenge of Limited Scalability. While Deep Rein-forcement Learning (DRL) has become the dominant ap-proach for the hybrid action space problem (Hausknecht and Stone 2016; Fan et al. 2019), its various architectural explorations have consistently faced challenges with scal-ability and stability. Early attempts to homogenize hybrid action space, by either discretizing continuous actions or converting discrete ones into continuous, proved ineffec-tive due to the curse of dimensionality and the creation of poorly structured policy functions, respectively (Li et al. 2022). Another line of research, centered on the Parameter-ized DQN (PDQN) (Xiong et al. 2018) suffers from criti-cal redundancy and scalability issues. HACMan (Zhou et al. 2023) employs a similar architecture for non-prehensile ma-nipulation, inheriting similar challenges. Meanwhile, hierar-chical approaches like the Hierarchical Hybrid Q-Network (HHQN) (Fu et al. 2019) are plagued by severe non-stationarity (Wang et al. 2021). Collectively, these works lack an architecture that can scale effectively in domains with hybrid action space. 
+
+The Limitation of Policy Expressiveness. Running par-allel to the scalability issue is the limitation of policy ex-pressiveness. This trade-off is evident in recent methods: while HyAR (Li et al. 2022) offers a scalable latent-space framework, its expressiveness is constrained by its underly-ing deterministic policy and is often hampered by significant training instability (Liu et al. 2024b). Conversely, HyDo (Le et al. 2025) employs an expressive continuous diffusion pol-icy, but its underlying architecture inherits the scalability limitations of methods like PDQN. Other works have fo-cused solely on enhancing expressiveness through methods like energy-based models (Jain, Akhound-Sadegh, and Ra-vanbakhsh 2024), reparameterization in RPG (Huang et al. 2023), GMMs in LOM (Wang, Jin, and Montana 2025), and Diffusion Q-learning (Wang, Hunt, and Zhou 2023). How-ever, these methods lack the necessary expressiveness to capture the multi-modality for both discrete and continuous action spaces. In summary, the methods discussed above suffer from poor scalability and limited expressiveness. We propose CHDP, a novel framework that bridges this gap by combin-ing the scalability of a Q-guided codebook with the rich ex-pressiveness of diffusion policies. 
+
+# 3 Preliminaries 
+
+## 3.1 Parameterized Action MDP (PAMDP) 
+
+In this paper, we distinguish between two types of timesteps. We use superscripts i ∈ { 1, . . . , N } to denote the diffusion process timestep, and subscripts t ∈ { 1, . . . , T } to denote the reinforcement learning trajectory timestep. The problem of controlling systems with hybrid actions is formalized as a Parameterized Action Markov Decision Process (PAMDP) (Hausknecht and Stone 2016). A PAMDP is defined by a tuple (S, A, P, r, γ ), consisting of a state space S, a hybrid action space A, a transition function 
+
+P : S ×A → P (S), a reward function r : S ×A → R, and a discount factor γ ∈ [0 , 1) . The key feature of a PAMDP lies in its hybrid action space, where an action a ∈ A is a pair 
+
+a = ( ad, a c). This pair comprises a discrete action ad ∈ A d
+
+and a vector of continuous parameters ac from the discrete action-dependent set Ac(ad).To solve the PAMDP, we approach it from a MARL per-spective. We decompose the single agent’s decision-making process into a cooperative task executed by two agents. A discrete agent, guided by its policy πθd (et|st), first selects a representation et. This representation is then used to derive both the discrete action adt and its corresponding embed-ding, ek. Subsequently, a continuous agent determines the corresponding parameters act via its policy πθc (act |st, e k),which is conditioned on both the state and the discrete ac-tion’s embedding. Here, θd and θc are the learnable param-eters of their respective policies. The objective is to learn a joint policy π = ( πθd , π θc ) that maximizes the expected dis-counted return E
+
+hPTt=0 γtr(st, at)
+
+i
+
+. Correspondingly, the action-value (or Q-value) for the joint policy π is defined 23641 as Qπϕ(st, e t, a ct ) = Eπ
+
+P ∞ 
+
+> k=0
+
+γkr(st+k, at+k)|st, e t, a ct
+
+,where ϕ denotes the parameters of the Q-function. 
+
+## 3.2 Diffusion Models and DQL 
+
+Diffusion Models for Generative Learning. Our frame-work builds upon diffusion models (Ho, Jain, and Abbeel 2020; Sohl-Dickstein et al. 2015; Song and Ermon 2019), a class of powerful generative models. A diffusion model learns to generate data by reversing a fixed forward process that gradually adds Gaussian noise to data a0 over N steps, transforming it into pure noise aN ∼ N (0 , I ).The core of the model is to learn the reverse process. This is achieved by training a neural network, ϵθ (ai, s, i ), to pre-dict the noise that was added at each step i. Once trained, this network can be used to iteratively denoise a random noise vector to generate a new data sample a0. Each step of this reverse process is performed as follows: 
+
+ai−1 = 1
+
+√αi
+
+
+
+ai − 1 − αi
+
+√1 − ¯αi
+
+ϵθ (ai, s, i )
+
+
+
++ pβiz, (1) where αi, ¯αi, β i are hyperparameters from a predefined noise schedule, and z ∼ N (0 , I ). The network ϵθ is trained by the diffusion loss:           
+
+> Ld(θ) = Es,a 0,ϵ,i
+> ∥ϵ−ϵθ(√¯αia0+√1−¯αiϵ, s, i )∥2.(2)
+
+Diffusion Q-Learning (DQL). Diffusion Q-Learning (DQL) (Wang, Hunt, and Zhou 2023) adapts this generative framework to serve as an expressive policy in reinforcement learning. Instead of merely modeling the data distribution, a DQL policy must generate actions that maximize long-term returns. To achieve this, DQL augments the standard dif-fusion loss Ld(θ) with a policy improvement term, Lq (θ),which guides the policy towards high-value actions. The overall training objective for a DQL policy is a weighted sum of these two components: 
+
+L(θ) = Ld(θ) + α · L q (θ). (3) The policy improvement term Lq (θ) is defined as the nega-tive expected Q-value of the generated actions: 
+
+Lq (θ) = −Es∼D ,a 0∼πθ [Qϕ(s, a 0)] . (4) DQL sets α = η/ Es,a ∼D [|Qϕ(s, a )|], where η is a hyperpa-rameter that balances the two loss terms. 
+
+# 4 Cooperative Hybrid Diffusion Policies 
+
+## 4.1 Overview of the CHDP Framework 
+
+The proposed CHDP, depicted in Figure 1, features a novel cooperative framework with three core components. CHDP consists of two specialized agents: a discrete agent using policy πθd for selecting discrete actions, and a continuous agent using policy πθc for specifying the corresponding con-tinuous parameters. In addition, a sequential update mecha-nism ensures co-adaptation by mitigating policy conflicts. Inspired by VQ-VAE (Van Den Oord, Vinyals et al. 2017), we construct a learnable Q-guided codebook, Eζ ∈ RK×de ,which embeds the high-dimensional discrete action space into a low-dimensional latent space. Comprising K learn-able codewords ( ek ∈ Rde ), where K is the cardinality of the discrete action space, the codebook also serves as the se-mantic bridge between the discrete and continuous policies. At each timestep, the action generation process unfolds as a structured, sequential collaboration. Given the current state s, the discrete policy, πθd , first generates a latent repre-sentation e by iteratively denoising an initial Gaussian noise vector eN ∼ N (0 , I ). Each sampling step is defined as: 
+
+ei−1 = 1
+
+√αi
+
+
+
+ei − 1 − αi
+
+√1 − ¯αi
+
+ϵθd (ei, s, i )
+
+
+
++ pβiz, (5) where z ∼ N (0 , I ) is a noise vector and ϵθd denotes the noise prediction network for the discrete policy. The fi-nal output, e = e0, then undergoes a Vector Quantization (VQ) (Linde, Buzo, and Gray 2003) step, where it is mapped to the nearest entry in the codebook. This yields the index k
+
+of the nearest codeword, which is set as the discrete action (ad = k), and the corresponding codeword vector ek, which is retrieved to condition the continuous policy. The specific mechanism for this codebook will be detailed in Section 4.3. Subsequently, the continuous policy πθc generates the continuous action ac. Critically, its reverse diffusion process is conditioned on both the state s and the codeword ek from the first stage:              
+
+> aci−1=1
+> √αi
+> 
+> aci−1−αi
+> √1−¯αi
+> ϵθc(aci, s, e k, i )
+> 
+> +pβiz, (6)
+
+where ϵθc is the noise prediction network. This directly in-fuses the semantic information of the discrete choice into the continuous action generation, ensuring the two components are coherent. 
+
+## 4.2 Sequential Update Scheme 
+
+CHDP employs a sequential update scheme for policy up-dates, a strategy inspired by Heterogeneous-Agent Rein-forcement Learning (HARL) (Liu et al. 2024c; Zhong et al. 2024). As illustrated in Figure 1(Right), this scheme decom-poses the joint optimization into a turn-based sequence. 
+
+Step 1: Discrete Policy Update. The training process be-gins with the discrete policy. CHDP first updates the dis-crete policy πθd , which provides a fixed, stable target for the subsequent update of the continuous policy. This update is performed by minimizing the objective function L(θd) with the goal of improving the generated latent representation 
+
+e ∼ πθd (·| s), which is defined as: 
+
+L(θd) = Ld(θd) − α · Es,a c∼D ,e ∼πθd [Qϕ(s, e, a c)] , (7) where Ld(θd) is the standard diffusion loss from DQL, as defined in Eq. (2), which regularizes the policy using data from the replay buffer. The second term, Lq (θd), is the pol-icy improvement objective that guides the latent represen-tation e towards higher Q-values. The continuous action ac
+
+is sampled from the replay buffer D, and this fixed value serves as a stable target for evaluating the latent representa-tion e. This initial step provides a stable foundation for the subsequent optimization of the continuous policy and code-book. 
+
+Step 2: Continuous Policy and Codebook Update. In this second step, the newly updated discrete policy, π′ 
+
+> θd
+
+, gen-erates a latent representation e′ ∼ π′ 
+
+> θd
+
+(·| s). This vector is 23642 Figure 1: An overview of our CHDP framework. (Left) Inference: The discrete policy’s latent representation is quantized by a codebook to yield a discrete action and relevant codeword. This codeword conditions the continuous policy for generating the final continuous action. (Right) Training: Guided by a shared Q-function, the discrete policy is updated first. Subsequently, conditioned on the output of this updated discrete policy, the continuous policy and the codebook are jointly optimized. quantized to select a codeword ek from the codebook Eζ ,which in turn conditions the continuous policy to produce an action ac ∼ πθc (·| s, e ad ). The continuous policy param-eters, θc, and the codebook parameters, ζ, are then jointly optimized by minimizing their shared objective L(θc, ζ ):
+
+L(θc, ζ ) = Ld(θc) + α · L q (θc, ζ ), (8) where the first term, Ld(θc), is a diffusion loss analogous to the one for the discrete policy, as defined in Eq. (2). The second term, Lq (θc, ζ ), is the policy improvement term that guides the continuous policy towards generating actions that yield higher Q-values. It is defined as: 
+
+Lq (θc, ζ ) = −Es∼D ,e ′∼π′  
+
+> θd,a c∼πθc
+
+[Qϕ(s, sg( e′), a c)] . (9) The design of this objective is crucial for managing the gra-dient flow. Gradients from the Q-function update the contin-uous policy πθc based on the output of the updated discrete policy, rather than the outdated discrete action from the re-play buffer. Meanwhile, a stop-gradient operator sg( ·) on the discrete representation prevents any gradient from flowing back to the discrete policy π′ 
+
+> θd
+
+, thereby resolving potential conflicts in the policy updates. Concurrently, the critics are updated by minimizing the Mean-Squared Bellman Error (MSBE). To ensure stability, we adopt the Double Q-learning paradigm (Van Hasselt, Guez, and Silver 2016). The loss for each critic Qϕi is:         
+
+> L(ϕi) = E(st,e t,a ct,r t,s t+1 )∼D
+> h
+> (Qϕi(st, e t, a ct)−yt)2i
+> ,(10)
+
+where the target value yt is computed using the next action 
+
+at+1 , which is sampled from the target policies π′
+
+> θ′
+> d
+
+and π′ 
+
+> θ′
+> c
+
+.The target value is then defined as: 
+
+yt = rt + γ min  
+
+> j=1 ,2
+
+Q′ 
+
+> ϕ′
+> j
+
+(st+1 , e t+1 , a ct+1 ). (11) 
+
+Figure 2: The process of aligning latent representations and codewords. 
+
+## 4.3 Downstream Q-guided Codebook 
+
+CHDP constructs a learnable codebook Eζ to represent the discrete action space. Instead of learning via reconstruction, the value of a codeword is measured by its functional impact on the downstream task, that is, its effectiveness in maximiz-ing the Q-value. This is enforced by a deliberately asymmet-ric gradient flow, where the shared Q-function guides both the discrete policy’s latent output and the selected codeword through distinct optimization pathways, forcing them to im-plicitly align. The aligning process, as illustrated in Figure 2, begins with the discrete policy πθd generating a latent representa-tion e ∼ πθd (·| s). This vector is then quantized to its nearest codeword ek in the codebook Eζ via a VQ operation: 
+
+k = argmin 
+
+> k
+
+∥e − ek∥2. (12) 23643 The selected codeword ek is subsequently used to con-dition the continuous policy πθc , which generates the final continuous parameters. The codebook’s parameters, ζ, are optimized via gradi-ents originating from the continuous policy’s improvement term Lq (θc, ζ ). Since the continuous action ac is condi-tioned on the chosen codeword ek, the final Q-value is an im-plicit function of this codeword. Consequently, during back-propagation, gradients from the Q-value propagate through the continuous action ac back to the specific codeword ek
+
+used in its generation. This downstream signal steers the codeword’s embedding toward a representation that supports higher-value actions. In contrast, the discrete policy, which generates the la-tent vector e, is optimized using the same Q-function, 
+
+Q(s, e, a c), as defined in Eq. (7). Crucially, for this update, the continuous action ac is a detached constant sampled from the replay buffer D, severing the gradient path through it. In this way, both the codebook embeddings ek and the discrete policy’s outputs e are guided by the same ultimate measure of utility, the Q-value, forcing them to implicitly align within the shared latent space. This training paradigm ensures the semantic meaning of each discrete action’s em-bedding is forged by its downstream utility of maximizing the Q-value, rather than by reconstruction. This end-to-end process produces a task-aware, semantically potent repre-sentation of the discrete action space, ensuring a synergistic coupling between the policies. As a result, this integrated de-sign provides a principled and scalable mechanism for rep-resentation learning that obviates the need for pre-training. 
+
+# 5 Experiments 
+
+We evaluate CHDP on various hybrid action environments against representative prior algorithms. Then, a detailed ab-lation study is conducted to verify the contribution of each component in CHDP. Moreover, we provide a qualitative ex-periment to show the expressiveness of the diffusion policy. 
+
+Benchmarks: We evaluated CHDP on eight standard Pa-rameterized Action MDP (PAMDP) benchmarks: Platform and Goal (Masson, Ranchod, and Konidaris 2016), Catch Point (Fan et al. 2019), Hard Goal, and four variations of Hard Move (Li et al. 2022). These environments are iden-tical to those used to evaluate HyAR, which represents the SOTA algorithm for these tasks. Visualizations of these en-vironments are shown in Figure 3. 
+
+Baselines: We evaluate CHDP against several SOTA baselines for hybrid action space. Our primary compari-son is against HyAR (Li et al. 2022), the current leading method. To ensure a fair and direct comparison, we adopt the same set of TD3-based baselines used in HyAR. These base-lines extend prior methods using the Twin Delayed Deep Deterministic Policy Gradient (TD3) algorithm (Fujimoto, Hoof, and Meger 2018) and include: PDQN-TD3 (an ex-tension of PDQN (Xiong et al. 2018)), PA-TD3 (from PAD-DPG (Hausknecht and Stone 2016)), and HHQN-TD3 (from HHQN (Fu et al. 2019)). Additionally, we include the PPO-based HPPO (Fan et al. 2019) for broader coverage.   
+
+> (a) Platform (b) Goal
+> (c) Catch Point (d) Hard Move
+
+Figure 3: Visualizations of the tested environments. 
+
+## 5.1 Performance Evaluation 
+
+We conducted a comprehensive empirical study to evaluate the performance of our proposed method, CHDP, against a suite of strong baseline algorithms across eight standard PAMDP benchmarks. The mean success rates at the end of training are presented in Table 1, and the learning dynam-ics are shown in Figure 4. The results clearly demonstrate that CHDP achieves SOTA performance, consistently out-performing all baselines by showcasing superior policy ex-pressiveness, scalability, and sample efficiency. 
+
+Analysis of Policy Expressiveness. CHDP demonstrates significant performance gains in hybrid action environments that demand highly expressive policies to handle multi-modal action distributions. This is most evident in the Hard Goal task, where CHDP achieves a success rate of 79 .5% ,substantially surpassing the strongest baseline, HyAR-TD3, which scored only 60 .2% . This advantage extends across other challenging tasks. As shown in Table 1, CHDP also secures SOTA performance in the Platform (99 .7% ) and 
+
+Catch Point (93 .8% ) environments. This underscores the advantage of CHDP’s diffusion-based policy in captur-ing complex, multi-modal strategies. 
+
+Analysis of Scalability in High-Dimensional Space. 
+
+The Hard Move suite of tasks is designed to test scala-bility as the size of the discrete action space increases. In these environments, a discrete action involves selecting an on/off state for each of n actuators, creating a combinato-rial space of size 2n. Each of these discrete choices is paired with its own set of continuous parameters (e.g., for n = 4 ,there are 24 = 16 discrete actions, each with its own cor-responding set of continuous parameters). As shown in Ta-ble 1, CHDP consistently outperforms all competing meth-ods across all difficulty levels, from n = 4 to n = 10 . No-tably, CHDP maintains a success rate exceeding 90% for n
+
+up to 8 ( 28 = 256 options), a scale where other methods 23644 ENV HPPO PATD3 PDQN-TD3 HHQN-TD3 HyAR-TD3 CHDP (ours) Goal 0.0 ± 0.0 0.0 ± 0.0 71.4 ± 4.3 0.0 ± 0.0 77.3 ± 4.2 80.9 ± 4.9 
+
+Hard Goal 0.0 ± 0.0 43.0 ± 10.0 0.0 ± 0.0 1.2 ± 0.7 60.2 ± 5.0 79.5 ± 5.0 
+
+Platform 66.3 ± 0.9 95.1 ± 3.6 96.7 ± 4.1 56.7 ± 29.4 96.6 ± 2.2 99.7 ± 0.2 
+
+Catch Point 55.7 ± 5.2 86.7 ± 8.3 89.8 ± 3.2 23.7 ± 5.5 86.6 ± 0.9 93.8 ± 0.6 
+
+Hard Move (n=4) 3.3 ± 1.3 63.9 ± 20.5 79.7 ± 4.8 81.8 ± 3.5 91.4 ± 2.4 94.2 ± 1.7 
+
+Hard Move (n=6) 2.5 ± 0.4 9.8 ± 5.6 31.1 ± 8.1 47.1 ± 27.6 92.3 ± 0.6 93.9 ± 1.0 
+
+Hard Move (n=8) 2.3 ± 0.9 4.6 ± 2.1 6.6 ± 2.5 18.8 ± 8.9 88.3 ± 1.9 90.6 ± 2.2 
+
+Hard Move (n=10) 3.4 ± 0.5 10.3 ± 2.0 3.3 ± 0.5 11.3 ± 6.3 69.0 ± 5.6 79.8 ± 5.4 
+
+Table 1: Mean success rates ( ± one standard deviation) over 5 independent trials, where the result for each trial is itself the average of the success rates from its final 5 evaluations. 
+
+Figure 4: Comparisons of algorithms in different environments. The x- and y-axis represent the environment steps ( ×10 5) and the average success rate, respectively. The solid curve and the shaded region denote the mean and standard deviation over 5 independent runs. All curves are smoothed for visual clarity. degrade significantly. This validates the excellent scalability of our Q-guided codebook approach. 
+
+Analysis of Convergence and Sample Efficiency. The learning curves in Figure 4 demonstrate CHDP’s superior sample efficiency. Compared to all baselines, CHDP’s learn-ing curve (red) consistently exhibits a steeper ascent, in-dicating that it learns effective policies with substantially fewer environmental interactions. This advantage is partic-ularly pronounced in Platform (a), Catch Point (b), and the Hard Move suite (e-h), where CHDP not only con-verges to a higher final performance but also does so more rapidly. Such high sample efficiency not only validates the effectiveness of our approach but is also a crucial factor for its practical viability in complex, resource-intensive tasks. 
+
+## 5.2 Ablation Study 
+
+To quantitatively validate our design, we conducted an abla-tion study to isolate the roles of our components: the expres-sive diffusion policies, the Q-guided codebook, and the se-quential update scheme. The results on the Hard Goal and 
+
+Hard Move (n = 6 ) environments are presented in Ta-ble 2. They demonstrate that each component is indispens-able, addressing a distinct challenge within the framework. 
+
+The Ablation of Diffusion Policy. To verify our central hypothesis that policy expressivity is crucial, we created a variant where the diffusion policies were replaced by deter-ministic ones. This change led to a dramatic performance drop on both Hard Goal and Hard Move . Although this deterministic variant still achieved a 51.3% success rate in 
+
+Hard Goal —outperforming several baselines—this result is far from SOTA. This starkly demonstrates that even with our cooperative framework, a policy constrained by expres-siveness is insufficient. The success of the full CHDP model is therefore directly attributable to the diffusion policy’s ability to capture complex, multi-modal action distributions, validating our primary motivation. 
+
+The Ablation of Codebook. The contribution of the Q-guided codebook is most evident in environments with a 23645 Method Hard Goal Hard Move CHDP (Full Model) 75.9 ± 3.7 93.9 ± 1.0 
+
+w/o Diffusion Policy 51.3 ± 10.2 45.1 ± 19.5 w/o Codebook 71.0 ± 6.0 11.1 ± 6.9 w/o Sequential Update 32.8 ± 4.3 89.4 ± 3.5 w/o Both 31.5 ± 16.4 10.7 ± 5.1 Table 2: Ablation of CHDP components. Values are mean success rates ( ± std.) over 5 independent runs. The score for each run is the average of its final 5 evaluations. The first row uses default parameters: Diffusion steps N = 15 ,
+
+η = 5 and de = 8 , distinct from the configuration in Table 1. The ‘w/o Both‘ variant removes both the Codebook and the Sequential Update scheme. Best results are in bold .high-dimensional discrete action space. As illustrated in the 
+
+Hard Move (n = 6 ) environment, which features 26 dis-crete actions, replacing the codebook with a simple argmax 
+
+selection over raw outputs caused performance to collapse catastrophically from 93.9% to 11.1%. This result confirms the codebook’s critical role in ensuring scalability. By em-bedding the high-dimensional space into a compact latent space, the codebook provides a structured, low-dimensional representation for the discrete policy to learn in. 
+
+The Ablation of Sequential Update. To evaluate our sequential update scheme’s role in mitigating optimization conflicts, we tested an ablation variant that updates both policies concurrently using data from the replay buffer, a mechanism identical to MADDPG (Lowe et al. 2017). The concurrent update is detrimental in the more complex 
+
+Hard Goal environment, where performance collapses from 75.9% to 32.8%. We hypothesize this is because this task’s challenge is policy coordination, making the preven-tion of conflicting updates critical. In contrast, the perfor-mance drop is minimal in the Hard Move environment (from 93.9% to 89.4%), where the main bottleneck is its high-dimensional action space. This confirms that our se-quential update scheme is a vital component for ensuring co-adaptation, especially in coordination-intensive tasks. 
+
+The Ablation of Both. The ‘w/o Both‘ variant, which lacks both the codebook and the sequential update mecha-nism, exhibits a near-total performance failure in both envi-ronments (31.5% and 10.7%). This result provides evidence that CHDP’s success stems from a synergistic interplay be-tween its components, confirming that both the codebook and sequential update are indispensable. 
+
+## 5.3 Qualitative Analysis of Expressive Policy 
+
+To assess our policy’s multi-modality, we designed a tar-geted experiment. In the Hard Move (n=6) environ-ment, we placed the target area just above the agent’s fixed starting position, which renders the task solvable in a single step. This setting isolates our analysis from the confounding effects of a multi-step trajectory. Our analysis then hinges on two key metrics: the Base Direction , representing the resultant force vector from one of 26 = 64 possible actua-
+
+Base Direction Frequency Continuous Action CHDP (Ours) 
+
+(−0.5, −0.866) 79.0% −0.897 ± 0.089 (0 .0, −0.866) 17.0% −0.703 ± 0.309 (0 .75 , 0.443) 4.0% 0.945 ± 0.070 
+
+HyAR 
+
+(0 .75 , 0.433) 100.00% 0.445 ± 0.000 
+
+Table 3: Action distribution statistics across 100 trials. tor combinations, and the Continuous Action , a scalar value to control the intensity of the final acceleration. Our analysis compares CHDP against the deterministic baseline HyAR. The Gaussian baseline, HPPO, is not in-cluded as it failed to solve the task. As detailed in Ta-ble 3, HyAR’s policy collapses into a single, rigid mode, consistently selecting the same actuator combination. This results in a fixed Base Direction and an unvarying 
+
+Continuous Action with zero variance, demonstrat-ing its inability to capture the task’s multi-modality. In contrast, CHDP leverages its expressiveness to discover a multi-modal policy, employing at least three distinct actu-ator combinations with frequencies of 79.0%, 17.0%, and 4.0%. Most notably, CHDP’s policy demonstrates a sophis-ticated understanding of the task’s dynamics by master-ing different strategies. For instance, its primary approach (79.0% frequency) involves pairing a southwest-pointing 
+
+Base Direction , (-0.5, -0.866), with a strong negative 
+
+Continuous Action to effectively invert the force vec-tor and reach the objective. In stark contrast, it simultane-ously discovers a more intuitive, northeast-pointing strat-egy, (0.75, 0.443), coupled with a positive Continuous Action . This ability to identify and exploit multiple, non-intuitive, and even opposing pathways provides compelling evidence of CHDP’s superior expressiveness. 
+
+# 6 Conclusion 
+
+In this paper, we have proposed CHDP, a novel framework that addresses hybrid action space problems using two co-operating agents, each driven by a diffusion policy. The co-operative design lies in modeling the complex dependencies between actions by conditioning the continuous policy on the discrete action’s representation. To ensure both stabil-ity and efficiency, CHDP further incorporates a sequential update scheme to mitigate update conflicts and a Q-guided codebook to create a compact yet expressive representation for the discrete action space. Experimental results demon-strate that CHDP achieves SOTA performance on challeng-ing benchmarks, outperforming the prior leading method by up to 19 .3% . We further designed a qualitative experiment to evaluate the framework’s expressiveness and scalability. In the Hard Move (n = 6 ) benchmark, CHDP success-fully learned at least three distinct strategies, despite its large discrete action space of 64 (26) options. 23646 Acknowledgements 
+
+This work was supported in part by the National Natural Science Foundation of China under Grant 62272357 and 62302326; in part by Wuhan Science and Technology Joint Project for Building a Strong Transportation Country under Grant 2024-2-7; in part by The State Key Laboratory of In-tegrated Services Networks under Grant ISN25-09, and in part by the Wuhan Science and Technology Project for Key Research and Development No. 2024050702030090. 
+
+# References 
+
+Duan, J.; Guan, Y.; Li, S. E.; Ren, Y.; Sun, Q.; and Cheng, B. 2021. Distributional soft actor-critic: Off-policy rein-forcement learning for addressing value estimation errors. 
+
+IEEE transactions on neural networks and learning systems (TNNLS) , 33(11): 6584–6598. Duan, J.; Wang, W.; Xiao, L.; Gao, J.; Li, S. E.; Liu, C.; Zhang, Y.-Q.; Cheng, B.; and Li, K. 2025. Distributional soft actor-critic with three refinements. IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI) .Fan, Z.; Su, R.; Zhang, W.; and Yu, Y. 2019. Hybrid actor-critic reinforcement learning in parameterized action space. In Proceedings of the 28th International Joint Conference on Artificial Intelligence (IJCAI) , 2279–2285. Fu, H.; Tang, H.; Hao, J.; Lei, Z.; Chen, Y.; and Fan, C. 2019. Deep multi-agent reinforcement learning with discrete-continuous hybrid action spaces. In Proceedings of the 28th International Joint Conference on Artificial Intelli-gence (IJCAI) , 2329–2335. Fujimoto, S.; Hoof, H.; and Meger, D. 2018. Addressing function approximation error in actor-critic methods. In In-ternational conference on machine learning (ICML) , 1587– 1596. PMLR. Hausknecht, M. J.; and Stone, P. 2016. Deep Reinforcement Learning in Parameterized Action Space. In Bengio, Y.; and LeCun, Y., eds., 4th International Conference on Learning Representations (ICLR), 2016, San Juan, Puerto Rico, May 2-4, 2016, Conference Track Proceedings .Ho, J.; Jain, A.; and Abbeel, P. 2020. Denoising diffusion probabilistic models. Advances in neural information pro-cessing systems (NeurIPS) , 33: 6840–6851. Huang, Z.; Liang, L.; Ling, Z.; Li, X.; Gan, C.; and Su, H. 2023. Reparameterized policy learning for multimodal tra-jectory optimization. In International Conference on Ma-chine Learning (ICML) , 13957–13975. PMLR. Jain, V.; Akhound-Sadegh, T.; and Ravanbakhsh, S. 2024. Sampling from Energy-based Policies using Diffusion. In 
+
+Reinforcement Learning Conference (RLC) .Le, H.; Hoang, T.; Gabriel, M.; Neumann, G.; and Vien, N. A. 2025. Enhancing Exploration With Diffusion Policies in Hybrid Off-Policy RL: Application to Non-Prehensile Manipulation. IEEE Robotics and Automation Letters (RA-L) , 10(6): 6143–6150. Li, B.; Tang, H.; Zheng, Y.; Hao, J.; Li, P.; Wang, Z.; Meng, Z.; and Wang, L. 2022. HyAR: Addressing Discrete-Continuous Action Reinforcement Learning via Hybrid Ac-tion Representation. In International Conference on Learn-ing Representations (ICLR) .Linde, Y.; Buzo, A.; and Gray, R. 2003. An algorithm for vector quantizer design. IEEE Transactions on communica-tions , 28(1): 84–95. Liu, B.; Hao, J.; Wang, E.; Jia, D.; Han, W.; Wu, L.; and Xiong, S. 2024a. Multi-agent reinforcement learning based resource allocation for efficient message dissemination in c-v2x networks. In 2024 IEEE/ACM 32nd International Sym-posium on Quality of Service (IWQoS) , 1–10. IEEE. Liu, J.; Hao, X.; ZHENG, Y.; Hu, Y.; Fan, C.; Lv, T.; Hu, Z.; et al. 2024b. Hybrid CtrlFormer: learning adaptive search space partition for hybrid action control via transformer-based Monte Carlo tree search. In The 40th Conference on Uncertainty in Artificial Intelligence (UAI) .Liu, J.; Zhong, Y.; Hu, S.; Fu, H.; FU, Q.; Chang, X.; and Yang, Y. 2024c. Maximum Entropy Heterogeneous-Agent Reinforcement Learning. In The Twelfth International Con-ference on Learning Representations (ICLR) .Lowe, R.; Wu, Y.; Tamar, A.; Harb, J.; Abbeel, P.; and Mordatch, I. 2017. Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments. Neural Informa-tion Processing Systems (NeurIPS) .Massaroli, S.; Poli, M.; Bakhtiyarov, S.; Yamashita, A.; Asama, H.; and Park, J. 2020. Neural ordinary differential equation value networks for parametrized action spaces. In 
+
+ICLR 2020 Workshop on Integration of Deep Neural Models and Differential Equations .Masson, W.; Ranchod, P.; and Konidaris, G. 2016. Rein-forcement learning with parameterized actions. In Proceed-ings of the AAAI conference on artificial intelligence (AAAI) ,volume 30. Sohl-Dickstein, J.; Weiss, E.; Maheswaranathan, N.; and Ganguli, S. 2015. Deep unsupervised learning using nonequilibrium thermodynamics. In International confer-ence on machine learning (ICML) , 2256–2265. pmlr. Song, Y.; and Ermon, S. 2019. Generative modeling by esti-mating gradients of the data distribution. Advances in neural information processing systems (NeurIPS) , 32. Van Den Oord, A.; Vinyals, O.; et al. 2017. Neural dis-crete representation learning. Advances in neural informa-tion processing systems (NeurIPS) , 30. Van Hasselt, H.; Guez, A.; and Silver, D. 2016. Deep rein-forcement learning with double q-learning. In Proceedings of the AAAI conference on artificial intelligence (AAAI) , vol-ume 30. Wang, M.; Jin, Y.; and Montana, G. 2025. Learning on One Mode: Addressing Multi-modality in Offline Reinforcement Learning. In The Thirteenth International Conference on Learning Representations, ICLR 2025, Singapore, April 24-28, 2025 . OpenReview.net. Wang, R.; Yu, R.; An, B.; and Rabinovich, Z. 2021. I2hrl: Interactive influence-based hierarchical reinforcement learn-ing. In Proceedings of the twenty-ninth international confer-ence on international joint conferences on artificial intelli-gence (IJCAI) , 3131–3138. 23647 Wang, X.; Tian, Z.; Wan, Z.; Wen, Y.; Wang, J.; and Zhang, W. 2023. Order Matters: Agent-by-agent Policy Optimiza-tion. In The Eleventh International Conference on Learn-ing Representations, (ICLR) 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net. Wang, Z.; Hunt, J. J.; and Zhou, M. 2023. Diffusion Poli-cies as an Expressive Policy Class for Offline Reinforce-ment Learning. In The Eleventh International Conference on Learning Representations (ICLR) .Xiong, J.; Wang, Q.; Yang, Z.; Sun, P.; Han, L.; Zheng, Y.; Fu, H.; Zhang, T.; Liu, J.; and Liu, H. 2018. Parametrized Deep Q-Networks Learning: Reinforcement Learning with Discrete-Continuous Hybrid Action Space. 
+
+CoRR , abs/1810.06394. Yu, C.; Velu, A.; Vinitsky, E.; Gao, J.; Wang, Y.; Bayen, A.; and Wu, Y. 2022. The surprising effectiveness of PPO in cooperative multi-agent games. In Proceedings of the 36th International Conference on Neural Information Processing Systems (NeurIPS) , 24611–24624. Zhang, R.; Fu, H.; Miao, Y.; and Konidaris, G. 2024. Model-based Reinforcement Learning for Parameterized Action Spaces. In Salakhutdinov, R.; Kolter, Z.; Heller, K.; Weller, A.; Oliver, N.; Scarlett, J.; and Berkenkamp, F., eds., Pro-ceedings of the 41st International Conference on Machine Learning (ICML) , volume 235 of Proceedings of Machine Learning Research , 58935–58954. PMLR. Zhong, Y.; Kuba, J. G.; Feng, X.; Hu, S.; Ji, J.; and Yang, Y. 2024. Heterogeneous-Agent Reinforcement Learning. Jour-nal of Machine Learning Research (JMLR) , 25(32): 1–67. Zhou, W.; Jiang, B.; Yang, F.; Paxton, C.; and Held, D. 2023. HACMan: Learning Hybrid Actor-Critic Maps for 6D Non-Prehensile Manipulation. In Tan, J.; Toussaint, M.; and Darvish, K., eds., Conference on Robot Learning, CoRL 2023, 6-9 November 2023, Atlanta, GA, USA , volume 229 of Proceedings of Machine Learning Research , 241–265. PMLR. 23648

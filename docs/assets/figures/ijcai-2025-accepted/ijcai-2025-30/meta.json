@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "extractor": "papercropper",
+  "figures": [
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-30/fig-001.webp",
+      "caption": "",
+      "page": 0,
+      "index": 1,
+      "width": 258,
+      "height": 330,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-30/fig-002.webp",
+      "caption": "",
+      "page": 0,
+      "index": 2,
+      "width": 1641,
+      "height": 898,
+      "label": "Figure"
+    }
+  ]
+}

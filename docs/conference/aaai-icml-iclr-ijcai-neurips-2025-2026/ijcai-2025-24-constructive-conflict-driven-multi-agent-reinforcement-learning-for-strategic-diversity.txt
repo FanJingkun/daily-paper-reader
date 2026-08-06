@@ -1,0 +1,729 @@
+Title: Constructive Conflict-Driven Multi-Agent Reinforcement Learning for Strategic Diversity
+
+URL Source: https://www.ijcai.org/proceedings/2025/0024.pdf
+
+Published Time: Thu, 18 Sep 2025 11:25:58 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Constructive Conflict-Driven Multi-Agent Reinforcement Learning for Strategic Diversity 
+
+Yuxiang Mai 1,2,3 , Qiyue Yin 1,2,3 , Wancheng Ni 1,2,3,∗ , Pei Xu 2,3 , Kaiqi Huang 1,2,3,∗
+
+> 1
+
+School of Artificial Intelligence, University of Chinese Academy of Sciences 
+
+> 2
+
+CRISE, Institute of Automation, Chinese Academy of Sciences 
+
+> 3
+
+The Key Laboratory of Cognition and Decision Intelligence for Complex Systems, Institute of Automation, Chinese Academy of Sciences 
+
+{maiyuxiang2020, wancheng.ni, pei.xu }@ia.ac.cn, {qyyin, kqhuang }@nlpr.ia.ac.cn 
+
+Abstract 
+
+In recent years, diversity has emerged as a use-ful mechanism to enhance the efficiency of multi-agent reinforcement learning (MARL). However, existing methods predominantly focus on design-ing policies based on individual agent characteris-tics, often neglecting the interplay and mutual in-fluence among agents during policy formation. To address this gap, we propose Competitive Diversity through Constructive Conflict (CoDiCon), a novel approach that incorporates competitive incentives into cooperative scenarios to encourage policy ex-change and foster strategic diversity among agents. Drawing inspiration from sociological research, which highlights the benefits of moderate compe-tition and constructive conflict in group decision-making, we design an intrinsic reward mechanism using ranking features to introduce competitive mo-tivations. A centralized intrinsic reward module generates and distributes varying reward values to agents, ensuring an effective balance between com-petition and cooperation. By optimizing the pa-rameterized centralized reward module to maxi-mize environmental rewards, we reformulate the constrained bilevel optimization problem to align with the original task objectives. We evaluate our algorithm against state-of-the-art methods in the SMAC and GRF environments. Experimental re-sults demonstrate that CoDiCon achieves superior performance, with competitive intrinsic rewards ef-fectively promoting diverse and adaptive strategies among cooperative agents. 
+
+1 Introduction 
+
+Due to the advancement of deep multi-agent reinforcement learning, many real-world problems have been modeled and addressed as cooperative multi-agent problems [Samvelyan 
+
+et al. , 2019; Sunehag et al. , 2017; Rashid et al. , 2020], such as traffic signal control [Wiering, 2000], autonomous driv-ing [Hu et al. , 2019], and robot control [Haarnoja et al. ,
+
+> ∗Corresponding authors
+
+2019]. The goal of these cooperative multi-agent problems is to maximize the reward from a team perspective [Colby et al. ,2015; Rashid et al. , 2020]. However, learning effective strate-gies for such complex multi-agent systems remains a signif-icant challenge. One key problem is that relying on a single feedback signal often leads to homogeneous agent policies, resulting in inefficient exploration and hindering the emer-gence of complex cooperative behaviors [Li et al. , 2021]. Providing additional reward signals [Du et al. , 2019; Li 
+
+et al. , 2021; Jiang and Lu, 2021] to individual agents has proven to be an effective approach for diversifying coopera-tive strategies and improving performance. Existing methods for designing such rewards primarily rely on the mutual in-formation between agent policies and agent identities (IDs) as intrinsic rewards [Li et al. , 2021; Jiang and Lu, 2021], but such methods do not consider the influence of other agents and lack intuitive interpretability. LIIR [Du et al. , 2019] in-troduces learnable intrinsic rewards with shared parameters to facilitate information exchange, enabling agents to develop independent strategies. However, the process of learning in-trinsic rewards overlooks the important role of competitive mechanisms in cooperative scenarios, as evidenced in socio-logical research. There is a unique phenomenon observed in sociological re-search called Constructive Conflict [Kirchmeyer and Cohen, 1992; King et al. , 2009]. Constructive Conflict describes a situation in which the collective intelligence of a cooperative group is stimulated by the positive competition or clash of views between individuals and subgroups. Unlike destructive conflict that hinder the achievement of optimization goals, constructive conflict does not lead to strained relationships or reduced efficiency. Instead, it fosters diverse perspectives and strategy refinement, positively contributing to group goals. Inspired by the concept of constructive conflict, we propose competitive intrinsic rewards to enhance agent learning and team performance. In particular, unlike intrinsic rewards, the competitive intrinsic rewards provide cooperative agents with competitive incentives, thereby stimulating strategic commu-nication and strategy diversification among agents. In this paper, we propose an algorithm called CoDiCon, which is designed for competitive intrinsic rewards. Specif-ically, ranking is an effective method to encourage mutual competition, so we design an intrinsic reward that incorpo-Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 205
+
+rates ranking property. The overall algorithm adopts an actor-critic structure [Lowe et al. , 2017; Schulman et al. , 2017] based on MAPPO [Yu et al. , 2022], where each agent has a separate set of parameters. The global critic evaluates the current action values, and a centralized intrinsic reward gen-eration module produces a ranked intrinsic reward for each agent’s current action to foster competition. The agent’s pol-icy is jointly optimized using both extrinsic and intrinsic re-wards, with the intrinsic reward serving merely as a train-ing signal to distinguish rankings rather than having any in-herent meaning. Mathematically, the optimization problem can be modeled as a constrained bilevel optimization prob-lem, where the constraints in the outer optimization ensure the equivalence between the optimization objective and the original maximization of the environmental reward. We sum-marize our contributions as follows: • We design an effective intrinsic reward mechanism based on the principles of constructive conflict, intro-ducing competitive incentives to cooperative multi-agent systems to enhance team performance. • The ranking module is proposed to provide agents with intrinsic rewards possessing ranking property. The opti-mization objective is formulated as a constrained bilevel problem, ensuring that optimizing the policy based on the ranking rewards aligns with the original goal of max-imizing environmental rewards. • Experimental results demonstrate that our algorithm out-performs existing methods. Visualizations of the agents’ intrinsic rewards and state-reward space indicate that the learned intrinsic rewards produce distinct signals, en-abling agents to take diverse actions collaboratively. 
+
+2 Related Work 
+
+In recent years, deep multi-agent reinforcement learning has made significant advancements. Research efforts such as COMA [Foerster et al. , 2018], MADDPG [Lowe et al. , 2017], and LICA [Zhou et al. , 2020] have explored policy-based approaches to multi-agent problems, utiliz-ing a centralized critic to evaluate the value of each dis-tributed policy. Value decomposition methods, including VDN [Sunehag et al. , 2017], QMIX [Rashid et al. , 2020], and QTRAN [Hostallero et al. , 2019], decompose environmental feedback into individual agent value functions, thereby en-abling credit assignment. QPLEX [Wang et al. , 2020] pro-posed using dueling networks to relax the monotonicity con-straint of mixing networks, expanding their representational capacity. Learning from others is an innate human survival skill, a phenomenon mirrored in agent policies, where infor-mation exchange via mixing networks enhances policy gen-eration. However, most existing methods focus on central-ized mixing network structures to satisfy value function con-straints, often relying on strong assumptions about these func-tions. In contrast, our approach learns explicit intrinsic re-wards for each agent at each time step, avoiding such assump-tions and enabling immediate credit assignment. Our work addresses the problem of designing intrinsic re-wards in cooperative multi-agent systems, a topic that has been explored in some previous studies. EOI [Jiang and Lu, 2021] proposed learning a classifier for observations to compute the probability that an observation belongs to each agent, using this probability as an intrinsic reward to adjust the agent’s final reward. CDS [Li et al. , 2021] introduced maximizing the mutual information between agent IDs and trajectories as an intrinsic reward to promote diverse poli-cies. However, such methods do not consider the influence of other agents, overlooking the importance of learning from them, and they lack intuitive interpretability. LIIR [Du et al. ,2019] designed a module for generating intrinsic rewards to guide more diverse policies, ensuring that the two-level op-timization is equivalent to the initial optimization problem. However, it also overlooks the positive competitive influence that other agents can have on policy development. Further-more, directly calculating intrinsic rewards can result in an excessively large optimization space, increasing the risk of policies converging to local optima. 
+
+3 Preliminary 
+
+3.1 Cooperative Multi-Agent Reinforcement Learning 
+
+Multi-agent reinforcement learning [Sutton and Barto, 2018] extends traditional reinforcement learning to address decision-making problems with multiple agents in sequen-tial environments. A fully cooperative multi-agent problem can be represented as a Decentralized Partially Observable Markov Decision Process (Dec-POMDP) [Oliehoek and Am-ato, 2016]. In this model, a Dec-POMDP is described by the tuple ⟨S, A, U, Z, O, P, r, n, γ ⟩. Here, S represents the global states of the environment, and A denotes the set of n agents. At each time step t, each agent i ∈ A selects an action ui from its action set Ui, resulting in a joint action u ∈ U ≡ U n. The state transition function P determines the next state s′ ∈ S
+
+based on the current state s and the joint action u. All agents share a common reward r(s, u), which depends on the state and joint action. A discount factor γ ∈ [0 , 1) is used to weigh future rewards. In the partially observable setting, each agent receives a local observation zi ∈ Z, derived from the observation function O(s, u) : S × U → Z, where Z is the observation space. Each agent learns an individual pol-icy πi(ui|τi; θi) with parameters θi based on its own action-observation history τi. The agents’ combined policies deter-mine the joint action taken in the environment. 
+
+3.2 Centralized Training with Decentralized Execution 
+
+Centralized Training and Decentralized Execution (CTDE) is a commonly used paradigm for addressing multi-agent problems. In this paradigm, actor-critic methods are of-ten chosen [Williams, 1992; Andrychowicz et al. , 2016; Schulman, 2015; Sutton and Barto, 2018; Yu et al. , 2022]. In our approach, we choose the MAPPO [Yu et al. , 2022] algorithm as the base framework, which consists of n inde-pendently parameterized policies πθi . The policy parame-ters θ = {θ1, θ 2, ..., θ n} are optimized using policy gradient methods to maximize the extrinsic reward: 
+
+Jex (θ) = Es, u [min ( p(θ)Aπ (s, u) , ep(θ)Aπ (s, u))] , (1) Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25)               
+
+> 206 Extrinsic Critic
+> Network (𝜙 )
+> Agent n (𝜃 !)
+> 𝑟 !
+> "# ,…,𝑟 $
+> "#
+> Agent 1 (𝜃 ")𝜋 !(𝜏 %
+> !,𝑢 %
+> !)
+> Hybird Critic
+> Network (𝜑 )
+> Rank
+> Network
+> 𝜋 $(𝜏 %
+> $,𝑢 %
+> $)
+> ⋯
+> 𝑉 &'(")* (𝑠 %,𝒖 %)
+> ⋯
+> GRU
+> FC
+> (𝑜 %
+> !,𝑢 %+!
+> !)
+> FC
+> softmax
+> ℎ%+!ℎ%
+> 𝑉 &'(")* (𝑠 %,𝒖 %)
+> FC
+> FC
+> 𝜋 !(𝜏 %
+> !,𝑢 %
+> !)
+
+Environment 𝑟 ,- ⨁       
+
+> FC
+> FC
+> sort layer
+> 𝑟 !
+> "# ,…,𝑟 $
+> "#
+> 𝑠 %,𝒖 %𝑠 %,𝒖 %
+> 𝐿 ./0 (𝜂 )
+> 𝐿 123 (𝜂 )
+> (𝜂 )
+> Data flow
+> Effect of
+> backpropagation
+> 𝑉 ,-(𝑠 %,𝒖 %)
+
+Figure 1: Framework of the proposed method. The framework consists of four parameterized modules: the agent module with parameters θ,the ranking module with parameters η, the hybird critic module with parameters φ, and the extrinsic critic module with parameters ϕ.
+
+where p(θ) = πθ (u|s)  
+
+> πold ,θ(u|s)
+
+denotes the policy ratio, which de-pends on the policy parameters θ, and ep(θ) = clip (p(θ), 1 −
+
+ϵ, 1 + ϵ) is the clipped policy ratio. Aπ (s, u) represents the advantage function based on the state and actions. There are several methods to estimate Aπ (s, u). For example, 
+
+Aπ (s, u) = rex (s, u) + V ex (s′) − V ex (s) is the standard ad-vantage function [Schulman, 2015], where s′ is the next state. 
+
+4 Method 
+
+In this section, we present the competitive intrinsic reward al-gorithm, CoDiCon. First, we provide a formal definition of the problem and represent it as a constrained bilevel optimiza-tion problem. Then, we detail the approach for solving this problem, which effectively addresses the interplay between agents’ learning and their competitive interactions. 
+
+4.1 The Optimization Objective 
+
+We define the components of the agent’s reward, which con-sist of intrinsic reward rin and extrinsic reward rex . The in-trinsic reward is parameterized by η. At each time step, each agent takes a state-action pair as input, the hybird reward can be expressed as: 
+
+rhybird  
+
+> i,t
+
+= rex  
+
+> t
+
++ λr in 
+
+> i,t
+
+(η). (2) In equation (2), λ represents the hyperparameter that balances intrinsic and extrinsic rewards. It is important to note that the additional intrinsic reward does not appear in the standard multi-agent problem. After defining a hybird reward rhybird 
+
+> i,t
+
+for each agent at each time step, we define the discounted hybird reward for each agent as follows: 
+
+Rhybird  
+
+> i,t
+
+=
+
+> ∞
+
+X
+
+> l=0
+
+γl  rex  
+
+> t+l
+
++ λr in 
+
+> i,t +l
+
+(η) , (3) and the hybird value function for agent i is defined as: 
+
+V hybird  
+
+> i
+
+(st) = Est+1 ,u i,t ,... 
+
+h
+
+Rhybird 
+
+> i,t
+
+i
+
+. (4) Unlike the extrinsic value function V ex , these hybird value functions V hybird  
+
+> i
+
+do not have any actual physical meaning. They are just used to update the parameters θi of each agent’s policy. Next, we consider the overall optimization objective, defined as: 
+
+max  
+
+> η, θ
+
+Jex (η), (5) s.t. θi = arg max  
+
+> θ
+
+Jhybird  
+
+> i
+
+(θ, η ), ∀i ∈ [1 , 2, . . . , n ],rin  
+
+> 1
+
+< r in  
+
+> 2
+
+< · · · < r in  
+
+> n
+
+, where rin  
+
+> i
+
+= rank (η)
+
+where Jhybird  
+
+> i
+
+= Es0,u i, 0,... 
+
+h
+
+Rhybird 
+
+> i, 0
+
+i
+
+depending on θi and η,
+
+η indicates the parameter of the ranking module and θ in-dicates the policy parameter set {θ1, θ 2, · · · , θ n}. The up-dates of the ranking module parameters and policy param-eters are performed alternately. The ranking network mod-ule consists of fully connected layers and a sorting function layer, ensuring that the intrinsic rewards rin it outputs have numerical differences and are arranged in ascending order. When the parameters of the ranking module are frozen, the policy parameter θi is optimized by maximizing the hybrid expected cumulative return Jhybird  
+
+> i
+
+for agent i. The advan-tage of this approach lies in using the ranked intrinsic re-wards at each step for policy learning, where competition is captured by the intrinsic rewards, defined through pairwise performance ranking as rin  
+
+> i
+
+= rank η (i, −i). This mechanism motivates agents to compete and learn from each other, lead-ing to more complex and diverse behaviors. Conflict arises when an agent’s action that maximizes its intrinsic reward rin 
+
+> i
+
+opposes the team’s extrinsic reward rex . Specifically, conflict exists if for some agent i, ∇ui rex · ∇ ui rin  
+
+> i
+
+< 0, implying the agent’s optimal behavior hinders team performance. From an optimization perspective, problem (5) can be viewed as a constrained bilevel optimization problem, where the outer op-timization constrains the inner policy improvement process. The ultimate goal of optimization is to maximize the environ-mental reward under the constraint of intrinsic rewards. This ensures alignment with the original objective of maximizing Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+207 the environmental reward, allowing better-performing poli-cies to receive higher intrinsic rewards. In the next section, we will discuss the relationship between Jex and the intrinsic reward parameter η during the optimization process. 
+
+4.2 Algorithm 
+
+For the constrained two-level optimization problem, at each update step, the policy parameters are updated based on the hybrid expected return, while the update of the ranking mod-ule parameters depends on the ranking process and the extrin-sic expected return. Specifically, the parameters of each agent are updated us-ing the hybird critic network. Given the trajectory data gener-ated by the agents, the policy parameters are updated through the policy gradient method as described in (1): 
+
+∇θi min 
+
+
+
+p(θi)Ahybird  
+
+> i
+
+(s, u) , ep(θi)Ahybird  
+
+> i
+
+(s, u)
+
+
+
+, (6) where p(θi) is the policy ratio of agent i. Ahybird  
+
+> i
+
+(s, u)
+
+denotes the hybird critic, which can be chosen in various ways [Sutton and Barto, 2018; Schulman, 2015; Yu et al. ,2022]. In this paper, we choose Ahybird  
+
+> i
+
+(s, u) = rhybird  
+
+> i
+
+(s, u)+ 
+
+V hybird  
+
+> φ
+
+(s′) − V hybird  
+
+> φ
+
+(s) as the advantage function, where 
+
+V hybird  
+
+> φ
+
+represents the hybird state value, parameterized by 
+
+φ, and s′ denotes the next state of the agent in the tra-jectory. Given (6) and a policy learning rate a, the up-dated policy parameter θ′ 
+
+> i
+
+can be expressed as: θ′ 
+
+> i
+
+= θi +
+
+α∇θi min 
+
+
+
+p(θi)Ahybird  
+
+> i
+
+(s, u) , ep(θi)Ahybird  
+
+> i
+
+(s, u)
+
+
+
+.To ensure that intrinsic rewards promote competition among agents, we update η by applying a relative numeri-cal constraint to the intrinsic rewards produced by the ranking module. This ensures that the rewards follow a sequential dis-tribution. Specifically, we use mean squared error (MSE) loss and variance loss of intrinsic rewards to maintain the output as a sequence with numerical differences: 
+
+LMSE (η) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(rin  
+
+> i
+
+− yi)2, (7) 
+
+LVar (η) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(rin  
+
+> i
+
+− ¯rin )2, (8) where y is the optimization target for the intrinsic reward, represented as an ordered sequence. This sequence is ran-domly initialized at the beginning of training (in our setup, 20% positive values and 80% negative values) and remains fixed during subsequent training. ¯rin is the mean of the in-trinsic rewards. For the update of the parameter η, we first minimize the MSE loss and maximize the variance loss: 
+
+L(η) = β1LMSE (η) − β2LVar (η). (9) Given (9) and a learning rate β, the updated parameters of the ranking module can be expressed as: η′ = η − β∇η L(η).Next, we construct expressions for η′ and Jex to update the parameter η′. Using the updated policy parameter θ′, we apply the chain update rule to get: 
+
+∇η′ Jex = ∇θ′ 
+
+> i
+
+Jex ∇η′ θ′
+
+> i
+
+. (10) 
+
+Algorithm 1 The algorithm of CoDiCon. 
+
+1: Input: Policy learning rate α and intrinsic reward learn-ing rate β.
+
+2: Initialize: Policy parameters θ and intrinsic reward pa-rameters η.
+
+3: for t = 1 to Tmax do 
+
+4: Sample a trajectory D = {s0, u0, s 1, u1, · · · } by executing actions with the decentralized policies 
+
+{πθ1 , · · · , π θn };
+
+5: Update θ according to (6) with learning rate α;
+
+6: Update η according to (9) with learning rate β;
+
+7: Compute (11) and (12) using samples from D after the first update of η;
+
+8: Update η′ according to (10) and step 7 with learning rate β;
+
+9: end for 
+
+10: return policy parameters θ
+
+The purpose of (10) is to formally express the impact of Jex 
+
+on the updated policy parameter η′ through the updated pa-rameter θ′
+
+> i
+
+. This technique is widely adopted in meta-gradient learning [Andrychowicz et al. , 2016; Santoro et al. , 2016; Xu et al. , 2018]. Using samples generated by the updated pol-icy network, the meta-gradient ∇η′ can be computed. In (10), 
+
+∇θ′ 
+
+> i
+
+Jex can be estimated by stochastic gradient as 
+
+∇θ′ 
+
+> i
+
+min ( p(θ′
+
+> i
+
+)Aex (s, u) , ep(θ′
+
+> i
+
+)Aex (s, u)) , (11) here, Aex (s, u) denotes the centralized extrinsic critic. Sim-ilar to the centralized hybrid critic, we define Aex (s, u) = 
+
+rex (s, u) + V ex  
+
+> ϕ
+
+(s′) − V ex  
+
+> ϕ
+
+(s), where V ex  
+
+> ϕ
+
+(s) is the extrinsic value function with parameters ϕ. For the update of η′, the second term in (10) can be derived as: 
+
+∇η′ θ′ 
+
+> i
+
+=∇η′
+
+θi + α∇θi min 
+
+
+
+p(θi)Ahybird  
+
+> i
+
+, ep(θi)Ahybird 
+
+> i
+
+ 
+
+=αλ min( ∇θi p(θi)∇η′ rhybird  
+
+> i
+
+, ∇θi ep(θi)∇η′ rhybird  
+
+> i
+
+).
+
+(12) Figure 1 presents the overall framework of the CoDiCon al-gorithm. A detailed description of the algorithm is provided in Algorithm 1. 
+
+5 Experiments 
+
+In this section, we analyze and illustrate the perfor-mance and effectiveness of our algorithms in Pac-Men, Google Reasearch Football (GRF) and Starcraft Multi-agent Changellenge (SMAC) environments. We select the multi-agent policy-based method (MAPPO), the intrinsic reward policy-based method (LIIR), and the independent emergence methods (EOI, CDS) as baseline methods for comparison. First, we analyze the effectiveness of introducing a compet-itive mechanism to improve policy performance in the Pac-Man environment. Next, we conduct performance compar-ison experiments on GRF and SMAC. Then, we perform a case study on GRF to analyze the effectiveness of the intrin-sic rewards in our algorithm. Additionally, we use t-SNE vi-sualization in the SMAC environment to compare the final Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+208 (a) (b) (c) 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00   
+
+> Steps 1e6
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> Test Score Pac-Men
+> CoDiCon CDS EOI MAPPO LIIR
+
+(d) Figure 2: (a) The designed Pac-Men environment. (b) Visitation heatmap of EOI. (c) Visitation heatmap of our CoDiCon. The darker color means the higher value. (d) The training curve for the compared methods. 0.0 0.2 0.4 0.6 0.8 1.0                 
+
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> Test Win Rate %
+> academy 3 vs 1 with keeper
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate %
+> academy counterattack easy
+> 0.0 0.5 1.0 1.5 2.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> Test Win Rate %
+> academy counterattack hard
+> CoDiCon CDS EOI MAPPO LIIR
+
+Figure 3: Training curves compared with the baselines on GRF. 
+
+distribution of policies in the state-reward space, explaining the intrinsic reasons behind the effectiveness of the algorithm. Finally, we experimentally validate the two modules of the algorithm that encourage intrinsic reward variability through ablation studies. 
+
+5.1 Competitive Intrinsic Reward 
+
+We design the Pac-Men environment, shown in Figure 2a, to demonstrate how our algorithm encourages agents to com-pete, thereby improving overall algorithm performance. In this environment, the central room connects four equally sized rooms and is equidistant from each of them. Four agents are initialized at fixed positions near the entrance of each room, and each agent has a 5x5 field of view. To fos-ter competition among agents, the lower room contains the highest number of ”dots” compared to the other three rooms. To make the environment more challenging, the game is lim-ited to 17 timesteps, making it difficult for a single agent to collect all dots in the lower room, requiring at least two agents. The best case scenario is that one of the agents gives up the closest room and chooses to enter the room below, and then the two agents eat all the dots in the room below to-gether. Agents incur a -0.25 penalty per timestep but gain 1 reward for each bean eaten. We compare our algorithm with SOTA algorithms. As shown in the visitation heatmap in Figure 2b and 2c, the EOI agents dispersed to four different rooms, whereas two agents in our algorithm both moved to the lower room, which contains the highest number of dots. In this environment, overly dispersed strategies do not result in optimal rewards. The experimental results shown in Figure 2 demonstrate that our algorithm successfully discovers the op-timal strategy, while other algorithms fall into local optimal solutions. The possible reason is that our algorithm enables other agents to learn the high-reward strategy of the agent that moves to the lower room to collect ”dots” by continuously ranking the intrinsic rewards, that is, by assigning higher in-trinsic rewards to the agents that go to the lower room. 
+
+5.2 Performence on GRF 
+
+In this section, we first evaluate the performance of the al-gorithm in the GRF environment. Specifically, we com-pare our algorithm with others on GRF tasks of increasing difficulty, including academy 3 vs 1 with keeper, academy-counterattack easy, and academy counterattack hard. In the GRF task, the agents need to collaborate in time and space to organize the attacking opportunities, and only the scoring are rewarded. In our experiments, we control the agents on the left (in yellow) except the goalkeeper’s agent, and the agents on the right are controlled via the roule-based AI built into the game engine. The agents have 19 discrete action spaces, in-cluding moving from different angles, sliding, shooting, and passing. Observations include the position and direction of movement of the agents and other agents, as well as the po-sition and direction of movement of the ball. The movement of the soccer ball in the z-axis direction is also included in the observations, and the agents receive feedback from the environment only at the end of the game. Our algorithm outperforms all other algorithms in all test environments, and the results are shown in Figure 3. In the academy 3 vs 1 with keeper, other baselines also per-form well, such as MAPPO and LIIR, showing performance close to that of our algorithm. However, on the progressively more difficult environments of academy counterattack easy and academy counterattack hard, the advantage of our algo-Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+209 0.0 0.2 0.4 0.6 0.8 1.0                                    
+
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate % 5m vs 6m
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate % 3s5z
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate % 3s vs 5z
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate % 8m vs 9m
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate % 2c vs 64zg
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Steps 1e7
+> 0
+> 20
+> 40
+> 60
+> 80
+> Test Win Rate % MMM2 CoDiCon CDS EOI MAPPO LIIR
+
+Figure 4: Training curves compared with the baselines on SMAC. 
+
+rithm gradually widens, and the interval between the training curves becomes more and more obvious. This demonstrates that our algorithm is able to effectively capture valuable states and actions in sparse reward-difficult environments, generat-ing intrinsic rewards that encourage the agent to learn better. 
+
+5.3 Performence on SMAC 
+
+In this section, we test our algorithm in the StarCraft Micro-management (SMAC) environment, a popular MARL bench-mark. Each agent has attributes like health, weapon CD, shield, unit type, last action, and relative distances to ob-served units, with enemy units sharing similar attributes ex-cept CD. In partially observable settings, agents gather infor-mation within a circular range. The action space includes four movement directions, k attack actions (where k is the max number of enemies), a stop action, and a no-op action, with invalid actions masked. We evaluate on scenarios: 3s vs 5z, 8m vs 9m, MMM2, 2c vs 64zg, 5m vs 6m, 3S5Z. Only the Zealot is melee, the Medivac is a non-attacking support unit, and others are ranged. Agents receive a joint team reward based on total damage, with a significant bonus for winning. We present the experimental results of the comparison in Figure 4. Our algorithm outperforms the baseline algorithms in most environments, with performance comparable to EOI only in the environment of 2c vs 64zg. Both CDS and EOI achieve performance close to our algorithm on some maps, such as 3s vs 5z and 8m vs 9m. However, their performance on 5m vs 6m and 2c vs 64zg are highly unstable, indicating that the diversity mechanisms in CDS and EOI lack effective exploration and utilization of the state space, which may lead to local optima. MAPPO shows relatively stable and high performance across all environments, but it still lags behind our algorithm in terms of training efficiency and convergence speed. In contrast, LIIR performs poorly on all SMAC maps, suggesting that the unconstrained learnable intrinsic rewards in LIIR make learning highly unstable, particularly in scenar-ios with denser rewards. In contrast, our algorithm provides P 0          
+
+> P 2 P 2 P 3 P 3
+> P 1
+> pass
+> shoot
+> dribble
+> P 1   
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+>    
+> 
+> 
+> 
+
+pass 
+
+> shoot
+
+Figure 5: Left. Visualization of the trained policy. Right. The learned intrinsic reward curve for the agent players. 
+
+stable initial feedback during training by introducing a dis-tinctly different prior intrinsic reward. 
+
+5.4 Visualizing the Learned Intrinsic Reward 
+
+The effectiveness of the strategy is demonstrated on the GRF counter attack hard mission, where we control four players positioned at different locations, cooperating to kick the ball from the half-field area into the opponent’s goal. During the course of the play, the team encounters two opposing play-ers controlled by the built-in AI, as well as a goalkeeper de-fending the opponent’s goal. We visualize the trajectories of the players and the ball in Figure 5 (left), where the players’ paths are represented by white arrows and the ball’s path by yellow arrows. Agents are distinguished by numerical identi-fiers. Player 2 dribbles the ball and passes it to player 3, who receives it and shoots it into the goal. Player 1 collaborates with player 2 in the attack, applying pressure on the two op-posing defenders, while player 0 moves toward the penalty area to support the offensive play. In Figure 5 (right), we plot the intrinsic reward curves corresponding to each player during the passing and shooting process. • In the passing process, higher rewards are assigned to player 3 (the player taking the shot), player 2 (the player dribbling the ball), and player 1 (the player supporting the attack). In contrast, player 0, who is farther from the Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+210 80 60 40 20 0 20 40 60 80                
+
+> t-SNE 1
+> 75
+> 50
+> 25
+> 025 50 75 100
+> t-SNE 2
+> t-SNE Visualization of MAPPO
+> 0.0 0.5 1.0 1.5 2.0
+> reward 75 50 25 025 50 75 100
+> t-SNE 1
+> 75
+> 50
+> 25
+> 025 50 75
+> t-SNE 2
+> t-SNE Visualization of CoDiCon without rank
+> 0.0 0.5 1.0 1.5 2.0
+> reward 80 60 40 20 020 40 60 80
+> t-SNE 1
+> 60
+> 40
+> 20
+> 020 40 60 80
+> t-SNE 2
+> t-SNE Visualization of CoDiCon
+> 0.0 0.5 1.0 1.5 2.0
+> reward
+
+Figure 6: t-SNE results on the state-reward space. 
+
+offensive play, receives lower rewards. • After player 2 passes the ball, his intrinsic reward drops sharply. During the flight of the ball, player 1 maintains a relatively high intrinsic reward because he is close to the two opposing defenders and supports the offense. Once player 3 receives the ball and takes the shot, the intrinsic rewards of the three players involved in the of-fensive play increase significantly. This demonstrates that the intrinsic rewards in our algorithm effectively evaluate each agent’s state and its contribution to the overall team performance. 
+
+5.5 Strategy Visualization in State-Reward Space 
+
+In addition to evaluating the performance of the trained poli-cies, we are also interested in understanding how the learned intrinsic reward function influences policy learning. To ana-lyze the intrinsic impact of our algorithm on policy training, we combine the state space and reward space to form a high-dimensional state-reward space. In this space, we can intu-itively compare the distribution of the learned policy across states and the rewards obtained by executing actions in these states. We use t-SNE [Van der Maaten and Hinton, 2008] to perform a low-dimensional mapping of the state-reward space, where the specific value of each point is represented by the environmental reward. Different colors are used on the graph to represent the values, with warmer colors indi-cating higher values, as shown in the figure 6. We compared CoDiCon, MAPPO, and the intrinsic reward algorithm with-out ranking (CoDiCon without rank) based on the results of the trained policies over 50 episodes. As shown in the fig-ure, MAPPO explores more meaningless states and attempts actions over a larger area (larger canvas size) compared to algorithms utilizing intrinsic rewards, but this does not lead to higher rewards. In contrast to the policy without ranked intrinsic rewards, our algorithm avoids meaningless explo-ration in adjacent feature spaces with high feature similar-ity (the points are more dispersed yet relatively concentrated) 0.0 0.2 0.4 0.6 0.8 1.0 1.2         
+
+> Steps 1e6
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Win Rate % 5m vs 6m
+> CoDiCon w/o pri w/o var w/o rank LIIR 0.0 0.2 0.4 0.6 0.8 1.0 1.2
+> Steps 1e6
+> 0
+> 20
+> 40
+> 60
+> 80
+> Test Win Rate % MMM2
+> CoDiCon w/o pri w/o var w/o rank LIIR
+
+Figure 7: The training curves of success rate for ablation methods. 
+
+and identifies high-value actions at key nodes (points with more warm colors). The possible reason is that our algorithm facilitates mutual learning among agents for high-reward ac-tions, and the differences in intrinsic rewards make the strat-egy more complex, diverse, and efficient. 
+
+5.6 Ablation Study 
+
+In our algorithm, two loss functions are designed to promote intrinsic reward variability and constrain the training of the ranking module parameters: the priori intrinsic reward MSE loss and the intrinsic reward maximum variance loss. To eval-uate the effectiveness of these constraints, we conduct abla-tion experiments on the two loss functions as shown in Fig-ure 7. Here, w/o pri refers to the algorithm without the priori loss constraint, w/o var refers to the algorithm without the variance loss constraint, and w/o rank refers to the algorithm without both loss constraints. We perform comparative ex-periments on the 5m vs 6m and MMM2 scenarios in SMAC, and the results in both scenarios are consistent. These results indicate that both loss functions make positive contributions to policy training, outperforming the performance achieved without the intrinsic reward ranking loss, thereby demonstrat-ing that both constraints are effective. Notably, using only the priori intrinsic reward constraint achieves higher performance and faster convergence compared to using only the variance constraint. A possible explanation is that reinforcement learn-ing involves a large number of low-value states during the early stages of training, where distinguishing these low-value states and assigning them lower intrinsic rewards is critical. In contrast, variance constraints primarily become effective during the later stages of training. 
+
+6 Conclusion 
+
+We propose a novel competitive intrinsic reward multi-agent algorithm, CoDiCon, which enables each agent to learn an in-trinsic reward with ranking properties. This approach effec-tively guides mutual competition and learning among agents, enhancing the efficiency of learning diverse strategies even when the environment provides only a single team reward. Our algorithm is formulated as a constrained bilevel opti-mization problem, theoretically ensuring that the final opti-mization objective aligns with maximizing the original envi-ronmental rewards. Experimental results on the SMAC, GRF, and Pac-Men environments demonstrate that CoDiCon out-performs existing state-of-the-art methods in terms of perfor-mance. Furthermore, case studies further validate the effec-tiveness of our intrinsic reward design. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+211 Acknowledgments 
+
+This work is jointly supported by the National Science and Technology Major Project (No.2022ZD0116403), the Key Research Project of Chinese Academy of Sciences (No.RCJJ-145-24-15), the Postdoctoral Fellowship Program of CPSF (Grant No.GZC20232995), the China Postdoctoral Science Foundation (Grant No.2024M763533). 
+
+References 
+
+[Andrychowicz et al. , 2016] Marcin Andrychowicz, Misha Denil, Sergio Gomez, Matthew W Hoffman, David Pfau, Tom Schaul, Brendan Shillingford, and Nando De Freitas. Learning to learn by gradient descent by gradient descent. 
+
+Advances in neural information processing systems , 29, 2016. [Colby et al. , 2015] Mitchell K Colby, Sepideh Kharaghani, Chris HolmesParker, and Kagan Tumer. Counterfactual exploration for improving multiagent learning. In AAMAS ,pages 171–179, 2015. [Du et al. , 2019] Yali Du, Lei Han, Meng Fang, Ji Liu, Tian-hong Dai, and Dacheng Tao. Liir: Learning individ-ual intrinsic reward in multi-agent reinforcement learning. 
+
+Advances in Neural Information Processing Systems , 32, 2019. [Foerster et al. , 2018] Jakob Foerster, Gregory Farquhar, Triantafyllos Afouras, Nantas Nardelli, and Shimon Whiteson. Counterfactual multi-agent policy gradients. In 
+
+Proceedings of the AAAI Conference on Artificial Intelli-gence , volume 32, 2018. [Haarnoja et al. , 2019] Tuomas Haarnoja, Sehoon Ha, Au-rick Zhou, Jie Tan, George Tucker, and Sergey Levine. Learning to walk via deep reinforcement learning. In Antonio Bicchi, Hadas Kress-Gazit, and Seth Hutchin-son, editors, Robotics: Science and Systems XV, University of Freiburg, Freiburg im Breisgau, Germany, June 22-26, 2019 , 2019. [Hostallero et al. , 2019] Wan Ju Kang David Earl Hostallero, Kyunghwan Son, Daewoo Kim, and Yung Yi Qtran. Learning to factorize with transformation for cooperative multi-agent reinforcement learning. In Pro-ceedings of the 31st International Conference on Machine Learning, Proceedings of Machine Learning Research. PMLR , 2019. [Hu et al. , 2019] Yeping Hu, Alireza Nakhaei, Masayoshi Tomizuka, and Kikuo Fujimura. Interaction-aware deci-sion making with adaptive strategies under merging sce-narios. In 2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) , pages 151–158. IEEE, 2019. [Jiang and Lu, 2021] Jiechuan Jiang and Zongqing Lu. The emergence of individuality. In International Conference on Machine Learning , pages 4992–5001. PMLR, 2021. [King et al. , 2009] Eden B King, Michelle R Hebl, and Daniel J Beal. Conflict and cooperation in diverse work-groups. Journal of Social Issues , 65(2):261–285, 2009. [Kirchmeyer and Cohen, 1992] Catherine Kirchmeyer and Aaron Cohen. Multicultural groups: Their performance and reactions with constructive conflict. Group & Organi-zation Management , 17(2):153–170, 1992. [Li et al. , 2021] Chenghao Li, Tonghan Wang, Chengjie Wu, Qianchuan Zhao, Jun Yang, and Chongjie Zhang. Cel-ebrating diversity in shared multi-agent reinforcement learning. Advances in Neural Information Processing Sys-tems , 34:3991–4002, 2021. [Lowe et al. , 2017] Ryan Lowe, Yi I Wu, Aviv Tamar, Jean Harb, OpenAI Pieter Abbeel, and Igor Mordatch. Multi-agent actor-critic for mixed cooperative-competitive envi-ronments. Advances in neural information processing sys-tems , 30, 2017. [Oliehoek and Amato, 2016] Frans A Oliehoek and Christo-pher Amato. A concise introduction to decentralized POMDPs . Springer, 2016. [Rashid et al. , 2020] Tabish Rashid, Mikayel Samvelyan, Christian Schroeder De Witt, Gregory Farquhar, Jakob Fo-erster, and Shimon Whiteson. Monotonic value function factorisation for deep multi-agent reinforcement learning. 
+
+Journal of Machine Learning Research , 21(178):1–51, 2020. [Samvelyan et al. , 2019] Mikayel Samvelyan, Tabish Rashid, Christian Schroeder De Witt, Gregory Farquhar, Nantas Nardelli, Tim GJ Rudner, Chia-Man Hung, Philip HS Torr, Jakob Foerster, and Shimon Whiteson. The starcraft multi-agent challenge. arXiv preprint arXiv:1902.04043 , 2019. [Santoro et al. , 2016] Adam Santoro, Sergey Bartunov, Matthew Botvinick, Daan Wierstra, and Timothy Lill-icrap. Meta-learning with memory-augmented neural networks. In International conference on machine learning , pages 1842–1850. PMLR, 2016. [Schulman et al. , 2017] John Schulman, Filip Wolski, Pra-fulla Dhariwal, Alec Radford, and Oleg Klimov. Prox-imal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. [Schulman, 2015] John Schulman. Trust region policy opti-mization. arXiv preprint arXiv:1502.05477 , 2015. [Sunehag et al. , 2017] Peter Sunehag, Guy Lever, Audrunas Gruslys, Wojciech Marian Czarnecki, Vinicius Zambaldi, Max Jaderberg, Marc Lanctot, Nicolas Sonnerat, Joel Z Leibo, Karl Tuyls, et al. Value-decomposition networks for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 , 2017. [Sutton and Barto, 2018] Richard S Sutton and Andrew G Barto. Reinforcement learning: An introduction . MIT press, 2018. [Van der Maaten and Hinton, 2008] Laurens Van der Maaten and Geoffrey Hinton. Visualizing data using t-sne. Journal of machine learning research , 9(11), 2008. [Wang et al. , 2020] Jianhao Wang, Zhizhou Ren, Terry Liu, Yang Yu, and Chongjie Zhang. Qplex: Duplex dueling Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 212
+
+multi-agent q-learning. In International Conference on Learning Representations , 2020. [Wiering, 2000] Marco A Wiering. Multi-agent reinforce-ment learning for traffic light control. In Machine Learn-ing: Proceedings of the Seventeenth International Confer-ence (ICML’2000) , pages 1151–1158, 2000. [Williams, 1992] Ronald J Williams. Simple statistical gradient-following algorithms for connectionist reinforce-ment learning. Machine learning , 8:229–256, 1992. [Xu et al. , 2018] Zhongwen Xu, Hado P van Hasselt, and David Silver. Meta-gradient reinforcement learning. Ad-vances in neural information processing systems , 31, 2018. [Yu et al. , 2022] Chao Yu, Akash Velu, Eugene Vinitsky, Ji-axuan Gao, Yu Wang, Alexandre Bayen, and Yi Wu. The surprising effectiveness of ppo in cooperative multi-agent games. Advances in Neural Information Processing Sys-tems , 35:24611–24624, 2022. [Zhou et al. , 2020] Meng Zhou, Ziyu Liu, Pengwei Sui, Yix-uan Li, and Yuk Ying Chung. Learning implicit credit as-signment for cooperative multi-agent reinforcement learn-ing. arXiv preprint arXiv:2007.02529 , 2020. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+213

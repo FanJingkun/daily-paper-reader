@@ -1,0 +1,520 @@
+Title: Emergent Fast-Slow Dynamics in Multi-Agent Q-Learning for Networked Stochastic Games
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/40186/44147
+
+Number of Pages: 9
+
+Markdown Content:
+# Emergent Fast-Slow Dynamics in Multi-Agent Q-Learning for Networked Stochastic Games 
+
+# Yuxin Geng 1, Wolfram Barfuss 3, 4, 5* , Xingru Chen 2* 
+
+> 1
+
+School of Mathematical Sciences, Beijing University of Posts and Telecommunications, Beijing 100876, China 
+
+> 2
+
+School of Artificial Intelligence, Beihang University, Beijing 100191, China 
+
+> 3
+
+Transdisciplinary Research Area Sustainable Futures, University of Bonn, Germany 
+
+> 4
+
+Center for Development Research, University of Bonn, Germany 
+
+> 5
+
+Institute for Food and Resource Economics, University of Bonn, Germany yuxin.evol@gmail.com, wbarfuss@uni-bonn.de, xingrucz@gmail.com 
+
+Abstract            
+
+> Understanding the emergence of collective behaviors of multi-agent systems requires investigating the learning dynamics. However, the theoretical analysis of large-scale graph-structured multi-agent reinforcement learning (MARL) systems remains challenging due to agent hetero-geneity and the intrinsic coupling between state transitions and individual Q-value updates. In this work, we develop a unified theoretical framework that captures the evolution of agent behaviors at both individual and population levels. By leveraging the pair approximation technique from statistical physics, we derive a closed set of evolution equations that ac-curately describe the temporal dynamics of the system. Our analysis also reveals a separation of time scales. For small learning rates, state transitions equilibrate rapidly, while Q-value updates evolve slowly with stationary state distribu-tions. Through extensive agent-based simulations, we vali-date the robustness of our theoretical results and explain the mechanisms that lead to the emergence of cooperation in so-cial dilemmas. Our framework offers new perspectives for bridging complex systems science and MARL, providing in-sights for the design of cooperative and resilient AI.
+
+# Introduction 
+
+Reinforcement learning (RL) is a paradigm for sequential decision-making in complex environments, with applica-tions across diverse fields (Sutton and Barto 2018). In sociol-ogy and psychology, RL has been used to study how animals and humans acquire and adapt their behaviors (Lee et al. 2004; Dayan and Daw 2008). In computer science and arti-ficial intelligence, RL is a foundational framework for mod-eling and improving autonomous decision-making (Mnih et al. 2015; Silver et al. 2017). Recently, applying RL to large language models has led to substantial improvements in their capabilities (Bai et al. 2022; Guo et al. 2025). Al-though single-agent RL has achieved remarkable progress over the years, multi-agent reinforcement learning (MARL) remains a thriving field with many open challenges, includ-ing non-convergence, system instability, and catastrophic failures that may cause a complete breakdown of coordina-tion among agents (Hammond et al. 2025; Pan et al. 2025). 
+
+> *Corresponding authors Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved.
+
+In addition, individuals can sometimes spontaneously ex-hibit emergent behaviors, such as cooperation (Leibo et al. 2017) and social learning (Ndousse et al. 2021), that are not explicitly encoded by the underlying rules. Therefore, it is essential to understand MARL systems from the perspective of collective learning dynamics (Barfuss et al. 2025). Such insights not only guide the development of more effective learning algorithms but also inform the design of mecha-nisms that promote social fairness and cooperation, mitigate social dilemmas, and enhance collective welfare (Hughes et al. 2018; Dafoe et al. 2020; Tacchetti et al. 2025). One of the central challenges in understanding the dy-namics of large-scale MARL systems is managing the com-plex patterns of interaction among agents. A straightforward modeling approach is to describe the system at the indi-vidual level, which involves formulating a set of evolution equations for each agent. Early work investigated the rela-tionship between the dynamics of RL algorithms and the replicator equation in two-player settings. B¨ orgers and Sarin (1997) and Tuyls, Verbeeck, and Lenaerts (2003) demon-strated that, in two-player normal-form games, Cross learn-ing and Q-learning correspond to replicator and replicator-mutator dynamics, respectively. The problem becomes more complex when the environment itself can change dynami-cally. From the perspective of a single agent, its surround-ing environment is non-stationary, as neighboring agents are continuously adapting their behaviors. This results in a feed-back coupling between the evolution of agents’ policies and the transitions of environmental states. Hennes, Tuyls, and Rauterberg (2009); Hennes, Kaisers, and Tuyls (2010) ex-tended the replicator dynamics framework to accommodate changing environments. More recently, Barfuss, Donges, and Kurths (2019) introduced a batch learning framework to analyze the dynamics of temporal-difference learning in stochastic games. However, this individual-level approach rapidly becomes intractable as the size of the system increases, due to the well-known “curse of dimensionality.” Rather than follow-ing each agent’s trajectory separately, recent studies have instead adopted a population-level perspective, focusing on modeling the distribution of agent behaviors across the en-tire system. Hu, Leung, and Leung (2019) and Hu et al. (2022) derived a continuity equation for multi-agent Q-The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+> 29450
+
+learning in normal-form games. Regarding different inter-action structures, Leung, Hu, and Leung (2022) investigated the effects of local interactions and incomplete information; Chu et al. (2022) analyzed the dynamics on regular graphs; and Hussain et al. (2025) examined the convergence of my-opic stateless Q-learning in random network systems. For dynamic environments, Chu et al. (2023) studied myopic stateless Q-learning dynamics in stochastic games. The existing studies above either treat the environment as static (i.e., assuming that agents adopt stateless learning rules) or adopt a deterministic mean-field limit that over-looks the intrinsic stochasticity arising from the exploratory policies, the state transitions, and the heterogeneity of neigh-bor distributions. To achieve a comprehensive understanding of emergent behaviors in complex and dynamic multi-agent environments, an effective theoretical framework for large-scale MARL systems should capture the above stochastici-ties, and also link the individual-level and population-level phenomena. In this work, we consider a graph-structured popula-tion of agents engaged in pairwise stochastic games (Shap-ley 1953), with agents adapting their policies using Q-learning (Watkins and Dayan 1992). We introduce a unified theoretical framework that can scale effectively to large, de-centralized settings. To simultaneously represent individual strategies and their game states, we employ a heterogeneous graph to characterize the population. Starting from a micro-scopic description of the system, we derive a stochastic dif-ferential equation (SDE) that governs the evolution of a rep-resentative agent’s Q-value. This SDE naturally corresponds to a Fokker-Planck equation (FPE), which describes the evo-lution of the distribution of Q-values on the population level. Meanwhile, the evolution of the distribution of environmen-tal states can be captured by a master equation. By integrating the master equation that describes state transitions with the FPE that characterizes the evolution of Q-values, and leveraging the pair approximation tech-nique (Hauert and Szab´ o 2005; Ohtsuki et al. 2006; Chu et al. 2023) from statistical physics, we obtain a complete set of equations for the MARL system. Although Q-value updates and state transitions are coupled, we find that for small learning rates, these processes occur on two distinct time scales and can thus be analyzed separately. In partic-ular, the environmental states quickly reach their stationary distribution, allowing the agents’ learning dynamics to be effectively studied within this stable environment. This sep-aration of time scales enables us to derive a reduced FPE that accurately captures the dynamics of the system. We val-idate the effectiveness of our theoretical framework through extensive agent-based simulations. In addition, our model successfully predicts the emergence of cooperation even in social dilemmas with adverse payoff structures. In summary, we present a unified theoretical framework that characterizes the dynamics of multi-agent reinforce-ment learning in stochastic games within large-scale, graph-structured populations. We identify that state transitions and Q-value updates occur on two distinct time scales and ac-cordingly derive a reduced FPE with time-scale separation that accurately captures the dynamics of the system at both microscopic and macroscopic levels. Our theoretical anal-ysis bridges complex system science and multi-agent rein-forcement learning, revealing new insights into the emer-gence of collective behaviors, especially the emergence of cooperation in large-scale graph-structured multi-agent sys-tems. 
+
+# Model 
+
+Although the theoretical framework developed in this pa-per is applicable to broader scenarios, including multiplayer games and other temporal-difference learning algorithms, we focus our analysis on a graph-structured population in-teracting in pairwise stochastic games, and Q-learning for clarity. The components of our model are formally defined in the following subsections, and the overall procedure is outlined in Algorithm 1. 
+
+## Environment: Stochastic Game 
+
+In contrast to normal-form games, in which the envi-ronmental state remains static, a stochastic game G =
+
+⟨N , S, A, T, R ⟩ is characterized by multiple states with dy-namic state transitions. Here, N = {1, 2} denotes the set of players, and S = {s1, . . . , s K } denotes the set of states. At each time step, both players simultaneously select an action from the action set A(s) available in the current state s. For simplicity, we assume that the action set is identical across all states, i.e., A(s) ≡ A = {a1, . . . , a M } for all s.When both players are in state s and select the joint action 
+
+a = ( a, ˜a), each receives a reward determined by the reward function R : N ×S×A×A → R, which specifies the reward of each player under the joint action a in state s. Since we assume a symmetric reward structure, the rewards can be represented by a payoff matrix U (s):                                  
+
+> 
+> a1a2· · · aM
+> a1U(s, a 1, a 1)U(s, a 1, a 2)· · · U(s, a 1, a M)
+> a2U(s, a 2, a 1)U(s, a 2, a 2)· · · U(s, a 2, a M)
+> .......... . ....
+> aMU(s, a M, a 1)U(s, a M, a 2)· · · U(s, a M, a M)
+> 
+
+.
+
+(1) Here, U (s, a i, a j ) denotes the reward for the row player when selecting action ai against the column player using aj
+
+in state s.Given the current state s and joint action a, the subsequent environmental state s′ ∈ S is determined by the Markovian transition kernel T : S × A × A × S → [0 , 1] . Specifically, 
+
+T (s, a, s ′) gives the probability of transitioning from state s
+
+to state s′, given the joint action a.
+
+## Population Structure: Heterogeneous Graph 
+
+Each agent i maintains a Q-function Qt(i, s, a ) for each state-action pair (s, a ) ∈ S × A , representing the value of executing action a in state s at time t. To simulta-neously capture the population structure and the environ-mental state, we represent the system as a heterogeneous graph G = ( V, E, Q t, s t) of average degree k. Here, V =
+
+{i|i ∈ { 1, 2, . . . , N }} denotes the set of agents, and E =29451 {eij |i, j ∈ V, i interacts with j} denotes the pairwise inter-action relationships between agents. Each edge eij ∈ E rep-resents the stochastic game interaction between agents i and 
+
+j. Under this graph representation, the Q-value Qt(i, s, a )
+
+becomes the attribute of node i, and the environmental state of the interaction between agents i and j is characterized as an edge attribute st(i, j ) that evolves over time. 
+
+## Policy Update Rule: Q-learning 
+
+The agent’s policy Xt(i, s, a ) specifies the probability of se-lecting each action a ∈ A in a given state s, and is defined by the Boltzmann distribution (softmax): 
+
+Xt(i, s, a ) = exp βQ t(i, s, a )P 
+
+> a′∈A
+
+exp βQ t(i, s, a ′) , (2) where β > 0 is the inverse temperature, controlling the exploration-exploitation trade-off. As β → ∞ , agent i de-terministically selects the action with the highest Q-value; i.e., Xt(i, s, a ) = 1 if a = arg max a′ Qt(i, s, a ′), and 0
+
+otherwise. Conversely, as β → 0, agent i selects actions uniformly at random, i.e., Xt(i, s, a ) = 1 /M for all a ∈ A .Agents improve their policies by updating Q-values using the temporal-difference (TD) learning rule: 
+
+Qt+1 (i, s, a ) = Qt(i, s, a ) + α δ t(i, s, a ), (3) where the learning rate α ∈ (0 , 1) determines the weight assigned to new information in the update process, and 
+
+δt(i, s, a ) is the TD error, which relies on information ob-tained through interactions with their neighbors. Specifi-cally, at time step t, i interacts with each of its neighbors 
+
+j in the current state st(i, j ) by executing its pre-selected action at(i, s t(i, j )) , with neighbor j simultaneously exe-cuting its own action. As a result of this interaction, agent i
+
+receives a reward rt(i, s t(i, j ), j ) and observes the next state 
+
+st+1 (i, j ). The TD error for this interaction and Q-learning is given by: 
+
+rt(i, s t(i, j ), j ) + γ max  
+
+> a′
+
+Qt(i, s t+1 (i, j ), a ′)
+
+−Qt(i, s t(i, j ), a t(i, s t(i, j ))) , (4) where γ is the discount factor, quantifying the degree to which future rewards are valued relative to immediate re-wards. These TD errors are then aggregated for each state-action pair (s, a ) and averaged over the relevant neighbors j
+
+to obtain the TD error δt(i, s, a ).
+
+# Theoretical Derivation 
+
+Before proceeding with the derivation, we introduce some notation. Since we aim to describe the evolution of Q-values at both individual and population levels, we characterize agents by their Q-value vectors rather than by fixed identities. For example, X(Q) denotes the policy of an individual with Q-value vector Q =[Q(s1, a 1), Q (s1, a 2), · · · , Q (sK , a M )] , and δ(Q) denotes the TD error for such an individual. Plain symbols refer to specific components of their corresponding vector quanti-ties. For instance, Q(Q, s, a ) and X(Q, s, a ) denote the Q-value and policy probability of the agent with Q-value Q in state s and action a. In addition, we abbreviate Q(Q, s, a )
+
+as Q(s, a ) for convenience. Algorithm 1: Multi-Agent Q-Learning for Pairwise Stochas-tic Games on a Graph  
+
+> 1:
+
+Input: Graph-structured population of size N , pairwise stochastic game G, and maximum time steps T 
+
+> 2:
+
+for t = 0 , . . . , T − 1 do  
+
+> 3:
+
+for each agent i do  
+
+> 4:
+
+for each state s ∈ S do  
+
+> 5:
+
+Sample action at(i, s ) ∼ Xt(i, s, ·) 
+
+> 6:
+
+end for  
+
+> 7:
+
+end for  
+
+> 8:
+
+for each connected unordered agent pair (i, j ) do  
+
+> 9:
+
+Agents i and j interact in state st(i, j ), receive re-wards rt(i, s t(i, j ), j ) and rt(j, s t(i, j ), i ), and the state transitions to st+1 (i, j ) 
+
+> 10:
+
+end for  
+
+> 11:
+
+for each agent i do  
+
+> 12:
+
+for each state s ∈ S where agent i interacted with some neighbor j in state s do  
+
+> 13:
+
+Compute average TD-error δt(i, s, a ) and update Q-value  
+
+> 14:
+
+Qt+1 (i, s, a ) ← Qt(i, s, a ) + αδ t(i, s, a ) 
+
+> 15:
+
+end for  
+
+> 16:
+
+end for  
+
+> 17:
+
+end for 
+
+## Individual-Level Dynamics: SDE 
+
+To investigate the population-level evolution of Q-value dis-tributions, it is essential to first understand how Q-values evolve at the individual level. The dynamics of a represen-tative agent’s Q-values are influenced by multiple sources of randomness, including stochastic state transitions and ex-ploratory policies. To capture both the typical learning tra-jectory and the random fluctuations that arise during the learning process, we adopt an SDE framework to model the evolution of a representative individual’s Q-value vector Q.This SDE describes how the Q-value vector Q changes in-finitesimally over an infinitesimal time interval dt:
+
+dQ = μ(Q) d t + pΣ(Q) d ξt. (5) Here, we omit the subscript t for the vector quantities 
+
+μ and Σ for simplicity. The term μ(Q) is the drift vec-tor, which represents the deterministic component of the Q-value dynamics, indicating the average direction and rate of change. Each entry μt(Q, s, a ) corresponds to the ex-pected change in the specific Q-value Q(s, a ) per unit time. Compared to the ordinary differential equation (ODE) framework, the SDE framework contains an additional term pΣ(Q) d ξt, accounting for the stochastic fluctuations in Q-value updates. The matrix pΣ(Q) ∈ R(KM )×(KM ) char-acterizes the magnitude and correlation structure of these fluctuations across different state-action pairs, where √ ·
+
+denotes the matrix square root. In Σ(Q), the diagonal en-tries represent the variances of the one-step change in each 
+
+Q(s, a ), while the off-diagonal entries represent the covari-ances between changes in different Q-values. The notation 
+
+ξt denotes a standard (K × M )-dimensional Wiener pro-cess. In the following, we sketch the derivation of μ(Q),29452 leaving the full details of μ(Q) and Σ(Q) to the Supple-mentary Material. When a focal agent with Q-value vector Q selects action 
+
+a, its opponent chooses action ˜a in state s, and the environ-ment transitions to s′, the TD error δt(Q, s, a, ˜a, s ′) for this interaction is given by: 
+
+U (s, a, ˜a) + γ max  
+
+> a′
+
+Q(s′, a ′) − Q(s, a ). (6) The average TD error ¯δt(Q, s, a ) when the focal agent se-lects action a in state s is computed by averaging over the distribution of the opponent’s Q-value vector ˜Q, the oppo-nent’s selected action ˜a, and the next state s′. Formally, this average is given by: 
+
+¯δt(Q, s, a ) := 
+
+Z X
+
+> ˜a,s ′
+
+X( ˜Q, s, ˜a)δ(Q, s, a, ˜a, s ′)·
+
+T (s, a, ˜a, s ′)pt( ˜Q|Q, s ) d ˜Q,
+
+(7) where we use the shorthand d ˜Q for the product of differ-entials d ˜Q(s1, a 1), d ˜Q(s1, a 2), · · · , d ˜Q(sK , a M ). The con-ditional probability distribution of the opponent’s Q-value vector ˜Q is defined as: 
+
+pt( ˜Q|Q, s ) = pt(Q, s, ˜Q)
+
+R pt(Q, s, ˜Q) d ˜Q , (8) where pt(Q, s, ˜Q) is the probability density of the edge that is state s and connected to agents with Q-values Q and ˜Q
+
+Recall that the Q-learning update is given by Equation (3), with the TD error defined in Equation (4), and that only the Q-value corresponding to the action chosen and executed by the focal agent is updated. Therefore, the drift term corre-sponds exactly to the expected change in Q(s, a ) per unit time: 
+
+μt(Q, s, a ) = α[1 − (1 − pt(s|Q)) k]X(Q, s, a )¯δt(Q, s, a ).
+
+(9) where pt(s|Q) is the proportion of stochastic games involv-ing an individual with Q-values Q that are in state s.
+
+## Population-Level Dynamics: FPE and Master Equation 
+
+The evolution of agents’ Q-values is fundamentally inter-twined with the evolution of states: updates to Q-values de-pend on the rewards received in particular states and the subsequent state transitions, while the states themselves are influenced by the agents’ policies, which are in turn deter-mined by their Q-values. Although the SDE in Equation (5) captures the microscopic, stochastic evolution of Q-values for an individual agent, it does not account for the dynam-ics of state transitions. Moreover, our primary interest often lies in understanding the collective behaviors and emergent phenomena that arise within large populations. To address this, we focus on two key macroscopic quanti-ties: the distribution of Q-values across agents in the popula-tion, denoted by pt(Q), and the conditional state distribution 
+
+pt(s|Q, ˜Q), which describes the distribution of interaction states between agents with Q-values Q and ˜Q. Equivalently, these two quantities can be jointly represented by the dis-tribution pt(Q, s, ˜Q). In deriving the evolutionary dynamics of this joint distribution, we decompose it into three com-ponents: the distribution of the focal agent’s Q-value, the distribution of the neighbor’s Q-value, and the distribution of the interaction state between them. 
+
+From SDE to FPE When shifting our perspective from a single agent to the entire population, the SDE that describes an individual agent’s trajectory becomes the generator for an evolving ensemble of agents in the high-dimensional Q-value space. Each agent’s path is still driven by the SDE with drift μ(Q) and diffusion Σ(Q), but we are now interested in how the ensemble of agents is distributed in the Q-value space, i.e., how the population-level density pt(Q) evolves over time. The population-level dynamics corresponding to the SDE are exactly the following FPE: 
+
+∂p t(Q)
+
+∂t =− ∇ Q · μ(Q) pt(Q)
+
++ 12 ∇Q ·
+
+n
+
+∇Q · Σ(Q) pt(Q)o
+
+.
+
+(10) Here, ∇Q · (∗) = P 
+
+> s,a
+
+∂Q(s,a )(∗) is the divergence oper-ator, and ∇Q · ∇Q · (∗)} = P 
+
+> s,a,s ′,a ′
+
+∂2
+
+> Q(s,a )Q(s′,a ′)
+
+(∗)
+
+corresponds to the sum of all elements of the Hessian matrix of the given function. Analogous to its microscopic coun-terpart, the FPE contains two transport mechanisms. The convective term −∇ Q · μ(Q) pt(Q) transfers probability mass along the deterministic learning flow dictated by the drift μ. The density increases in regions where the drift points inward and decreases where it points outward, much like how a current concentrates or disperses suspended par-ticles. Complementing this advection, the diffusive contri-bution 12 ∇Q · ∇Q · [Σ(Q) pt(Q)] captures the cumula-tive impact of random fluctuations encoded in the covariance matrix Σ, which gradually fan out high-density peaks and smooth sharp gradients, broadening the distribution in direct proportion to the local diffusion strength. At the individual level, the SDE provides a particle-based mechanics of learning for a single agent, with μ prescribing the expected increment of Q and Σ setting its fluctuations. At the population level, the FPE provides a continuum, fluid-like portrait, where the same μ steers the centroid of the density ensemble and the same Σ governs the rate at which it disperses. The SDE and the FPE form a dual description, as an ensemble of a large number of SDE trajectories, and the solutions of the FPE that are initialized with the same density p0(Q) will evolve identically in distribution. 
+
+Pair Approximation for Neighbor Distribution Track-ing the evolution of the distribution pt(Q) of Q-values re-quires the conditional distribution pt( ˜Q|Q, s ) of the first-order neighbor’s Q-values. In turn, tracking pt( ˜Q|Q, s ) re-quires the conditional distribution pt( ≈
+
+Q|Q, s, ˜Q, ˜s) of the second-order neighbor’s Q-values. If this cascade of depen-dencies were fully resolved, we would need to track the Q-values of all agents and all the states governing their interac-tions, which is exactly the individual-level description and is 29453 Figure 1: Pair approximation for neighbor distribution. This figure illustrates the pair approximation technique under a lattice population structure. Each blue node represents an agent with a specific Q-value vector, and each edge rep-resents a stochastic game between the connected agents, with the edge color indicating the game state. With node 
+
+Q as the focal agent, we approximate the distribution 
+
+pt( ≈
+
+Q|Q, s, ˜Q, ˜s) of the second-order neighbor ≈
+
+Q (dashed box) using the distribution pt( ≈
+
+Q| ˜Q, s ) of the first-order neighbor (solid box), as if we treat the neighbor ˜Q as the focal agent. computationally intractable for a large population size N . To manage this complexity, we employ the pair approximation technique. As illustrated in Figure 1, this approach truncates the infinite series of higher-order correlations by approxi-mating the distribution for a neighbor’s neighbor using the distribution for a direct neighbor: 
+
+pt( ≈
+
+Q|Q, s, ˜Q, ˜s) ≈ pt( ≈
+
+Q| ˜Q, s ). (11) Consequently, the neighbor distribution pt( ˜Q|Q, s ) evolves according to the same dynamic equation (Equation (10)) that governs the marginal distribution pt(Q). As a result, the sys-tem’s dynamics can be fully described by the joint distribu-tion of the triplet pt(Q, s, ˜Q).
+
+Master Equation for State Transitions To obtain the evolutionary dynamics of pt(Q, s, ˜Q), it remains to account for the effect of state transitions on the joint distribution of the triplet. When only state transition is considered, the tran-sition rate λss ′ (Q, ˜Q) from s to s′ between two agents with Q-values Q and ˜Q is given by the transition kernel averaged over the policies of both players: 
+
+λss ′ (Q, ˜Q) = X
+
+> a, ˜a
+
+Xt(Q, s, a )Xt( ˜Q, s, ˜a)T (s, a, ˜a, s ′).
+
+(12) To describe state transitions at the population level, we multiply the transition rate by the density at state s to obtain the probability flux from s to s′ per unit time: 
+
+Jss ′ (Q, ˜Q) = pt(Q, s, ˜Q)λss ′ (Q, ˜Q). (13) The temporal evolution of the joint probability density 
+
+pt(Q, s, ˜Q) is determined by the net difference between the probability flux into state s from all other states and the flux out of state s to all other states. This conservation law leads to the master equation that describes the dynamics of 
+
+pt(Q, s, ˜Q):
+
+∂p t
+
+ Q, s, ˜Q
+
+∂t α=0 
+
+= X 
+
+> s′̸=s
+
+h
+
+Js′s(Q, ˜Q)−Jss ′ (Q, ˜Q)
+
+i
+
+. (14) 
+
+Full Characterization of the System By coupling the FPEs arising from the SDEs for Q and ˜Q, and the master equation for the state transitions, we finally arrive at the dy-namic equation for pt(Q, s, ˜Q) that accounts for both Q-value updates and state transitions. The resulting equation is as follows: 
+
+∂p t
+
+ Q, s, ˜Q
+
+∂t 
+
+= X 
+
+> s′̸=s
+
+h
+
+Js′s(Q, ˜Q) − Jss ′ (Q, ˜Q)
+
+i| {z }
+
+> state-transition inflow/outflow
+
+− X  
+
+> F∈{ Q,˜Q}
+
+∇F ·
+
+h
+
+μ(F ) pt(Q, s, ˜Q)
+
+i| {z }
+
+> Q-values drift (deterministic change)
+
++ 12
+
+X  
+
+> F∈{ Q,˜Q}
+
+∇F ·
+
+n
+
+∇F ·Σ F  pt(Q, s, ˜Q)o| {z }
+
+> Q-values diffusion (stochastic fluctuations)
+
+.
+
+(15) 
+
+## Separation of Time-Scales 
+
+In the FPE component of Equation (15), the master equation is of order O(1) in α, the drift term is of order O(α), and the diffusion term is of order O(α2). This allows us to ex-press the evolution equations for pt(Q) and pt(s|Q, ˜Q) as follows: 
+
+∂p t(Q, ˜Q)
+
+∂t = − X  
+
+> F∈{ Q,˜Q}
+
+∇F ·
+
+h
+
+μ(F )pt(Q, ˜Q)
+
+i
+
++ O(α2).
+
+(16) 
+
+∂p t
+
+ s|Q, ˜Q
+
+∂t = X
+
+> s′
+
+λs′s(Q, ˜Q) · pt(s′|Q, ˜Q)
+
+− X
+
+> s′
+
+λss ′ (Q, ˜Q) · pt(s|Q, ˜Q) + O(α).
+
+(17) When the learning rate α is sufficiently small (i.e., α ≪
+
+1), state transitions happen significantly faster than Q-value updates. On this fast time scale, the conditional state dis-tribution pt(s|Q, ˜Q) rapidly approaches the slow manifold defined by ∂p t(s|Q, ˜Q) 
+
+> ∂t
+
+= 0 , which ensures zero net probabil-ity flux for any state s. As a result, the slow variables Q and 
+
+˜Q evolve along the slow manifold, as if the system is em-bedded in a stationary environment. Throughout this work, 29454 Figure 2: Visualization of Eq. (15) for two-state stochastic games. Each point represents a pair of agents with Q-values 
+
+Q and ˜Q in a specific state. For visualization purposes, Q
+
+and ˜Q are simplified to one-dimensional values. The prob-ability mass p(Q, s, ˜Q)d Qd ˜Q is transferred between cor-responding positions on the two planes through the state-transition flows Jss ′ and Js′s (gray arrows). Meanwhile, the mass evolves on each plane through drift arising from aver-age deterministic learning dynamics (solid blue arrows) and diffusion driven by stochastic fluctuations (dashed blue ar-rows). such quantities under stationary state distributions are de-noted with an asterisk (e.g., p∗(s|Q, ˜Q), μ∗(Q)), indicating that all fast state inflows and outflows have reached equilib-rium in Eq. (17). Under this time-scale separation, the stationary state dis-tribution p∗(s|Q, ˜Q) becomes the function of Q-value pairs 
+
+Q and ˜Q. Specifically, the stochastic game between these two agents induces a Markov chain over the state space S,where the transition probability from s to s′ is exactly the transition rate λss ′ (Q, ˜Q) in Equation (12). The stationary distribution p∗(s|Q, ˜Q) is the unique solution to the follow-ing set of equations for all s ∈ S :
+
+p∗(s|Q, ˜Q) = X
+
+> s′
+
+p∗(s′|Q, ˜Q)λs′s(Q, ˜Q). (18) Consequently, the dynamics can be fully described by Q-value pairs with the state distribution reaching its stationary form: 
+
+∂p t(Q, ˜Q)
+
+∂t = − X  
+
+> F∈{ Q,˜Q}
+
+∇F ·
+
+h
+
+μ∗(F )pt(Q, ˜Q)
+
+i
+
+, (19) where in the calculation of μ∗(Q), we have 
+
+p∗( ˜Q|Q, s ) = pt(Q, ˜Q) · p∗(s|Q, ˜Q)
+
+R pt(Q, ˜Q) · p∗(s|Q, ˜Q) d ˜Q . (20) Here, p∗(s|Q, ˜Q) denotes the stationary distribution of state 
+
+s between two interacting agents with Q-values Q and ˜Q.The resulting Equation (19) is an FPE without diffusion. In other words, under time-scale separation, although agents randomly select their actions to interact, the learning dynam-ics of each agent follow a deterministic trajectory. 
+
+# Experiments 
+
+In this section, we conduct agent-based simulations to vali-date the theoretical predictions. We first consider a two-state Prisoner’s Dilemma game (Hilbe et al. 2018) on a regular lattice. In each state, agents can choose between two actions: cooperation (action a1) or defection (action a2). Coopera-tion incurs a cost and provides a benefit to the other agent, so that defection always yields a higher payoff. However, mutual cooperation yields higher social welfare, creating a social dilemma scenario. The payoff matrices for the two states are given by: 
+
+U (s1) = 
+
+b1 − c1 −c1
+
+b1 0
+
+
+
+, U (s2) = 
+
+b2 − c2 −c2
+
+b2 0
+
+
+
+,
+
+(21) where c1, c 2 > 0 represent the costs of cooperation in states 
+
+s1 and s2, respectively, and b1, b 2 > 0 are the corresponding benefits received when the opponent cooperates. The transi-tion structure captures the intuition that mutual cooperation tends to maintain favorable conditions, while defection leads to environmental degradation. The system transitions to state 
+
+s1 with probability p1 and to s2 with probability 1 − p1 if both agents cooperate (choose a1), and with probability p2
+
+and 1 − p2 if at least one defects (chooses a2). Figure 3 presents the theoretical predictions and agent-based simulation trajectories averaged over 10 runs for the two-state Prisoner’s Dilemma game. We observe a clear time-scale separation in the system dynamics. As shown in subfigure (a), the state distribution converges to the theo-retical stationary distribution (marks) within just one time step, demonstrating the rapid equilibration of the state dy-namics relative to the Q-value evolution. Subfigures (b) and (c) display the mean policies of agents in states s1 and s2,respectively. Our FPE theoretical model accurately captures the policy evolution of the system, with theoretical predic-tions closely matching the simulation results. Despite both states presenting social dilemma scenarios, agents converge to full cooperation in both states. In Figure 4, we explore the mechanism that drives the emergence of cooperation. In subfigures (a) and (b), the pay-off matrices are identical for both states ( b1 = b2 = 1 .2). In such a case, cooperation does not emerge since there is no environmental incentive to promote it. However, as shown in subfigures (c) and (d), the dynamics change when mu-tual cooperation leads the system to the prosperous state 
+
+s1 (b1 = 5 ) and defection leads to the degraded state s2
+
+(b2 = 1 .2). Although defection can yield a higher imme-diate reward, the degradation into s2 results in lower future payoffs. Agents that sufficiently value future rewards (e.g., with γ = 0 .8) can recognize this trade-off and become more cooperative. This conclusion for large-scale MARL popu-lations is consistent with previous findings in other multi-29455 Figure 3: Simulation results and theoretical predictions for the two-state Prisoner’s Dilemma game on a regular lattice. We omit variance indicators as all trajectories are nearly identical across simulations. In addition, cooperation behavior emerges as the average probability of cooperation (action a1) in both states converges to 1, even though both states are social dilemmas. Parameters: N = 100 , α = 0 .001 , β = 1 , γ = 0 .8, b1 = 5 , b2 = 1 .2, c1 = c2 = 0 .5, p1 = 0 .8 and p2 = 0 .3.
+
+Figure 4: Mechanism of the emergence of cooperation. Ex-cept for the parameters shown in the figure, all other param-eters are the same as in Figure 3. agent systems (Nowak 2006; Hilbe et al. 2018; Su et al. 2019; Barfuss et al. 2020). In Figure 5, we examine the robustness of our model in the learning rate α and the degree k of the graph. The time-scale separation holds effectively with α < 10 −3, as in sub-figures (a) and (b), the theoretical results derived from the stationary distribution closely match the simulation trajecto-ries. In subfigures (c) and (d), we vary the network topology by employing random regular graphs with different degrees. As the degree k increases, individuals converge faster and the learning trajectory gradually approaches that of a com-plete graph (where k = N − 1). When an individual has 
+
+k neighbors, it effectively performs Q-learning with a batch size of k. Therefore, increasing the network degree is equiv-alent to increasing the batch size, which accelerates the in-dividual learning process. To further validate the generaliz-ability of our theoretical framework, we include additional cross-validation between theoretical predictions and simula-tion results in the Supplementary Material. 
+
+Figure 5: Parameter sensitivity analysis. Our theoretical framework accurately captures the dynamics across differ-ent parameter values. Except for the parameters shown in the figure, all other parameters are the same as in Figure 3. 
+
+# Conclusion 
+
+Beyond accurately predicting agent behaviors, our frame-work provides the following additional contributions. For networked MARL systems in dynamic environments, our use of a heterogeneous graph representation enables the application of the pair approximation technique to de-rive closed-form equations describing the joint evolution of Q-values and states. These equations reveal an intrinsic timescale separation between rapid state mixing and slower Q-value updates, allowing us to apply fast-slow systems the-ory for further analysis. Intuitively, when the learning rate is small, although the environmental states continuously tran-sition, the distribution of states remains stable before the agents’ policies undergo a significant change. These theo-retical approaches demonstrate that statistical physics and complex systems science can significantly enhance our un-derstanding of MARL systems. 29456 In experiments, we extend the findings on collective be-havior to large-scale MARL systems, showing that the emer-gence of cooperation requires agents sufficiently value fu-ture rewards. From the perspectives of dynamical systems and control theory, our framework enables the characteriza-tion of equilibrium solutions and their stability, providing an efficient approach to enhancing the controllability of such systems. For example, it informs the design of mechanisms that promote cooperation (McAvoy et al. 2025). In summary, our work expands the methodological toolbox for studying large-scale, networked MARL systems in dynamic environ-ments and offers insights for the development of cooperative and resilient AI. 
+
+# Acknowledgments 
+
+XC acknowledges the support of the Beijing Natural Science Foundation (grant no. 1244045). WB acknowledges the sup-port of the Cooperative AI Foundation. 
+
+# References 
+
+Bai, Y.; Jones, A.; Ndousse, K.; Askell, A.; Chen, A.; Das-Sarma, N.; Drain, D.; Fort, S.; Ganguli, D.; Henighan, T.; et al. 2022. Training a helpful and harmless assistant with re-inforcement learning from human feedback. arXiv preprint arXiv:2204.05862 .Barfuss, W.; Donges, J. F.; and Kurths, J. 2019. Determin-istic limit of temporal difference reinforcement learning for stochastic games. Physical Review E , 99(4): 043305. Barfuss, W.; Donges, J. F.; Vasconcelos, V. V.; Kurths, J.; and Levin, S. A. 2020. Caring for the future can turn tragedy into comedy for long-term collective action under risk of collapse. Proceedings of the National Academy of Sciences ,117(23): 12915–12922. Barfuss, W.; Flack, J.; Gokhale, C. S.; Hammond, L.; Hilbe, C.; Hughes, E.; Leibo, J. Z.; Lenaerts, T.; Leonard, N.; Levin, S.; Sehwag, U. M.; McAvoy, A.; Meylahn, J. M.; and Santos, F. P. 2025. Collective cooperative intelligence. 
+
+Proceedings of the National Academy of Sciences , 122(25): e2319948121. B¨ orgers, T.; and Sarin, R. 1997. Learning through reinforce-ment and replicator dynamics. Journal of Economic Theory ,77(1): 1–14. Chu, C.; Li, Y.; Liu, J.; Hu, S.; Li, X.; and Wang, Z. 2022. A Formal Model for Multiagent Q-Learning Dynamics on Regular Graphs. In IJCAI , 194–200. Chu, C.; Yuan, Z.; Hu, S.; Mu, C.; and Wang, Z. 2023. A pair-approximation method for modelling the dynamics of multi-agent stochastic games. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, 5565– 5572. Dafoe, A.; Hughes, E.; Bachrach, Y.; Collins, T.; Mc-Kee, K. R.; Leibo, J. Z.; Larson, K.; and Graepel, T. 2020. Open problems in cooperative AI. arXiv preprint arXiv:2012.08630 .Dayan, P.; and Daw, N. D. 2008. Decision theory, reinforce-ment learning, and the brain. Cognitive, Affective, & Behav-ioral Neuroscience , 8(4): 429–453. Guo, D.; Yang, D.; Zhang, H.; Song, J.; Wang, P.; Zhu, Q.; Xu, R.; Zhang, R.; Ma, S.; Bi, X.; et al. 2025. Deepseek-r1 incentivizes reasoning in llms through reinforcement learn-ing. Nature , 645(8081): 633–638. Hammond, L.; Chan, A.; Clifton, J.; Hoelscher-Obermaier, J.; Khan, A.; McLean, E.; Smith, C.; Barfuss, W.; Foerster, J.; Gavenˇ ciak, T.; et al. 2025. Multi-agent risks from ad-vanced ai. arXiv preprint arXiv:2502.14143 .Hauert, C.; and Szab´ o, G. 2005. Game theory and physics. 
+
+American Journal of Physics , 73(5): 405–414. Hennes, D.; Kaisers, M.; and Tuyls, K. 2010. RESQ-learning in stochastic games. In Adaptive and Learning Agents Workshop at AAMAS , 8. Citeseer. Hennes, D.; Tuyls, K.; and Rauterberg, M. 2009. State-coupled replicator dynamics. In Proceedings of the 8th In-ternational Conference on Autonomous Agents and Multia-gent Systems-Volume 2 , 789–796. Hilbe, C.; ˇ Simsa, ˇ S.; Chatterjee, K.; and Nowak, M. A. 2018. Evolution of cooperation in stochastic games. Na-ture , 559(7713): 246–249. Hu, S.; Leung, C.-w.; and Leung, H.-f. 2019. Modelling the dynamics of multiagent q-learning in repeated symmetric games: a mean field theoretic approach. Advances in Neural Information Processing Systems , 32. Hu, S.; Leung, C.-W.; Leung, H.-f.; and Soh, H. 2022. The dynamics of q-learning in population games: Aphysics-inspired continuity equation model. arXiv preprint arXiv:2203.01500 .Hughes, E.; Leibo, J. Z.; Phillips, M.; Tuyls, K.; Due˜ nez-Guzman, E.; Garc´ ıa Casta˜ neda, A.; Dunning, I.; Zhu, T.; McKee, K.; Koster, R.; et al. 2018. Inequity aversion im-proves cooperation in intertemporal social dilemmas. Ad-vances in Neural Information Processing Systems , 31. Hussain, A.; Leonte, D.; Belardinelli, F.; Huser, R.; and Paccagnan, D. 2025. Multi-Agent Q-Learning Dynamics in Random Networks: Convergence due to Exploration and Sparsity. arXiv preprint arXiv:2503.10186 .Lee, D.; Conroy, M. L.; McGreevy, B. P.; and Barraclough, D. J. 2004. Reinforcement learning and decision making in monkeys during a competitive game. Cognitive Brain Re-search , 22(1): 45–58. Leibo, J. Z.; Zambaldi, V.; Lanctot, M.; Marecki, J.; and Graepel, T. 2017. Multi-agent reinforcement learning in se-quential social dilemmas. arXiv preprint arXiv:1702.03037 .Leung, C.-w.; Hu, S.; and Leung, H.-f. 2022. Modelling the Dynamics of Multi-Agent Q-learning: The Stochastic Ef-fects of Local Interaction and Incomplete Information. In 
+
+IJCAI , 384–390. McAvoy, A.; Sehwag, U. M.; Hilbe, C.; Chatterjee, K.; Barfuss, W.; Su, Q.; Leonard, N. E.; and Plotkin, J. B. 2025. Unilateral incentive alignment in two-agent stochastic games. Proceedings of the National Academy of Sciences ,122(25): e2319927121. Mnih, V.; Kavukcuoglu, K.; Silver, D.; Rusu, A. A.; Ve-ness, J.; Bellemare, M. G.; Graves, A.; Riedmiller, M.; Fidje-land, A. K.; Ostrovski, G.; et al. 2015. Human-level control 29457 through deep reinforcement learning. Nature , 518(7540): 529–533. Ndousse, K. K.; Eck, D.; Levine, S.; and Jaques, N. 2021. Emergent social learning via multi-agent reinforcement learning. In International Conference on Machine Learn-ing , 7991–8004. PMLR. Nowak, M. A. 2006. Five rules for the evolution of cooper-ation. science , 314(5805): 1560–1563. Ohtsuki, H.; Hauert, C.; Lieberman, E.; and Nowak, M. A. 2006. A simple rule for the evolution of cooperation on graphs and social networks. Nature , 441(7092): 502–505. Pan, M. Z.; Cemri, M.; Agrawal, L. A.; Yang, S.; Chopra, B.; Tiwari, R.; Keutzer, K.; Parameswaran, A.; Ramchan-dran, K.; Klein, D.; et al. 2025. Why do multiagent systems fail? In ICLR 2025 Workshop on Building Trust in Language Models and Applications .Shapley, L. S. 1953. Stochastic games. Proceedings of the National Academy of Sciences , 39(10): 1095–1100. Silver, D.; Schrittwieser, J.; Simonyan, K.; Antonoglou, I.; Huang, A.; Guez, A.; Hubert, T.; Baker, L.; Lai, M.; Bolton, A.; et al. 2017. Mastering the game of go without human knowledge. Nature , 550(7676): 354–359. Su, Q.; McAvoy, A.; Wang, L.; and Nowak, M. A. 2019. Evolutionary dynamics with game transitions. Proceed-ings of the National Academy of Sciences , 116(51): 25398– 25404. Sutton, R. S.; and Barto, A. G. 2018. Reinforcement Learn-ing: An Introduction . The MIT Press, second edition. Tacchetti, A.; Koster, R.; Balaguer, J.; Leqi, L.; Pislar, M.; Botvinick, M. M.; Tuyls, K.; Parkes, D. C.; and Summer-field, C. 2025. Deep mechanism design: Learning social and economic policies for human benefit. Proceedings of the National Academy of Sciences , 122(25): e2319949121. Tuyls, K.; Verbeeck, K.; and Lenaerts, T. 2003. A selection-mutation model for q-learning in multi-agent systems. In 
+
+Proceedings of the second International Conference on Au-tonomous Agents and Multiagent Systems , 693–700. Watkins, C. J.; and Dayan, P. 1992. Q-learning. Machine learning , 8: 279–292. 29458

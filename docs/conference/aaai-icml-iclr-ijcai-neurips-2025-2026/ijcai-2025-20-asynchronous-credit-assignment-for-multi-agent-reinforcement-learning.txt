@@ -1,0 +1,901 @@
+Title: Asynchronous Credit Assignment for Multi-Agent Reinforcement Learning
+
+URL Source: https://www.ijcai.org/proceedings/2025/0020.pdf
+
+Published Time: Thu, 18 Sep 2025 12:01:22 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Asynchronous Credit Assignment for Multi-Agent Reinforcement Learning 
+
+## Yongheng Liang 1,2 , Hejun Wu 1,2∗ , Haitao Wang 1,2 and Hao Cai 31School of Computer Science and Engineering, Sun Yat-sen University, Guangzhou, China 
+
+> 2
+
+## Guangdong Key Laboratory of Big Data Analysis and Processing, Guangzhou, Guangdong, China 
+
+> 3
+
+## College of Mathematics and Computer Science, Shantou University, Shantou, China 
+
+## {liangyh38, wanght39 }@mail2.sysu.edu.cn, wuhejun@mail.sysu.edu.cn, haocai@stu.edu.cn 
+
+## Abstract 
+
+Credit assignment is a critical problem in multi-agent reinforcement learning (MARL), aiming to identify agents’ marginal contributions for optimiz-ing cooperative policies. Current credit assignment methods typically assume synchronous decision-making among agents. However, many real-world scenarios require agents to act asynchronously without waiting for others. This asynchrony intro-duces conditional dependencies between actions, which pose great challenges to current methods. To address this issue, we propose an asynchronous credit assignment framework, incorporating a Vir-tual Synchrony Proxy (VSP) mechanism and a Multiplicative Value Decomposition (MVD) algo-rithm. VSP enables physically asynchronous ac-tions to be virtually synchronized during credit as-signment. We theoretically prove that VSP pre-serves both task equilibrium and algorithm conver-gence. Furthermore, MVD leverages multiplica-tive interactions to effectively model dependencies among asynchronous actions, offering theoretical advantages in handling asynchronous tasks. Exten-sive experiments show that our framework consis-tently outperforms state-of-the-art MARL methods on challenging tasks while providing improved in-terpretability for asynchronous cooperation. 
+
+## 1 Introduction 
+
+Multi-agent reinforcement learning (MARL) is promising for many cooperative tasks, such as video games [Arulkumaran 
+
+et al. , 2019] and collaborative control [Zhou et al. , 2023]. MARL typically assumes a synchronous decision-making setting, where all agents make decisions simultaneously and their joint actions have the same duration. This assumption simplifies the overall learning process [Oliehoek et al. , 2016]. Despite the success of MARL in synchronous settings, real-world tasks often exhibit asynchrony, i.e., agents can-not complete their atomic actions simultaneously, because of hardware constraints or the nature of agents’ actions [Wang and Sun, 2021; Liang et al. , 2023], as shown in Figure 1a. 
+
+> ∗
+
+Corresponding author 𝑇 
+
+𝑡 1
+
+Agent 
+
+1
+
+3
+
+2
+
+𝑡 0
+
+> 𝑎 2
+> 0
+> 𝑎 3
+> 0
+> 𝑎 1
+> 0
+
+(a) Waiting 𝑇 1
+
+3
+
+2 𝑎 2
+
+> 2
+> 𝑎 3
+> 1
+> 𝑎 1
+> 4
+> 𝑎 2
+> 5
+
+Agent 
+
+> 𝑎 2
+> 0
+
+𝑡 1 𝑡 2 𝑡 3 𝑡 4 𝑡 5 𝑡 6𝑡 0 (b) Discarding 𝑡 1 𝑡 2 𝑡 3 𝑡 4 𝑡 5 𝑡 6𝑡 0
+
+𝑇 1
+
+3
+
+2 𝑎 2
+
+> 2
+> 𝑎 1
+> 0
+> 𝑎 3
+> 1
+
+Agent 
+
+(c) Padding 𝑡 1 𝑡 2 𝑡 3 𝑡 4 𝑡 5 𝑡 6𝑡 0
+
+𝑇 1
+
+3
+
+2
+
+> 𝑎 1
+> 0
+> 𝑎 3
+> 1
+> 𝑎 2
+> 2
+
+Agent  (d) Our framework Figure 1: Illustration of various asynchronous MARL frameworks. Blue/Yellow circles denote agent #x’s action ayx at time step ty .Small white circles denote padding actions. Stars denote action completion. (a) Agents #2 and #3 must wait for agent #1 to finish at t1 before making next decisions. (b) Agent #2 disregards action 
+
+a41 from t2 to t5. (c) Credit at t2 is attributed to the padding actions. (d) Our proposed framework captures the interactions among asyn-chronous decisions being executed at t2.
+
+To address this issue, researchers have proposed two primary mechanisms as follows. Discarding : Agents with varying time step lengths collect data and update policies only when they make decisions [Xiao et al. , 2022], as shown in Figure 1b. P adding : Define a time step as the smallest indivisible time unit and use padding actions to transform asynchronous tasks into synchronous ones, so as to apply existing MARL [Chen et al. , 2021], as shown in Figure 1c. Nevertheless, both discarding and padding struggle to ad-dress complex asynchronous cooperative tasks. Their failure is due to an inability to resolve the credit assignment problem, caused by the following two limitations. (1) Bias introduced in evaluating the global impacts of asynchronous actions .On one hand, the discarded information leads to biased eval-uations of the impacts of decisions from other agents. As shown in Figure 1b, agent #2 discards the information of ac-tion a13 and a41, neglecting their impacts on agent #2 ’s tran-Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+170 sition from t2 to t5. On the other hand, the padding actions introduce bias in credit assignment. As shown in Figure 1c, the algorithm assigns credit at t2 mainly to the two padding actions, rather than actions a01 and a13. (2) Inability to model conditional dependencies between asynchronous actions .In MARL, value decomposition (VD) and its variants [Sune-hag et al. , 2018; Rashid et al. , 2020] are widely used syn-chronous credit assignment methods. They learn the marginal contribution of each agent and decompose the global Q-value 
+
+Qtot into individual agent-wise utilities Qi to guide agents’ behaviors. However, most VD algorithms have limitations in accounting for higher-order interactions [Liu et al. , 2023]. They fail to capture the conditional dependencies between de-cisions made by agents asynchronously, such as the depen-dency of the current decision a22 on the actions being exe-cuted, a01 and a13, as shown in Figure 1c. In this paper, we propose an asynchronous credit assign-ment framework that incorporates a Virtual Synchrony Proxy (VSP) mechanism and a Multiplicative Value Decomposi-tion (MVD) algorithm. Inspired by virtual synchrony in dis-tributed systems [Dolev et al. , 2018], our VSP introduces virtual proxies to migrate asynchronous actions to a unified time step. This allows actions a01, a22, and a13 in Figure 1d to appear synchronized at t2, facilitating better capturing their global impacts. We have proven that VSP preserves both the task equilibrium and the algorithm convergence. Based on VSP, we derive the multiplicative value decomposition for-mula as well as its higher-order forms and propose MVD. Our MVD leverages multiplicative interactions [Rumelhart and McClelland, 1987; Jayakumar et al. , 2020] to capture dependencies among asynchronous actions and we demon-strate its superior representational capacity compared to tra-ditional VD algorithms. Moreover, we present three practi-cal implementations of MVD. We evaluate MVD on a mod-ified asynchronous variant of the classic MARL benchmark SMAC [Samvelyan et al. , 2019], along with two prominent asynchronous benchmarks: Overcooked [Wang et al. , 2020b] and POAC [Yao et al. , 2021]. Extensive experimental results show that MVD achieves considerable performance improve-ments in complex scenarios and provides easy-to-understand interaction processes among asynchronous decisions. Our contributions are summarized as follows: (1) We pro-pose an asynchronous credit assignment framework with VSP and MVD, capable of capturing high-order dependencies among asynchronous actions. (2) Theoretically, we prove the correctness of VSP and demonstrate the advantages of MVD. (3) Experimentally, we show MVD’s effectiveness across three asynchronous tasks, achieving significant perfor-mance gains and interpretable interaction processes. 
+
+## 2 Related Works 
+
+Despite the significant progress in MARL, most existing works rely on the premise of synchronous decision-making which does not reflect reality in many practical applications. The easiest way to adapt MARL from synchronous to asyn-chronous decision-making is to split actions into sub-actions or wait for others to finish before making the next decisions. Evidently, these methods raise training costs and lower effi-ciency. Thus, several works have been conducted to exploit the strengths of MARL in asynchronous settings. The discarding type methods recognize asynchronous ac-tions with varying durations as a whole and focus solely on the decision information. ASM-PPO [Liang et al. , 2022] and ASM-HPPO [Liang et al. , 2023] propose that each agent col-lects its own decision information and utilize MAPPO [Yu 
+
+et al. , 2022] for training. MAC IAICC [Xiao et al. , 2022] treats asynchronous actions as macro-actions [Theocharous and Kaelbling, 2003] and models the task as a MacDec-POMDP [Amato et al. , 2019]. CAAC [Wang and Sun, 2021] focuses on the bus holding control [Daganzo and Ouyang, 2019] and utilizes a graph attention network to capture the influence of agents’ asynchronous decisions. The padding type methods transform asynchronous prob-lems into synchronous ones through padding action, thereby obtaining Dec-POMDP [Oliehoek et al. , 2016] and apply-ing existing MARL methods. Since Dec-POMDP requires the collection of decision information from all agents at each time step, the padding action can be used as a substitute for the decision information of agents that are executing actions. VarLenMARL [Chen et al. , 2021] employs the most recent action for padding during the collection of joint transitions. EXP-Ms [Jia et al. , 2020] considers ongoing actions as idle, treating them as blank actions. However, there still remains a lack of theoretical and visual analysis on asynchronous credit assignments, hindering the resolution of complex asynchronous cooperative tasks. 
+
+## 3 Preliminaries 
+
+3.1 Dec-POMDP 
+
+A fully cooperative multi-agent task with synchronous decision-making is typically formulated as a Dec-POMDP. Dec-POMDP is defined as a tuple ⟨N , S, A, P, r, O, Ω, γ ⟩,where N is a set of n agents and s ∈ S is a global state of the environment. At each time step, each agent i ∈ N ob-tains its own observation oi ∈ Ω determined by the partial observation O(s, i ) and selects an action ai ∈ A to form a joint action a = [ ai]ni=1 ∈ A n. Subsequently, all agents si-multaneously complete their actions, leading to the next state 
+
+s′ through the transition function P(s′|s, a) : S × A n → S 
+
+and to the global reward r(s, a) : S × A n → R. Each agent 
+
+i has its own policy πi(ai|τi) : T × A → [0 , 1] based on local action-observation history τi ∈ T . The objective of all agents is to find an optimal joint policy π = [ πi]ni=1 and max-imize the global value function Qπ = E[P∞ 
+
+> t=0
+
+γtrt+1 ] with a discount factor γ ∈ [0 , 1) .
+
+3.2 Credit Assignment and Value Decomposition 
+
+Credit assignment is a key challenge in designing reliable MARL methods [Oroojlooy and Hajinezhad, 2023]. It fo-cuses on attributing team success to individual agents based on their respective marginal contributions, aiming at col-lective policy optimization. VD algorithms are the most popular branches in MARL. They leverage global informa-tion to learn agents’ contributions and decompose the global Q-value function Qtot (s, a) into individual utility functions 
+
+Qi(τi, a i). In the execution phase, agents cooperate via their Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 171
+
+corresponding Qi(τi, a i), thereby realizing centralized train-ing and decentralized execution (CTDE) [Oliehoek et al. ,2008]. Traditional VD algorithms, including VDN [Sunehag 
+
+et al. , 2018], QMIX [Rashid et al. , 2020], and Qatten [Yang 
+
+et al. , 2020b], can be represented by the following general additive interaction formulation [Li et al. , 2022]: 
+
+Qtot = Qtot (s, Q 1, Q 2, · · · , Q n) = k0 +
+
+> n
+
+X
+
+> i=1
+
+kiQi, (1) where k0 is a constant and ki denotes the credit that reflects the contributions of Qi to Qtot .To capture high-order interactions that traditional VD al-gorithms ignored, NA 2Q [Liu et al. , 2023] employed a gen-eralized additive model (GAM) [Hastie, 2017]: 
+
+Qtot = f0 +
+
+> n
+
+X
+
+> i=1
+
+kif 1 
+
+> i
+
+(Qi) + · · · + X
+
+> j∈D l
+
+kj f lj (Qj )+ · · · + k1··· nf n
+
+> 1··· n
+
+(Q1, · · · , Q n),
+
+(2) where f0 is a constant, f lj captures l-order interactions among agents j in Dl. Dl is the set of all size-l subsets of {1, · · · , n },
+
+1 ≤ l ≤ n. The utility Qj of agent j is the input of f lj .In order to maintain the consistency between local and global optimal actions after decomposition, these VD al-gorithms should satisfy the following individual-global-max (IGM) principle [Son et al. , 2019]: 
+
+arg max  
+
+> a
+
+Qtot (s, a) = 
+
+
+
+arg max a1 Q1(τ1, a 1)
+
+...
+
+arg max an Qn(τn, a n)
+
+ . (3) For example, QMIX holds the monotonicity ∂Q tot  
+
+> ∂Q i
+
+≥ 0 and achieves IGM between Qtot and Qi. More details of VD and other credit assignment methods are in Appendix A. 
+
+## 4 Virtual Synchrony Proxy 
+
+In asynchronous scenarios, system dynamics depend on ac-tions taken at different times, yet existing methods fail to cap-ture the global impacts of these asynchronous actions. The discarding mechanism overlooks the contributions of other agents’ decisions. One padding approach uses the most recent action to synchronize decisions. For example, in Figure 1c, agent #1 selects a01 as its padding actions at t2. However, this introduces ambiguity since it cannot distinguish whether a01 is being continued or restarted at t2. Another padding approach uses blank actions to distinguish between decision-making and action execution, thereby avoiding ambiguity. Neverthe-less, as shown in Figure 1c, the credit for agent #1 at t2 is incorrectly assigned to the blank action rather than to a01.Our VSP is inspired by virtual synchrony, which offers an abstraction layer that ensures asynchronous messages are processed synchronously in distributed systems. Similarly, VSP employs virtual proxies to align asynchronous actions, allowing credit to be assigned at a unified time step. The general idea is as follows. To avoid ambiguity, VSP uses a 
+
+blank action as padding when agent i is continuing action ai.Meanwhile, to ensure semantic consistency, VSP introduces 𝑡 1 𝑡 2 𝑡 3 𝑡 4 𝑡 5 𝑡 6𝑡 0
+
+𝑇 
+
+Agent 
+
+1
+
+3
+
+2
+
+1′ 
+
+3′ 
+
+2′ 
+
+> 𝑎 1
+> 0
+> 𝑎 3
+> 1
+> 𝑎 1
+> 0
+> 𝑎 3
+> 1
+> 𝑎 2
+> 2
+
+(a) Re-execution of Actions 𝑡 1 𝑡 2 𝑡 3 𝑡 4 𝑡 5 𝑡 6𝑡 0
+
+𝑇 
+
+Agent 
+
+1
+
+3
+
+2
+
+1′ 
+
+3′ 
+
+2′  
+
+> 𝑎 1
+> 0
+> 𝑎 3
+> 1
+> 𝑎 1
+> 0
+> 𝑎 3
+> 1
+> 𝑎 2
+> 2
+
+(b) Policy Update via Proxy Figure 2: At t2, a01 and a13 are executing. (a) Virtual proxies #1 ′
+
+and #3 ′ are introduced to re-execute a01 and a13. (b) The policies of agent #1 and #3 for a01 and a13 are updated through their proxies. 
+
+a virtual proxy i′ at each time step when agent i is execut-ing action ai. The proxy i′ shares the same policy as agent 
+
+i and re-executes action ai. Therefore, when the policies of the proxies #1 ′ and #3 ′ are updated with assigned credit at 
+
+t2, the policies of the corresponding agents #1 and #3 are updated as well, as shown in Figure 2. We integrate the VSP mechanism into Dec-POMDP to model asynchronous decision-making problems. Before pre-senting the detailed formulation, the frequently used defini-tions are outlined below. Asynchronous action refers to an action that requires multiple time steps to complete, e.g., ac-tion a01 spans over four time steps in Figure 2. The observa-tion for making a decision is denoted as ˜oi, referring to the most recent observation upon which an agent i makes the de-cision to execute a new asynchronous action. ˜ai denotes the most recent new decision made by the agent i.
+
+Definition 1 (Dec-POMDP with VSP) . Dec-POMDP with VSP is a tuple ⟨ bN , I, bS, A, bP, br, bO, OP , Ω, γ ⟩, where bN =
+
+{N , N ′}, with N as the real agent set and N ′ as the vir-tual proxy set. At each time step t, the agents are divided into two disjoint sets: id ∈ N d, the agent making the de-cision, and ic ∈ N c, the agent executing the action. Time step index t is omitted for simplicity. Given an original state 
+
+s ∈ S , function I(s) returns a subset N ′ 
+
+> c
+
+⊆ N ′, where proxy 
+
+i′ 
+
+> c
+
+∈ N ′ 
+
+> c
+
+and agent ic ∈ N c form an real-virtual pair ⟨ic, i ′
+
+> c
+
+⟩.The agent ic and the proxy i′ 
+
+> c
+
+in this pair have the same pol-icy. bs = [ s; ˜oc] ∈ bS, where [·; ·] is the concatenation oper-ation. s is the original state and ˜oc is obtained according to OP (˜oc|s), which is the joint observation of all agents ic
+
+for making decisions. Each proxy i′ 
+
+> c
+
+receives oi′ 
+
+> c
+
+= ˜ oic ∈ Ω
+
+according to bO(bs, i ′
+
+> c
+
+) and selects action ai′ 
+
+> c
+
+= ˜ aic to form 
+
+ba = [ a; ˜ac] ∈ A n+n′ 
+
+> c
+
+, where n′ 
+
+> c
+
+= |N ′
+
+> c
+
+|, a ∈ A n is the original joint action, and ˜ac is the most recent joint decision made by all agents ic. Subsequently, they move to the next state bs′ according to bP(bs′|bs, ba) = OP (˜o′
+
+> c
+
+|s′)P(s′|s, a) and earn a joint reward br(bs, ba) = r(s, a)1.
+
+To ensure consistent dimensions of the extended state bs and action ba, virtual proxies are introduced for decision-making 
+
+> 1
+
+This setup allows us to investigate the effect of asynchronous actions ˜ac on the reward r(s, a).Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+172 agents id ∈ N d and action-executing agents ic ∈ N c at each time step, with proxies for agents id masked out. Our VSP improves the training efficiency without increas-ing the complexity. Since a virtual proxy shares policy with the corresponding real agent, the introduction of a proxy does not expand the policy space. Furthermore, during the execu-tion of action a13 in Figure 2, virtual proxy #3 ′ is repeatedly introduced, enabling multiple updates to the shared policy as-sociated with action a13. This significantly accelerates con-vergence, as demonstrated by the ablation studies in Section 6.2. Theoretically, we prove that VSP preserves the inherent characteristics of the task and the solution process. 
+
+Theorem 1. Given an asynchronous decision-making task, define π∗ 
+
+> Dec
+
+and π∗ 
+
+> V SP
+
+as the Markov Perfect Equilibrium (MPE) respectively for modeling as a Dec-POMDP and a Dec-POMDP with VSP. T ∗ 
+
+> Dec
+
+and T ∗ 
+
+> V SP
+
+as the VD opera-tor for the same. Assuming that T ∗ 
+
+> Dec
+
+converges to the MPE of this task, i.e., π∗
+
+> Dec
+
+, then: (1) π∗ 
+
+> V SP
+
+= π∗
+
+> Dec 2
+
+;(2) Given the same initial joint policy π0, T ∗ 
+
+> Dec
+
+and T ∗
+
+> V SP
+
+converge to the same MPE. Proof. Please see Appendix B. 
+
+## 5 MVD 
+
+5.1 Multiplicative Interaction Form 
+
+Based on VSP, asynchronous credit assignment can be ad-dressed in a synchronized manner within a single time step. According to the unified framework of general VD algo-rithms, the global Q-value Qtot with VSP mechanism is for-mulated in terms of individual utilities Qi as follows: 
+
+Qtot = Qtot (s, Q 1d , · · · , Q nd , Q 1c , · · · , Q nc , Q 1′ 
+
+> c
+
+, · · · , Q n′ 
+
+> c
+
+).
+
+(4) In asynchronous tasks, the agent who executes first must predict how later choices of other agents would affect its ex-ecution. Meanwhile, the agent who executes later needs to consider the impact of the current actions of other agents on its decision. This conditional dependency is represented in Eq. (4) as the interaction between Qid and Qi′ 
+
+> c
+
+. Considering the benefits of multiplicative interactions for fusing informa-tion streams and enabling conditional computation [Rumel-hart and McClelland, 1987; Jayakumar et al. , 2020], we en-rich Eq. (1) by incorporating multiplicative interactions to capture these dependencies. We propose the general Multi-plicative Value Decomposition (MVD) formula: 
+
+Qtot = k0 +
+
+> n+n′
+> c
+
+X
+
+> i
+
+kiQi + X
+
+> id,i ′
+> c
+
+kidi′ 
+
+> c
+
+Qid Qi′ 
+
+> c
+
+. (5) The detailed derivations are provided in Appendix C.1. We derive Eq. (5) by performing a Taylor expansion of Qi near an optimal joint action, providing support for the multiplication operation present in the value decomposition process. Furthermore, compared to the traditional additive inter-action VD, the multiplicative interaction between Qid and 
+
+> 2
+
+Since VSP does not affect the policy space, the joint policy can still be denoted by π from Dec-POMDP with n agents. 
+
+Qi′ 
+
+> c
+
+in MVD significantly boosts representational capabil-ity in learning interactions among agents. For Eq. (1), the gradient for updating Qi is ∂Q tot  
+
+> ∂Q i
+
+= ki. In contrast, the gradients from Eq. (5) are ∂Q tot 
+
+> ∂Q id
+
+= kid + P
+
+> i′
+> c
+
+kidi′ 
+
+> c
+
+Qi′ 
+
+> c
+
+,
+
+> ∂Q tot
+> ∂Q i′
+> c
+
+= ki′ 
+
+> c
+
++ P 
+
+> id
+
+kidi′ 
+
+> c
+
+Qid , and ∂Q tot 
+
+> ∂Q ic
+
+= kic . Therefore, MVD integrates the nonlinear interactions as contextual in-formation, allowing Qid and Qi′ 
+
+> c
+
+to refine their policies based on their mutual influence. We prove that MVD bears advan-tages in handling asynchronous tasks over traditional VD. 
+
+Theorem 2. Given an asynchronous decision-making task, define QAdd as the function class for the additive VD opera-tor T ∗
+
+> Add
+
+, and QM ul as the function class for the multiplica-tive interaction VD operator T ∗
+
+> M ul
+
+, then: 
+
+QAdd ⊊ QM ul .
+
+Proof. Please see Appendix B. 
+
+5.2 High-Order Interaction Form 
+
+Eq. (5) primarily considers the interaction of Qid and Qi′ 
+
+> c
+
+.However, as illustrated in Figure 2a, the actions a01 and a13 re-executed by virtual proxies #1 ′ and #3 ′ at t2 actually orig-inate from different time steps. This implies interactions be-tween Q1′ and Q3′ , thereby indicating high-order interactions among Q1′ , Q3′ , and Q2. Therefore, we propose a K-th order (where 1 ≤ K ≤ n) interactive VD formula as follows: 
+
+Qtot = k0 +
+
+> n+n′
+> c
+
+X
+
+> i
+
+kiQi + X
+
+> id,i ′
+> c
+
+kidi′ 
+
+> c
+
+Qid Qi′
+
+> c
+
++ · · · + X 
+
+> id,i ′
+> c, 1,··· ,i ′
+> c,K −1
+
+kidi′ 
+
+> c, 1··· i′
+> c,K −1
+
+Qid Qi′ 
+
+> c, 1
+
+· · · Qi′ 
+
+> c,K −1
+
+.
+
+(6) The detailed derivations are provided in Appendix C.2. Based on the derivation of Eq. (6), as the order increases, the error introduced by Taylor expansion decreases and agents are able to obtain deeper interactive information. Neverthe-less, higher-order interaction complicates the model and does not necessarily lead to better final performance [Wen et al. ,2019; Liu et al. , 2023]. Our ablation studies in Section 6.2 further confirm this conclusion. Therefore, we primarily fo-cus on multiplicative interactions between Qid and Qi′ 
+
+> c
+
+.
+
+5.3 Implementation 
+
+Finally, we discuss the issue of IGM consistency in the prac-tical implementation of MVD. In Dec-POMDP with VSP, the agent ic currently executing an action does not need to choose a new one, and virtual proxy i′ 
+
+> c
+
+can only execute the asyn-chronous actions of ic. This implies that agent ic and proxy 
+
+i′ 
+
+> c
+
+do not need to satisfy the IGM condition. Consequently, we obtain the MVD-based IGM as follows: 
+
+arg max  
+
+> a
+
+Qtot (s, a) = ( arg max 
+
+> a1d
+
+Q1d (τ1d , a 1d ),
+
+· · · , arg max 
+
+> and
+
+Qnd (τnd , a nd ),a1c , · · · , a nc , a 1′ 
+
+> c
+
+, · · · , a n′ 
+
+> c
+
+).
+
+(7) Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+173 (𝑜 1𝑑  
+
+> 𝑡
+
+, 𝑎 1𝑑 
+
+> 𝑡 −1
+
+) (𝑜 1𝑐  
+
+> 𝑡
+
+, 𝑎 1𝑐 
+
+> 𝑡 −1
+
+) (𝑜 1𝑐  
+
+> ′
+> 𝑡
+
+, 𝑎 1𝑐 
+
+> ′
+> 𝑡 −1
+
+)
+
+Mixing Network 
+
+Agent  𝒏 𝒅 
+
+Agent  𝟏 𝒅 
+
+Agent  𝒏 𝒄 
+
+Agent  𝟏 𝒄 
+
+Proxy  𝒏 𝒄 
+
+> ′
+
+Proxy  𝟏 𝒄 
+
+> ′
+
+𝑄 1𝑑 (𝜏 1𝑑 , 𝑎 1𝑑 ) 𝑄 1𝑐 (𝜏 1𝑐 , 𝑎 1𝑐 ) 𝑄 1𝑐  
+
+> ′
+
+(𝜏 1𝑐  
+
+> ′
+
+, 𝑎 1𝑐  
+
+> ′
+
+)
+
+𝑠 
+
+𝑄 𝑡𝑜𝑡 (𝝉 , 𝒂 )
+
+(𝑜 𝑖 
+
+> 𝑡
+
+, 𝑎 𝑖 
+
+> 𝑡 −1
+
+)
+
+ℎ𝑖  
+
+> 𝑡 −1
+
+ℎ𝑖 
+
+> 𝑡
+
+𝑄 𝑖 
+
+MLP 
+
+GRU 
+
+MLP 
+
+𝑄 𝑡𝑜𝑡 
+
+> 𝑑
+
+𝑸 𝑑 
+
+> Τ
+
+𝕎 𝑸 𝑐 ′
+
+𝑸 Τ𝒘 
+
+𝑏 
+
+## ⋯
+
+| ∙ |
+
+> Softmax
+
+𝑸 𝑑  𝑸 𝑐  𝑸 𝑐 ′
+
+𝑠 
+
+| ∙ |
+
+> MLP
+
+𝑄 𝑡𝑜𝑡  
+
+> 𝑠
+
+𝑄 𝑡𝑜𝑡 
+
+> 𝑚
+
+Figure 3: The overall framework of MVD. Left: Mixing network structure. In red are the hypernetworks that generate the weights and biases for mixing network. Middle: The overall MVD architecture. Right: Agent network structure. 
+
+To maintain the monotonicity between Qtot and Qid , i.e., 
+
+> ∂Q tot
+> ∂Q id
+
+≥ 0, we derive the following form that satisfies MVD-based IGM and employ hypernetworks [Ha et al. , 2017] fi(s)
+
+to learn the corresponding weights. Since Qi′ 
+
+> c
+
+may be less than 0, we track the minimum Qi′ 
+
+> c
+
+during training and denote it as Qmin c , ensuring Qi′ 
+
+> c
+
++ Qmin c ≥ 0. The detailed deriva-tions are provided in Appendix C.3. 
+
+Qtot ≈ f0 +
+
+> n+n′
+> c
+
+X
+
+> i
+
+|fi|Qi + X
+
+> id,i ′
+> c
+
+|fidi′ 
+
+> c
+
+| Qi′ 
+
+> c
+
++ Qmin c
+
+2 Qid . (8) The overall framework of MVD is illustrated in Figure 3. We propose three distinct practical implementations of the mixing network. The first approach directly calculates the final global Q value based on Eq. (8), denoted as Qdtot . The second approach employs a multi-head structure that allows the mixing network to focus on asynchronous interaction in-formation from different representation sub-spaces, thereby enhancing the representational capability and stability. Each head calculates a global Q-value based on Eq. (8), and inputs it into a Softmax function to obtain the final global Q-value, denoted as Qstot . The third approach also employs a multi-head mechanism. To simplify the model, we use a ReLU activation function and an MLP to replace the Softmax func-tion in the second implementation, denoted as Qmtot . In this paper, we primarily focus on the third implementation, and comparisons with the others are discussed in Section 6.2. The pseudo-code for MVD is in Appendix D. 
+
+## 6 Experiments 
+
+In this section, we evaluate our MVD on a modified asyn-chronous variant of SMAC and two existing asynchronous benchmarks: Overcooked and POAC. SMAC is a widely used testbed for MARL algorithms. Our asynchronous vari-ant introduces asynchronous actions, where allied agents re-quire different time steps to complete their movements. Over-cooked requires agents to prepare ingredients in sequence and cooperate to make salads. Different actions, such as chop-ping, moving to ingredients, and delivering, span varying 0 1 2 3 4 5T (mil) 0.0 0.1 0.2 0.3 0.4 0.5 Test Win Rate % 3s5z_vs_3s6z (Asynchronous SMAC)      
+
+> 012345T (mil) 050 100 150 200 Mean Test Return Map B (Overcooked)
+> MVD ICES QMIX Qatten SHAQ NA 2QIPPO MAC IAICC
+
+Figure 4: Performance on two challenging asynchronous scenarios 
+
+time steps. POAC is a confrontation wargame between two armies with three unit types, each having distinct attributes and action execution times. The goal is to learn asynchronous strategies to defeat the rule-based bots. The baselines fall into three categories: (1) The decentral-ized training and decentralized execution (DTDE) method, IPPO [de Witt et al. , 2020], treats other agents as part of the environment and is applicable to asynchronous tasks. (2) The discarding type method, MAC IAICC, which is the most ad-vanced algorithm in [Xiao et al. , 2022]. (3) Credit assignment algorithms based on padding type method, including QMIX, Qatten, SHAQ [Wang et al. , 2022], ICES [Li et al. , 2024], and NA 2Q that considers 2nd-order interactions 3.Details of benchmarks, baselines, and our MVD are pro-vided in Appendix E. The graphs illustrate the performance of all compared algorithms by plotting the mean and standard deviation of results obtained across five random seeds. 
+
+6.1 Benchmark Results 
+
+We run experiments across multiple benchmarks, focusing on three key aspects of our framework in asynchronous cooper-ation: the necessity of additional computation, effectiveness against baselines, and generalization in complex tasks. 
+
+> 3
+
+We excluded other asynchronous MARL algorithms in the sec-tion of Related Works due to their specificity to tasks with individual agent rewards or lack of open-source code. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+174 0 1 2 3 4 5T (mil) 0.0 0.2 0.4 0.6 0.8 1.0 Test Win Rate % Scenario 3           
+
+> 012345T (mil) 0.0 0.2 0.4 0.6 0.8 1.0 Test Win Rate % Scenario 4
+> 012345T (mil) 0.0 0.2 0.4 0.6 0.8 1.0 Test Win Rate % Scenario 5
+> MVD ICES QMIX Qatten SHAQ NA 2QIPPO MAC IAICC
+
+Figure 5: Test win rate % on three scenarios of POAC benchmark. 0 1 2 3 4 5T (mil) 050 100 150 200 Mean Test Return Map A 
+
+> MVD ICES QMIX Qatten SHAQ NA 2QIPPO MAC IAICC
+
+Figure 6: Mean test return on Overcooked benchmark. 
+
+We first investigate why the additional computations intro-duced by VSP and MVD are necessary for asynchronous co-operation. As shown in Figure 4, in the super hard scenario of asynchronous SMAC and map B of Overcooked, both dis-carding and padding methods fail to handle asynchronous cooperation effectively. In contrast, MVD employs virtual proxies and multiplicative interactions to better capture the marginal contributions of asynchronous actions, significantly accelerating convergence. The complete experimental re-sults and analysis are provided in Appendix F. These results show that while most baselines perform well in simple asyn-chronous scenarios, they struggle in complex tasks. We then analyze the specific performance comparison against baselines on map A of Overcooked, as shown in Fig-ure 6. The results indicate that MVD surpasses all baselines. Both IPPO and MAC IAICC exhibit slower training speeds. This suggests the discarding type methods suffer from low efficiency. NA 2Q and SHAQ mistakenly consider the influ-ence among padding actions, resulting in non-convergence. This implies that Dec-POMDP with padding action is also un-suitable for asynchronous settings. Although ICES enhances exploration, it is less effective than MVD as it neglects the interplay between asynchronous actions. QMIX and Qatten perform better than NA 2Q because they use simpler models to handle credit assignment, leading to stronger robustness to padding action. Furthermore, MVD outperforms baselines on other maps of Overcooked. The complete experimental results and analysis are in Appendix F.2. We further validate the generalization of MVD on the chal-lenging POAC. Figure 5 shows the win rate across scenar-ios with increasing difficulty levels. We observe that MVD demonstrates increasingly better performance. IPPO and MAC IAICC train slowly in simple scenarios and fail in com-plex tasks. Compared to Overcooked, POAC contains fewer asynchronous actions, resulting in less padding when using Dec-POMDP. Therefore, NA 2Q performs relatively better among the baselines. However, due to the interference from padding action and the complexity of the adopted model, the training efficiency of NA 2Q is consistently inferior to that of MVD, a result also observed in SHAQ and ICES. The additive interaction VD algorithms, QMIX and Qatten, do not yield satisfactory performance, since they cannot handle the mutual influence among agents in complex asynchronous tasks. Furthermore, MVD demonstrates highly competitive performance in other scenarios of POAC. The complete ex-perimental results and analysis are in Appendix F.3. 
+
+6.2 Ablation Studies 
+
+To obtain a deeper insight into our proposed VSP and MVD, we perform ablation studies to illustrate the impact of the fol-lowing factors on the performance: (1) The introduction of virtual proxies. (2) The interactions of different orders among agents. (3) The distinct practical implementations of MVD. For evaluating the impact of factor (1), we extend QMIX and Qatten with VSP, denoting them as QMIX(A) and Qat-ten(A). As shown in Figure 7a, the introduction of virtual proxies does not complicate the problem but instead notably improves the performance of QMIX and Qatten, highlighting the powerful advantages of VSP in an asynchronous setting. However, they fail to capture the mutual influence among agents, leading to poorer performance than MVD. We also extend other VD algorithms with VSP. The complete ablation experiments and analysis are in Appendix G.1. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+175 0 1 2 3 4 5T (mil) 0.0 0.2 0.4 0.6 0.8 1.0 Test Win Rate % Scenario 5 
+
+> MVD QMIX QMIX(A) Qatten Qatten(A)
+
+(a) Virtual proxies 0 1 2 3 4 5T (mil) 0.0 0.2 0.4 0.6 0.8 1.0 Test Win Rate % Scenario 5  
+
+> MVD(2) MVD(1) MVD(3) NA 2Q(2) NA 2Q(3)
+
+(b) Different orders interactions 0 1 2 3 4 5T (mil) 0.0 0.2 0.4 0.6 0.8 1.0 Test Win Rate % Scenario 5  
+
+> MVD(MLP) MVD MVD(Softmax)
+
+(c) Different implementations Figure 7: Ablation Studies of MVD on scenario 5 of POAC benchmark. 1       
+
+> 3
+> 2’
+> -0.733
+> 0.785
+> -0.182
+> 𝑸 𝒊
+> 12’
+> 32’
+> 0.310
+> 0.711
+> 𝒇 𝒊𝒋
+> 1Tank 2Chariot 3Infantry
+> 1
+> 2
+> 3
+
+(a) 1.638 3         
+
+> 0.522 1’
+> 0.242 2’
+> 𝑸 𝒊
+> 31’
+> 32’
+> 0.795
+> 3.614
+> 𝒇 𝒊𝒋
+> 1
+> 23
+> 1Tank 2Chariot 3Infantry
+
+(b) Figure 8: Visualization of evaluation for (a) MVD and (b) NA 2Q. 
+
+For evaluating the impact of factor (2), we consider MVD and NA 2Q with l-th order interactions under VSP, denot-ing them as MVD( l) and NA 2Q( l). As shown in Figure 7b, the performance of MVD(2) incorporating multiplicative in-teractions consistently outperforms MVD(1) which does not consider interactions between agents. Further, both MVD(3) and NA 2Q(3) suffer from performance degradation due to in-creased model complexity. Therefore, additive interactions, which ignore interactions, are insufficient for solving the asynchronous credit assignment problem, while higher-order interactions increase complexity and degrade performance. In contrast, the multiplicative interaction between Qid and 
+
+Qi′ 
+
+> c
+
+efficiently addresses these issues. The complete ablation experiments and analysis are in Appendix G.2. For evaluating the impact of factor (3), we compared three different practical implementations of MVD. As shown in Figure 7c, directly applying Eq. (8) to obtain Qdtot converges to the optimal joint policy, yet it suffers from slow training speed and instability. Employing a multi-head structure can effectively address these issues. However, using Softmax to obtain Qstot excessively complicates the entire mixing net-work. Therefore, MVD derives the greatest benefit from MLP with the ReLU activation function. The complete ablation ex-periments and analysis are in Appendix G.3. 
+
+6.3 Interpretability 
+
+To visually illustrate the asynchronous credit assignment pro-cess, we exhibit key frames from scenario 5 of POAC and compare the converged MVD and NA 2Q with VSP. The ar-rows in the figures represent the movements or attacks of the agents. We highlight the individual Qi and crucial weights within the mixing network to demonstrate their alignment with agents’ asynchronous behaviors. fij represents the col-laborative contribution of two agents to the global outcome. Figures 8a and 8b depict similar scenarios: one of our units lures the enemy deeper into the field, while another at-tack. Since the former is executing a movement action and the latter is making an attack decision, their decision-making is asynchronous. As shown in Figure 8a, the infantry suc-cessfully attacks an enemy, leading to a higher Q3, while the chariot is under attack, resulting in a negative Q2′ . MVD accurately attributes the importance of their asynchronous cooperation to the entire team using multiplicative interac-tion and assigns a higher credit f32 ′ . As shown in Fig-ure 8b, similarly, the infantry that successfully attacks ene-mies has a higher Q3, whereas the tank used to kite enemies has a lower Q1′ . Both the tank and the chariot are execut-ing actions, yet NA 2Q mistakenly regards the asynchronous infantry-chariot cooperation as more important than infantry-tank cooperation. Therefore, even though both strategies ul-timately achieve victory, MVD offers a superior ability to capture the interplay between agents’ asynchronous decision-making, providing higher interpretability. 
+
+## 7 Conclusion and Future Work 
+
+In this paper, we propose an asynchronous credit assignment framework incorporating the VSP mechanism and the MVD algorithm. Our framework fully captures the dependencies between asynchronous decisions and provides a solid basis for further exploration of asynchronous MARL. VSP syn-chronizes asynchronous actions without disrupting task equi-librium or VD convergence. MVD introduces multiplicative interactions, strictly extending the function class and effec-tively capturing the interplay between asynchronous actions. Extensive experiments demonstrate that MVD outperforms baselines, particularly in complex asynchronous tasks, and provides interpretability for asynchronous cooperation. One direction for future work involves exploring effective repre-sentations of higher-order asynchronous interactions and ad-dressing asynchronous cooperation in large-scale systems. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+176 Acknowledgments 
+
+This paper was mainly supported by the National Natural Sci-ence Foundation of China (NSFC) under Grant 62272497 to H. Wu. 
+
+## References 
+
+[Amato et al. , 2019] Christopher Amato, George Konidaris, Leslie P Kaelbling, and Jonathan P How. Modeling and planning with macro-actions in decentralized pomdps. 
+
+Journal of Artificial Intelligence Research , 64:817–859, 2019. [Arulkumaran et al. , 2019] Kai Arulkumaran, Antoine Cully, and Julian Togelius. Alphastar: An evolutionary computation perspective. In Proceedings of the genetic and evolutionary computation conference companion ,pages 314–315, 2019. [Chen et al. , 2021] Yuxin Chen, Hejun Wu, Yongheng Liang, and Guoming Lai. Varlenmarl: A framework of variable-length time-step multi-agent reinforcement learn-ing for cooperative charging in sensor networks. In 2021 18th Annual IEEE International Conference on Sensing, Communication, and Networking , pages 1–9. IEEE, 2021. [Daganzo and Ouyang, 2019] Carlos F Daganzo and Yan-feng Ouyang. Public transportation systems: Principles of system design, operations planning and real-time con-trol . World Scientific, 2019. [de Witt et al. , 2020] Christian Schroeder de Witt, Tarun Gupta, Denys Makoviichuk, Viktor Makoviychuk, Philip H. S. Torr, Mingfei Sun, and Shimon Whiteson. Is inde-pendent learning all you need in the starcraft multi-agent challenge?, 2020. [Dolev et al. , 2018] Shlomi Dolev, Chryssis Georgiou, Ioan-nis Marcoullis, and Elad M. Schiller. Practically-self-stabilizing virtual synchrony. Journal of Computer and System Sciences , 96:50–73, 2018. [Foerster et al. , 2018] Jakob Foerster, Gregory Farquhar, Triantafyllos Afouras, Nantas Nardelli, and Shimon Whiteson. Counterfactual multi-agent policy gradients. In 
+
+Proceedings of the AAAI conference on artificial intelli-gence , volume 32, 2018. [Ha et al. , 2017] David Ha, Andrew M. Dai, and Quoc V. Le. Hypernetworks. In International Conference on Learning Representations , 2017. [Hastie, 2017] Trevor J Hastie. Generalized additive mod-els. In Statistical models in S , pages 249–307. Routledge, 2017. [Jayakumar et al. , 2020] Siddhant M. Jayakumar, Woj-ciech M. Czarnecki, Jacob Menick, Jonathan Schwarz, Jack Rae, Simon Osindero, Yee Whye Teh, Tim Harley, and Razvan Pascanu. Multiplicative interactions and where to find them. In International Conference on Learning Representations , 2020. [Jia et al. , 2020] Hangtian Jia, Yujing Hu, Yingfeng Chen, Chunxu Ren, Tangjie Lv, Changjie Fan, and Chongjie Zhang. Fever basketball: A complex, flexible, and asyn-chronized sports game environment for multi-agent rein-forcement learning, 2020. [Li et al. , 2022] Jiahui Li, Kun Kuang, Baoxiang Wang, Fu-rui Liu, Long Chen, Changjie Fan, Fei Wu, and Jun Xiao. Deconfounded value decomposition for multi-agent rein-forcement learning. In International Conference on Ma-chine Learning , pages 12843–12856. PMLR, 2022. [Li et al. , 2024] Xinran Li, Zifan Liu, Shibo Chen, and Jun Zhang. Individual contributions as intrinsic exploration scaffolds for multi-agent reinforcement learning. In Inter-national Conference on Machine Learning , 2024. [Liang et al. , 2022] Yongheng Liang, Hejun Wu, and Haitao Wang. ASM-PPO: Asynchronous and scalable multi-agent ppo for cooperative charging. In Proceedings of the 21st International Conference on Autonomous Agents and Mul-tiagent Systems , pages 798–806, 2022. [Liang et al. , 2023] Yongheng Liang, Hejun Wu, and Haitao Wang. Asynchronous multi-agent reinforcement learning for collaborative partial charging in wireless rechargeable sensor networks. IEEE Transactions on Mobile Comput-ing , 2023. [Liu et al. , 2023] Zichuan Liu, Yuanyang Zhu, and Chunlin Chen. NA 2Q: Neural attention additive model for inter-pretable multi-agent q-learning. In International Confer-ence on Machine Learning , pages 22539–22558. PMLR, 2023. [Oliehoek et al. , 2008] Frans A Oliehoek, Matthijs TJ Spaan, and Nikos Vlassis. Optimal and approximate q-value functions for decentralized pomdps. Journal of Ar-tificial Intelligence Research , 32:289–353, 2008. [Oliehoek et al. , 2016] Frans A Oliehoek, Christopher Am-ato, et al. A concise introduction to decentralized POMDPs , volume 1. Springer, 2016. [Oroojlooy and Hajinezhad, 2023] Afshin Oroojlooy and Davood Hajinezhad. A review of cooperative multi-agent deep reinforcement learning. Applied Intelligence ,53(11):13677–13722, 2023. [Rashid et al. , 2020] Tabish Rashid, Mikayel Samvelyan, Christian Schroeder De Witt, Gregory Farquhar, Jakob Fo-erster, and Shimon Whiteson. Monotonic value function factorisation for deep multi-agent reinforcement learning. 
+
+Journal of Machine Learning Research , 21(178):1–51, 2020. [Rumelhart and McClelland, 1987] David E. Rumelhart and James L. McClelland. A General Framework for Parallel Distributed Processing , pages 45–76. 1987. [Samvelyan et al. , 2019] Mikayel Samvelyan, Tabish Rashid, Christian Schr¨ oder de Witt, Gregory Farquhar, Nantas Nardelli, Tim G. J. Rudner, Chia-Man Hung, Philip H. S. Torr, Jakob N. Foerster, and Shimon White-son. The starcraft multi-agent challenge. In Proceedings of the International Conference on Autonomous Agents and MultiAgent Systems , pages 2186–2188, 2019. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 177
+
+[Shapley, 1953] Lloyd S Shapley. A value for n-person games. 1953. [Son et al. , 2019] Kyunghwan Son, Daewoo Kim, Wan Ju Kang, David Earl Hostallero, and Yung Yi. Qtran: Learn-ing to factorize with transformation for cooperative multi-agent reinforcement learning. In International conference on machine learning , pages 5887–5896. PMLR, 2019. [Sundararajan et al. , 2017] Mukund Sundararajan, Ankur Taly, and Qiqi Yan. Axiomatic attribution for deep net-works. In International conference on machine learning ,pages 3319–3328. PMLR, 2017. [Sunehag et al. , 2018] Peter Sunehag, Guy Lever, Audrunas Gruslys, Wojciech Marian Czarnecki, Vinicius Zam-baldi, Max Jaderberg, Marc Lanctot, Nicolas Son-nerat, Joel Z. Leibo, Karl Tuyls, and Thore Grae-pel. Value-decomposition networks for cooperative multi-agent learning based on team reward. In Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Systems , page 2085–2087, 2018. [Theocharous and Kaelbling, 2003] Georgios Theocharous and Leslie Kaelbling. Approximate planning in pomdps with macro-actions. Advances in neural information pro-cessing systems , 16, 2003. [Wang and Sun, 2021] Jiawei Wang and Lijun Sun. Re-ducing bus bunching with asynchronous multi-agent rein-forcement learning. In Proceedings of the Thirtieth Inter-national Joint Conference on Artificial Intelligence, , pages 426–433, 2021. [Wang et al. , 2016] Ziyu Wang, Tom Schaul, Matteo Hessel, Hado Hasselt, Marc Lanctot, and Nando Freitas. Duel-ing network architectures for deep reinforcement learning. In International conference on machine learning , pages 1995–2003. PMLR, 2016. [Wang et al. , 2020a] Jianhong Wang, Yuan Zhang, Tae-Kyun Kim, and Yunjie Gu. Shapley q-value: A local re-ward approach to solve global reward games. In Proceed-ings of the AAAI Conference on Artificial Intelligence , vol-ume 34, pages 7285–7292, 2020. [Wang et al. , 2020b] Rose E Wang, Sarah A Wu, James A Evans, Joshua B Tenenbaum, David C Parkes, and Max Kleiman-Weiner. Too many cooks: Coordinating multi-agent collaboration through inverse planning. 2020. [Wang et al. , 2021] Jianhao Wang, Zhizhou Ren, Terry Liu, Yang Yu, and Chongjie Zhang. QPLEX: Duplex duel-ing multi-agent q-learning. In International Conference on Learning Representations , 2021. [Wang et al. , 2022] Jianhong Wang, Yuan Zhang, Yunjie Gu, and Tae-Kyun Kim. Shaq: Incorporating shapley value theory into multi-agent q-learning. Advances in Neural Information Processing Systems , 35:5941–5954, 2022. [Wen et al. , 2019] Ying Wen, Yaodong Yang, Rui Luo, Jun Wang, and Wei Pan. Probabilistic recursive reasoning for multi-agent reinforcement learning. In International Con-ference on Learning Representations , 2019. [Wolpert and Tumer, 2001] David H Wolpert and Kagan Tumer. Optimal payoff functions for members of collec-tives. Advances in Complex Systems , 4(02n03):265–279, 2001. [Xiao et al. , 2022] Yuchen Xiao, Weihao Tan, and Christo-pher Amato. Asynchronous actor-critic for multi-agent reinforcement learning. Advances in Neural Information Processing Systems , 35:4385–4400, 2022. [Yang et al. , 2020a] Yaodong Yang, Jianye Hao, Guangy-ong Chen, Hongyao Tang, Yingfeng Chen, Yujing Hu, Changjie Fan, and Zhongyu Wei. Q-value path decompo-sition for deep multiagent reinforcement learning. In Inter-national Conference on Machine Learning , pages 10706– 10715. PMLR, 2020. [Yang et al. , 2020b] Yaodong Yang, Jianye Hao, Ben Liao, Kun Shao, Guangyong Chen, Wulong Liu, and Hongyao Tang. Qatten: A general framework for cooperative multi-agent reinforcement learning, 2020. [Yao et al. , 2021] Meng Yao, Qiyue Yin, Jun Yang, Tong-tong Yu, Shengqi Shen, Junge Zhang, Bin Liang, and Kaiqi Huang. The partially observable asynchronous multi-agent cooperation challenge, 2021. [Yu et al. , 2022] Chao Yu, Akash Velu, Eugene Vinitsky, Ji-axuan Gao, Yu Wang, Alexandre Bayen, and Yi Wu. The surprising effectiveness of ppo in cooperative multi-agent games. Advances in Neural Information Processing Sys-tems , 35:24611–24624, 2022. [Zhou et al. , 2020] Meng Zhou, Ziyu Liu, Pengwei Sui, Yix-uan Li, and Yuk Ying Chung. Learning implicit credit as-signment for cooperative multi-agent reinforcement learn-ing. Advances in neural information processing systems ,33:11853–11864, 2020. [Zhou et al. , 2023] Xiaobo Zhou, Zhihui Ke, and Tie Qiu. Recommendation-driven multi-cell cooperative caching: A multi-agent reinforcement learning approach. IEEE Transactions on Mobile Computing , 2023. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25)

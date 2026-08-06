@@ -1,0 +1,323 @@
+Title: Augmented Runtime Collaboration for Self-Organizing Multi-Agent Systems: A Hybrid Bi-Criteria Routing Approach
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/40227/44188
+
+Number of Pages: 9
+
+Markdown Content:
+# Augmented Runtime Collaboration for Self-Organizing Multi-Agent Systems: A Hybrid Bi-Criteria Routing Approach 
+
+# Qingwen Yang 1*† , Feiyu Qu 2*‡ , Tiezheng Guo 1, Yanyi Liu 1, Yingyou Wen 1
+
+> 1
+
+School of Computer Science and Engineering, Northeastern University, Shenyang 110819, China 
+
+> 2
+
+Department of Computer Science, Dartmouth College, Hanover, NH 03755, USA 2290182@stu.neu.edu.cn, feiyu.qu.gr@dartmouth.edu, 2310725@stu.neu.edu.cn, 2290175@stu.neu.edu.cn, wenyingyou@mail.neu.edu.cn 
+
+Abstract 
+
+LLM-based multi-agent systems have demonstrated signifi-cant capabilities across diverse domains. However, the task performance and efficiency are fundamentally constrained by their collaboration strategies. Prevailing approaches rely on static topologies and centralized global planning, a paradigm that limits their scalability and adaptability in open, decen-tralized networks. Effective collaboration planning in dis-tributed systems using only local information thus remains a formidable challenge. To address this, we propose BiRouter, a novel dual-criteria routing method for Self-Organizing Multi-Agent Systems (SO-MAS). This method enables each agent to autonomously execute “next-hop” task routing at runtime, relying solely on local information. Its core decision-making mechanism is predicated on balancing two metrics: (1) the ImpScore, which evaluates a candidate agent’s long-term im-portance to the overall goal, and (2) the GapScore, which assesses its contextual continuity for the current task state. Furthermore, we introduce a dynamically updated reputa-tion mechanism to bolster system robustness in untrustwor-thy environments and have developed a large-scale, cross-domain dataset, comprising thousands of annotated task-routing paths, to enhance the model’s generalization. Ex-tensive experiments demonstrate that BiRouter achieves su-perior performance and token efficiency over existing base-lines, while maintaining strong robustness and effectiveness in information-limited, decentralized, and untrustworthy set-tings. 
+
+# 1 Introduction 
+
+Recent breakthroughs in Large Language Models (LLMs) such as GPT-4 (Achiam et al. 2023) have unlocked unprece-
+
+> *
+
+These authors contributed equally. 
+
+> †
+
+Author Contributions: Yang led the creation of the GapScore dataset and was responsible for training BiRouter. 
+
+> ‡
+
+Author Contributions: Qu designed the overall network frame-work and the BiRouter forwarding mechanism, and contributed to building the ImpScore dataset. Qu and Yang jointly executed all experiments and collaborated on writing the manuscript. Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+dented capabilities in autonomous reasoning and planning (Wei et al. 2022; Wang et al. 2023; Yao et al. 2023b; Zhao et al. 2025). When embodied as agents (Li et al. 2023a; Sun et al. 2021), these models can comprehend complex instruc-tions, decompose tasks, and execute actions to solve prob-lems in diverse domains (Wang et al. 2024; Xi et al. 2023). This success has catalyzed a shift from single-agent sys-tems to the more ambitious paradigm of Multi-Agent Sys-tems (MAS) (Chan et al. 2024; Chen et al. 2025). By or-chestrating agents with distinct roles and specialized skills, MAS can achieve a sophisticated division of labor, mirror-ing human societal structures to tackle tasks of far greater complexity (Tran et al. 2025). However, orchestrating this collaboration, especially in open and decentralized environ-ments, remains a formidable scientific challenge. The prevailing paradigm for MAS development has been the closed-world system, which relies on global optimiza-tion to coordinate agents (Zhang et al. 2025b). This approach inherently limits scalability and adaptability, prompting a community-wide effort towards open agent networks that in-tegrate heterogeneous agents from different systems. Foun-dational protocols such as Agent-to-Agent (A2A) (Google 2025) and Agent Network Protocol (ANP) (Chang 2024) have emerged from this effort. However, these protocols pro-vide mechanisms for agent discovery and invocation, but lack the strategies for dynamic, task-oriented collaboration. This absence leads to sub-optimal, or even chaotic, agent in-teractions, resulting in wasted computational resources, cas-cading failures, and an inability to reliably solve complex, multi-step tasks. Existing planning methods like GPTSwarm (Zhuge et al. 2024) and G-Designer (Zhang et al. 2025c) rely on static, global plans that pre-compute a complete ex-ecution path. Such an approach is not only brittle to dy-namic changes but fundamentally incompatible with decen-tralized settings where no single agent possesses a global view. Furthermore, their generalization capabilities are often limited as open environments demand adaptability across a wide array of tasks and domains. This exposes a critical re-search gap: How can an agent, relying solely on local in-The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+29811 formation, dynamically make “next hop” routing deci-sions that contribute to an emergent, globally efficient solution across diverse tasks? 
+
+To address this challenge, we situate our work within the framework of a Self-Organizing Multi-Agent System (SO-MAS). We define this as a decentralized network where individual agents autonomously make task-forwarding de-cisions using only local information, obviating the need for a central scheduler. In such a paradigm, we intro-duce BiRouter , a novel routing method that empowers each agent to dynamically plan task pathways at runtime. In-spired by A* search algorithm (Hart, Nilsson, and Raphael 1968), BiRouter makes intelligent, localized routing deci-sions through a bi-criteria heuristic that evaluates potential next-hop agents. This heuristic balances two metrics: (1) an Importance (Imp) score , which serves as a long-term heuristic by quantifying an agent’s capability relevance to the overall task goal (analogous to A*’s heuristic cost, h(n)), and (2) a Gap score , which assesses an agent’s contextual continuity to bridge the gap between the task’s current state and the next logical step (akin to A*’s path cost, g(n)). By integrating these scores, BiRouter enables the emergence of globally coherent problem-solving pathways from simple, local rules. To enhance robustness in open, untrusted envi-ronments, the model further incorporates an iteratively up-dated agent reputation score into its decision-making pro-cess. Furthermore, to train our scoring functions and ensure their generalization, we constructed a large-scale, domain-rich dataset comprising thousands of annotated task-routing paths for diverse multi-step problems. Our main contribu-tions can be summarized as follows: • We introduce BiRouter, a novel bi-criteria routing method for dynamic and decentralized task planning that balances long-term relevance with short-term state-awareness. • We develop and release a large-scale and diverse dataset specifically designed for training multi-agent collabora-tion models, providing a valuable resource for the re-search community. • We provide extensive experimental validation demon-strating that BiRouter significantly improves collabora-tion efficiency and robustness in both centralized and dis-tributed settings, outperforming established baselines. 
+
+# 2 Related Work 
+
+LLM-driven Multi-Agent Systems. The rise of LLMs has enabled Multi-Agent Systems (MAS) that outperform single agents on complex tasks (Li et al. 2023b; Chen et al. 2024a; Du et al. 2023; Liang et al. 2024). Early closed sys-tems relied on predefined roles (Chen et al. 2024b; Wu et al. 2024) or aggregating outputs (Jiang, Ren, and Lin 2023; Wang et al. 2025), inherently limiting extensibility. To ad-dress this, the community has shifted towards open net-works, developing foundational protocols like A2A (Google 2025), ANP (Chang 2024) and Agora (Marro et al. 2025) for dynamic discovery and decentralized communication. While these protocols establish the infrastructure for inter-operability, they primarily solve for connectivity, leaving a critical gap in the task-oriented, intelligent collaboration strategies needed for effective coordination. 
+
+Agent Collaboration Planning Mechanisms. Effective agent collaboration is crucial for task success. A dominant paradigm is static planning, which pre-computes a fixed workflow before task execution (Zhang et al. 2023; Zhuge et al. 2024). Methods include pruning connections (Agent-Prune (Zhang et al. 2025b)), generating task-specific struc-tures (G-Designer (Zhang et al. 2025c), AFlow (Zhang et al. 2025d)), or determining a dependency-based order (MacNet (Qian et al. 2025)). However, these static approaches lack adaptability to dynamic changes or failures. To address this rigidity, dynamic approaches like DyLAN (Liu et al. 2024) and MaAS (Zhang et al. 2025a) adapt team structures or se-lect executors during the task. Despite their flexibility, both static and dynamic methods typically rely on a centralized planner with a global view of the system. This centralized model is not applicable in large-scale, decentralized envi-ronments where information is inherently local. Our work addresses this gap by proposing a mechanism for agents to make effective runtime decisions using only local informa-tion. 
+
+Heuristic Search Methods. Planning a collaborative workflow can be framed as a pathfinding problem in a com-plex state space, making heuristic search highly relevant (Meng et al. 2024; Veerapaneni, Saleem, and Likhachev 2023). Recent methods have leveraged this, such as Tree-of-Thought (Yao et al. 2023a) using tree search for reason-ing paths, and ToolChain* (Zhuang et al. 2024) and AFlow applying A* (Hart, Nilsson, and Raphael 1968) and MCTS (Browne et al. 2012) to optimize workflows. However, A*’s reliance on a static heuristic makes it ill-suited for dynamic environments, while the more adaptable MCTS incurs sig-nificant computational overhead from extensive simulations. Inspired by the goal-oriented nature of A*, we introduce BiRouter: a novel, hybrid bi-criteria routing method. It nav-igates these dynamic spaces by learning its own heuristic functions, enabling efficient and adaptive task routing. 
+
+# 3 Methodology 
+
+Figure 1 presents the architecture of our method. Our sys-tem operates as a self-organizing agent network where any agent can initiate a query. It then employs its built-in rout-ing mechanism, BiRouter , to dynamically forward the task. This distributed routing process progressively approaches a optimal execution path, forming a runtime adaptive agent chain. To enhance system robustness, we employ a reputa-tion mechanism that dynamically updates each agent’s credit score upon task completion. In the following sections, Sec-tion 3.1 introduces definitions and optimization objectives, Section 3.2 details the forwarding criteria, Section 3.3 de-tails how selection policy of BiRouter helps to generate agent chain, and Section 3.4 describes the generation strat-egy of our BiRouter training dataset. 
+
+3.1 Preliminaries 
+
+System and Agent Chain Definition. We define a Self-organizing Multi-agent System S as a decentralized network 29812 Figure 1: The architecture of BiRouter and its workflow in self-organizing agent systems. operating without a central coordinator or hierarchical struc-ture: 
+
+S = A, CA, ϕ π (1) where A = {ai|i = 1 , . . . , n } is the set of agents, each with a description Desc (ai); CA = {C ai |ai ∈ A} defines the set of known successor candidates for each agent ai; and ϕπ is the successor selection policy. In this system, each agent can partially execute a query and autonomously forward the task based on its local policy. Given a query q, the system’s objective is to form an agent chain , Cagt (q) = {x1, x 2, . . . , x L}, which is an ordered se-quence of agents that collectively solve the task. The forma-tion of this chain, denoted as Cagt = Π( A, q ), results from this decentralized decision-making process. 
+
+Problem Formulation. In contrast to centralized ap-proaches that pre-plan the entire agent chain based on global knowledge, our system operates without a central scheduler. The agent chain emerges dynamically from a sequence of lo-cal, autonomous decisions. Each agent xi makes its decision based on a strictly local observation oxi (q), which represents the agent’s limited, egocentric view of the system: 
+
+oxi (q) = 
+
+> Past
+
+z }| { 
+
+(H(q)
+
+> i−1
+
+) ∪
+
+> Present
+
+z }| {
+
+Desc (xi) ∪
+
+> Future
+
+z }| {
+
+{Desc (xj )|xj ∈ C xi }
+
+(2) where H(q) 
+
+> i−1
+
+= ( q, x 1, m 1, . . . , x i−1, m i−1) is the chain’s history up to step i − 1, and m is the runtime message. Our objective is to learn an optimal local policy π∗ that selects the best successor cxi∗ from the local candidate set 
+
+Cxi , rather than the global set A:
+
+cxi∗ = ϕπ∗ (Cxi |oxi (q)) (3) The optimal policy π∗ favors successors based on a local decision score Sxi :
+
+π∗(Cxi |oxi (q)) ∝ Sxi (4) This single-hop forwarding mechanism allows each agent to make the best possible local decision, progressively con-structing a globally effective agent chain C∗
+
+> agt
+
+.
+
+3.2 Forwarding Criteria 
+
+The forwarding decision is governed by three key criteria: 
+
+Importance (ImpScore). This score quantifies an agent’s capability relevance to the overall task query. It is computed by a function ImpScore : A×Q → R|A|×|Q| , which outputs a matrix where each element (i, j ) represents the importance of agent ai for query qj , where Q is the query set and qj ∈Q. The score prioritizes agents with higher task-criticality, thereby enhancing execution efficiency. 
+
+Cohesion (GapScore). This score evaluates how well a candidate agent fits into the emerging chain, ensuring logical and contextual continuity. The function GapScore : Cxi →
+
+R|C xi | computes a vector of compatibility scores for the set of candidate successors Cxi of the current agent xi. A higher score indicates a smoother, more logical transition. The heatmaps in Figure 1 show the semantic distribu-tion of ImpScore and GapScore, where darker colors indi-cate higher scores. Agents with a high ImpScore form a path from the query to the goal, while those with a high GapScore form a cluster around the current agent. 
+
+Agent Reputation. To ensure system reliability, the policy incorporates agent reputation, a dynamic value represented 29813 by a credit score Scrd ∈ R|A| , reflecting each agent’s histor-ical trustworthiness and performance. This score is updated post-execution, where an LLM evaluates the agent’s perfor-mance to determine a multiplicative update factor. 
+
+3.3 The Successor Selection Policy 
+
+At each step i, the current agent xi selects a successor xi+1 
+
+from its candidates Cxi . This decision is executed by its built-in BiRouter module, which implements our policy ϕπ .The BiRouter consists of two branches that process inputs through a shared encoder, followed by distinct Cross At-tention and MLP layers to compute the ImpScore and Gap-Score, respectively: • Importance Branch (RImp ): Computes SImp , assessing the semantic relevance of each candidate to the original query q.• Cohesion Branch (RGap ): Computes SGap , evaluating the contextual fit of each candidate as a successor to xi.Formally, the score vectors for the next step ( i + 1 ) are com-puted as: 
+
+SImp 
+
+> i+1
+
+(q) = RImp (q, Desc (Cxi )) 
+
+SGap 
+
+> i+1
+
+(q) = RGap (oxi (q)) (5) where RImp (·) and RGap (·) are the neural network functions of the BiRouter, and the outputs SImp 
+
+> i+1
+
+, SGap  
+
+> i+1
+
+∈ R|C xi |.
+
+Probabilistic Synthesis. These dynamic scores are inte-grated with the static agent reputation scores ( Scrd ) to pro-duce a final probability distribution for successor selection. The local policy πi is defined as: 
+
+Logits i+1 = Scrd  
+
+> i+1
+
+⊙
+
+h
+
+αSImp  
+
+> i+1
+
++ (1 − α)SGap 
+
+> i+1
+
+i
+
+πi(Cxi |xi, q ) = Softmax (Logits i+1 )
+
+(6) where Scrd  
+
+> i+1
+
+is the vector of credit scores for the candidates, 
+
+⊙ denotes the element-wise product, and α ∈ [0 , 1] is a hy-perparameter balancing importance and cohesion. This for-mulation allows an agent’s reputation to act as a multiplica-tive gate on the combined task-relevance scores. A key feature of our design is that the transition message 
+
+mi is generated after the successor xi+1 has been selected. This enables the current agent xi to craft a successor-aware message , tailoring its content to the specific capabilities of 
+
+xi+1 to ensure a seamless and efficient task handoff: 
+
+mi = xi(H(q)
+
+> i−1
+
+, Desc (xi+1 )) (7) 
+
+Overall Chain Probability. The formation of a complete agent chain Cagt (q) is initiated from a user-specified starting agent x1. The probability of a specific chain, given the start-ing agent, is the product of the individual transition proba-bilities determined by our local policy π:
+
+P(Cagt |x1, q ) = 
+
+> L−1
+
+Y
+
+> i=1
+
+π(Cxi |xi, q ) (8) 
+
+Figure 2: Distribution of MARS against others in a 2D se-mantic space projected by t-SNE. 
+
+Adaptive Task Termination. We introduce a special Fin-isher agent to enable adaptive task completion. As a po-tential candidate at each step, its selection concludes tasks based on the task state rather than a fixed length, thus reduc-ing unnecessary token consumption. 
+
+3.4 Training Data Generation 
+
+To foster the BiRouter’s cross-domain generalization, we constructed Multi-agent Routing Dataset (MARS), a diverse dataset for BiRouter training. MARS consists of two main components: DI = {(q(i), a (i); s(i) 
+
+> I
+
+)} for ImpScore, which pairs queries and agents with importance scores, and DG =
+
+{(c(j), a (j); s(j) 
+
+> G
+
+)} for GapScore, which pairs execution con-texts and agents with cohesion scores. We initiated by prompting an LLM to produce a broad set of domain keywords, which were manually curated into 115 representative domains. Then, we prompted the LLM to gen-erate unique queries within one domain or cross domains. To ensure comprehensive semantic coverage, we densified the query embedding space by identifying and populating sparse regions. This process was guided by a semantic den-sity function using an RBF kernel: 
+
+ρ(x) = 1
+
+NqNq
+
+X
+
+> i=1
+
+exp 
+
+
+
+− ∥x − qi∥2
+
+2σ2
+
+
+
+(9) where the LLM was prompted to generate new queries in regions of low density ρ(x).For each query, an LLM generated multiple candidate ex-ecution paths (i.e., agent sequences). Within each path, the LLM ranked agents by their criticality; these ranks were av-eraged across multiple iterations for robustness. To promote efficiency, a penalty factor γ was applied to agents in long 29814 Figure 3: BiRouter’s performance and token consumption on GSM8K and MBPP across different α values. execution paths known for high token consumption. The fi-nal ImpScore is calculated using a scaled Sigmoid function to amplify the distinction between critical and non-critical agents within a target interval [l, u ]:
+
+sI (ai) = [ l + ( u − l) · 11 + e−β(Nr −ri) ] · γ (10) where Nr is the number of agents, ri is the agent’s rank, l
+
+and u are set to 0.3 and 1, and β = 2 is a scaling parameter. The context for GapScore is derived from the generated agent sequences. An agent ai at step k receives a GapScore based on its position in the full path: 
+
+sG(ai, k ) = 
+
+1/(i − k + 1) if i ≥ k
+
+0 if i < k (11) where i is the agent’s index.Finally, a dedicated “Finisher” agent was appended to each path to signal task completion. As shown in Figure 2, a t-SNE visualization of the dataset reveals a rich semantic distribution, which is crucial for en-hancing the BiRouter’s cross-domain generalization. 
+
+# 4 Experiments 
+
+4.1 Experimental Setup 
+
+Benchmarks. We evaluate BiRouter on six public bench-marks: MMLU (Hendrycks et al. 2021), GSM8K (Cobbe et al. 2021), MultiArith (Roy and Roth 2016), SVAMP (Pa-tel, Bhattamishra, and Goyal 2021), HumanEval (Chen et al. 2021) and MBPP (Austin et al. 2021). 
+
+Baselines. We compare BiRouter with three series of agentic baselines: (1) Single-agent approach : Single-agent LLM, CoT (Wei et al. 2022), ComplexCoT (Fu et al. 2023), and CoT-SC (Wang et al. 2023). (2) Static coor-dination MAS : MacNet (Qian et al. 2025), LLM-Blender (Jiang, Ren, and Lin 2023), LLM-Debate (Du et al. 2023), GPTSwarm (Zhuge et al. 2024), G-Designer (Zhang et al. 2025c). (3) Dynamic coordination MAS : AgentVerse (Chen et al. 2024b), DyLAN (Liu et al. 2024), MaAS (Zhang et al. 2025a). 
+
+Figure 4: Visualization of the performance metrics and token consumption. The diameter of each point is proportional to its y-axis value. 
+
+Implementation Details. We use qwen3-embedding -0.6b as the frozen encoder for BiRouter, training only the Cross-Attention and scoring head on our synthetically generated data. All agents use gpt-4o-mini via the Ope-nAI API. We set the temperature to 0 for all single-agent methods and 1 for all multi-agent methods. We use 
+
+gpt-4.1 to generate agent profiles to build the agent net-work, including agents specialized for the benchmarks and one fixed “Finisher” agent for task exit and answer summa-rization. We conduct each experiment twice and take the average as the final result. The optimal hyperparameter α
+
+was tuned using Q ∈ { 100 , 200 } queries randomly sam-pled from GSM8K and MBPP. As illustrated in Figure 3, we evaluated BiRouter’s performance across various α values. Balancing performance against token consumption, we set the final value to α = 0 .3.
+
+4.2 Results in Centralized MAS 
+
+We first conducted experiments in a centralized MAS envi-ronment where all agents are available at each stage of the task. We compared our method with 12 other baselines, with all agents powered by gpt-4o-mini . The evaluation re-sults demonstrate that BiRouter is: 
+
+High-performing. As summarized in Table 1, BiRouter achieves state-of-the-art or highly competitive results across all benchmarks. The average accuracy confirms that BiRouter surpasses all other baseline categories, demon-strating performance gains of 5.86% to 7.06% over single-agent methods, 4.65% to 7.58% over static coordination methods, and 4.52% to 5.23% over dynamic coordination methods. BiRouter achieved optimal results on 4 out of 6 benchmarks, demonstrating strong task performance. 29815 Method Dyn. Dis. MMLU GSM8K SVAMP HumanEval MultiArith MBPP Avg. Single-agent – – 77.81 87.45 88.26 87.08 96.85 71.83 84.88 CoT – – 78.43 +0 .62 87.10 −0.35 86.24 −2.02 88.13 +1 .05 96.31 −0.54 71.83 +0 .00 84.67 ComplexCoT – – 81.05 +3 .24 86.89 −0.56 90.53 +2 .27 87.49 +0 .41 96.70 −0.15 72.36 +0 .53 85.84 SC (CoT ×5) – – 80.96 +3 .15 87.57 +0 .12 87.92 −0.34 88.60 +1 .52 96.58 −0.27 73.60 +1 .77 85.87 MacNet × × 82.98 +5 .17 87.95 +0 .50 88.06 −0.20 84.57 −2.51 96.03 −0.82 65.28 −6.55 84.15 LLM-Blender × × 81.22 +3 .41 88.35 +0 .90 89.52 +1 .26 88.80 +1 .72 97.29 +0 .44 77.05 +5 .22 87.04 LLM-Debate × × 81.04 +3 .23 89.47 +2 .02 91.76 +3 .50 88.68 +1 .60 97.33 +0 .48 70.29 −1.54 86.43 GPTSwarm × × 82.80 +4 .99 89.14 +1 .69 87.02 −1.24 89.32 +2 .44 96.79 −0.06 77.43 +5 .60 87.08 G-Designer × × 87.20 +9 .39 93.97 +6 .52 90.29 +2 .03 87.50 +0 .42 98.33 +1 .48 – –AgentVerse ✓ × 78.36 +0 .55 89.91 +2 .46 89.64 +1 .38 89.29 +2 .21 97.50 +0 .65 74.28 +2 .45 86.50 DyLAN ✓ × 79.96 +2 .15 89.98 +2 .53 88.48 +0 .22 90.42 +3 .34 97.12 +0 .27 77.30 +5 .47 87.21 MaAS ✓ × – 92.30 +4 .85 – 92.85 +5 .77 98.80 +1 .95 82.17 +10 .34 –
+
+BiRouter (Ours) ✓ ✓ 86.80 +8 .99 94.09 +6 .64 93.20 +4 .04 91.46 +4 .38 100.00 +3 .15 84.82 +12 .99 91.73 
+
+Table 1: Performance comparison with BiRouter and baselines in centralized MAS settings. “Dyn.” and “Dis.” indicate whether a method supports dynamic topology and distributed execution ( ✓: yes, ×: no). 
+
+Method GSM8K HumanEval Acc. (%) Cost Pass@1 (%) Cost 
+
+DyLAN 87.95 6.3 × 10 6 68.29 6.2 × 10 5
+
+MaAS 86.43 3.8 × 10 6 79.27 4.9 × 10 5
+
+BiRouter 91.99 2.8 × 10 6 89.63 4.6 × 10 5
+
+Table 2: Performance and token consumption comparison in SO-MAS settings. “Acc.” denotes accuracy, and “Cost” represents the number of tokens used. 
+
+Token-economical. Figure 4 visualizes the trade-off be-tween token consumption (both prompt and completion to-kens) and performance. Across both SVAMP and GSM8K, BiRouter not only surpasses all other baselines in perfor-mance but does so with the lowest token expenditure. On HumanEval, it delivers a 3.96% performance boost over G-Designer while maintaining a comparable token count. This stands in sharp contrast to methods like GPTSwarm and DyLAN, whose complex, iterative approaches inflate token costs. By comparison, BiRouter exemplifies an exceptional balance between high performance and resource efficiency. 
+
+Generalizable. The consistent high performance across diverse domains (general reasoning, math, and code) demonstrates BiRouter’s strong generalization capabilities, especially given it was trained exclusively on synthetically generated data. Its task-adaptive and dynamically adaptive routing mechanism allows it to adjust agent selection in real-time, showing its scalability in dynamic environments. 
+
+4.3 Results in SO-MAS 
+
+In this section, we simulate a self-organizing MAS (SO-MAS) environment where each agent can only communicate with three other randomly selected agents and must choose 
+
+Figure 5: Agent credit score dynamics on GSM8K and Hu-manEval benchmarks. its successor from this limited set. We compare BiRouter with two other dynamic methods capable of operating in such a setting, DyLAN and MaAS, with results shown in Ta-ble 2. The localized information in this decentralized setting leads to a general performance degradation across all meth-ods. However, BiRouter exhibits the smallest performance drop, achieving 91.99 on GSM8K and 89.63 on HumanEval, respectively. This resilience stems from its native design for local decision-making. In contrast, DyLAN and MaAS rely heavily on the availability of global information, leading to a significant performance decline. BiRouter’s strong perfor-mance in both centralized and decentralized architectures underscores its cross-architecture adaptability. 
+
+4.4 Robustness 
+
+To evaluate BiRouter’s robustness, we introduced an equal number of unreliable agents into the network, created by using gpt-4.1 to rewrite agent prompts to intentionally produce incorrect outputs. As shown in Figure 5, which plots agent credit scores during experiments on GSM8K and HumanEval, BiRouter rapidly identifies and down-weights 29816 Figure 6: Performance comparison between before and after unreliable agent attack. 
+
+Figure 7: Visualization of BiRouter’s routing mechanism across centralized and decentralized paradigms. these unreliable agents, mitigating their negative influence. Consequently, as seen in Figure 6, while all methods suffer from performance degradation, BiRouter remains the high-est performance under unreliable agent attacks. This demon-strates its robustness in open, untrustworthy environments. 
+
+4.5 Case Study 
+
+We present a case study on GSM8K to illustrate BiRouter’s mechanism. As shown in Figure 7, in the centralized setting, BiRouter efficiently selects agents based on global visibility: ProblemParser (0.73) initiates, followed by MathReasoner                                                      
+
+> GSM8K HumanEval Variant Origin Attack Origin Attack Acc. Cost Acc. Cost Pass Cost Pass Cost (%) (10 6)(%) (10 6)(%) (10 5)(%) (10 5)BiRouter 94.09 2.1 92.37 2.5 91.46 3.5 90.55 3.7
+> w/o Scrd 92.31 2.5 84.79 3.2 90.24 3.7 82.93 4.9
+> w/o Succ. 90.84 2.5 90.35 3.0 87.80 3.8 87.20 3.9
+> w/o Fin. 90.08 4.1 88.73 4.2 88.72 5.4 88.10 5.4
+
+Table 3: Ablation study of BiRouter on GSM8K and Hu-manEval. (0.66) for reasoning and computation, and finally Finisher (the highest GapScore of 0.83) upon task completion. In the decentralized setting, with limited visibility, BiRouter ini-tially selects the locally optimal Verifier (0.60) but corrects its path by routing to MathReasoner (0.64), still reaching the solution. 
+
+4.6 Ablation Study 
+
+We conducted ablation studies on GSM8K and HumanEval with the following configurations: (1) w/o S crd : Agent credit scores are fixed at 1. (2) w/o Succ. : The current agent is not informed of the next-hop agent. (3) w/o Fin. : The Fin-isher agent is removed, and the number of execution steps is fixed at 5. The results in Tables 3 show that all three components contribute significantly. Without the Reputation mechanism, BiRouter fails to recognize unreliable agents, degrading performance in untrustworthy networks. Remov-ing the Successor-aware mechanism weakens inter-agent co-operation and lowers collaborative efficiency. The absence of the Finisher agent eliminates the ability for early task completion, forcing a fixed execution length. This reduces dynamic adaptability and leads to unnecessary token con-sumption, increasing the token overhead by approximately 69% on GSM8K and 50% on HumanEval. 
+
+# 5 Conclusion 
+
+This paper addresses the critical challenge of task plan-ning in open, decentralized multi-agent systems. We intro-duce BiRouter, a novel bi-criteria routing method designed for self-organizing MAS, which enables individual agents to make autonomous “next-hop” routing decisions based solely on local information. By balancing overall task rel-evance and contextual continuity of candidate agents at run-time, BiRouter dynamically constructs collaborative path-ways, demonstrating high adaptability and scalability. Ex-periments show that BiRouter holds significant advantages in performance, token efficiency, and robustness, and can seamlessly adapt to both centralized and decentralized archi-tectures. Our work provides an effective solution for achiev-ing emergent intelligent collaboration. Future work will fo-cus on online adaptive optimization and more complex col-laboration patterns. 29817 References 
+
+Achiam, J.; Adler, S.; Agarwal, S.; Ahmad, L.; Akkaya, I.; Aleman, F. L.; Almeida, D.; Altenschmidt, J.; Altman, S.; Anadkat, S.; et al. 2023. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 .Austin, J.; Odena, A.; Nye, M.; Bosma, M.; Michalewski, H.; Dohan, D.; Jiang, E.; Cai, C.; Terry, M.; Le, Q.; and Sutton, C. 2021. Program Synthesis with Large Language Models. arXiv:2108.07732. Browne, C. B.; Powley, E.; Whitehouse, D.; Lucas, S. M.; Cowling, P. I.; Rohlfshagen, P.; Tavener, S.; Perez, D.; Samothrakis, S.; and Colton, S. 2012. A Survey of Monte Carlo Tree Search Methods. IEEE Transactions on Compu-tational Intelligence and AI in Games , 4(1): 1–43. Chan, C.-M.; Chen, W.; Su, Y.; Yu, J.; Xue, W.; Zhang, S.; Fu, J.; and Liu, Z. 2024. ChatEval: Towards Better LLM-based Evaluators through Multi-Agent Debate. In The Twelfth International Conference on Learning Representa-tions .Chang, G. 2024. Agent Network Protocol: Enabling All Agents to Connect and Communicate. Chen, G.; Dong, S.; Shu, Y.; Zhang, G.; Sesay, J.; Karlsson, B. F.; Fu, J.; and Shi, Y. 2024a. AutoAgents: A Framework for Automatic Agent Generation. Chen, M.; Tworek, J.; Jun, H.; Yuan, Q.; de Oliveira Pinto, H. P.; Kaplan, J.; Edwards, H.; Burda, Y.; Joseph, N.; Brock-man, G.; Ray, A.; Puri, R.; Krueger, G.; Petrov, M.; Khlaaf, H.; Sastry, G.; Mishkin, P.; Chan, B.; Gray, S.; Ryder, N.; Pavlov, M.; Power, A.; Kaiser, L.; Bavarian, M.; Winter, C.; Tillet, P.; Such, F. P.; Cummings, D.; Plappert, M.; Chantzis, F.; Barnes, E.; Herbert-Voss, A.; Guss, W. H.; Nichol, A.; Paino, A.; Tezak, N.; Tang, J.; Babuschkin, I.; Balaji, S.; Jain, S.; Saunders, W.; Hesse, C.; Carr, A. N.; Leike, J.; Achiam, J.; Misra, V.; Morikawa, E.; Radford, A.; Knight, M.; Brundage, M.; Murati, M.; Mayer, K.; Welinder, P.; Mc-Grew, B.; Amodei, D.; McCandlish, S.; Sutskever, I.; and Zaremba, W. 2021. Evaluating Large Language Models Trained on Code. arXiv:2107.03374. Chen, S.; Liu, Y.; Han, W.; Zhang, W.; and Liu, T. 2025. A Survey on LLM-based Multi-Agent Sys-tem: Recent Advances and New Frontiers in Application. arXiv:2412.17481. Chen, W.; Su, Y.; Zuo, J.; Yang, C.; Yuan, C.; Chan, C.-M.; Yu, H.; Lu, Y.; Hung, Y.-H.; Qian, C.; Qin, Y.; Cong, X.; Xie, R.; Liu, Z.; Sun, M.; and Zhou, J. 2024b. AgentVerse: Facilitating Multi-Agent Collaboration and Exploring Emer-gent Behaviors. In The Twelfth International Conference on Learning Representations .Cobbe, K.; Kosaraju, V.; Bavarian, M.; Chen, M.; Jun, H.; Kaiser, L.; Plappert, M.; Tworek, J.; Hilton, J.; Nakano, R.; Hesse, C.; and Schulman, J. 2021. Training Verifiers to Solve Math Word Problems. arXiv:2110.14168. Du, Y.; Li, S.; Torralba, A.; Tenenbaum, J. B.; and Mordatch, I. 2023. Improving Factuality and Reasoning in Language Models through Multiagent Debate. arXiv:2305.14325. Fu, Y.; Peng, H.; Sabharwal, A.; Clark, P.; and Khot, T. 2023. Complexity-Based Prompting for Multi-step Reasoning. In 
+
+The Eleventh International Conference on Learning Repre-sentations .Google. 2025. A2A: An open protocol enabling communi-cation and interoperability between opaque agentic applica-tions. Hart, P. E.; Nilsson, N. J.; and Raphael, B. 1968. A For-mal Basis for the Heuristic Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and Cyber-netics , 4(2): 100–107. Hendrycks, D.; Burns, C.; Basart, S.; Zou, A.; Mazeika, M.; Song, D.; and Steinhardt, J. 2021. Measuring Massive Mul-titask Language Understanding. In International Conference on Learning Representations .Jiang, D.; Ren, X.; and Lin, B. Y. 2023. LLM-Blender: En-sembling Large Language Models with Pairwise Ranking and Generative Fusion. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 14165–14178. Toronto, Canada: Association for Computational Linguistics. Li, C.; Chen, H.; Yan, M.; Shen, W.; Xu, H.; Wu, Z.; Zhang, Z.; Zhou, W.; Chen, Y.; Cheng, C.; Shi, H.; Zhang, J.; Huang, F.; and Zhou, J. 2023a. ModelScope-Agent: Build-ing Your Customizable Agent System with Open-source Large Language Models. In Proceedings of the 2023 Con-ference on Empirical Methods in Natural Language Pro-cessing: System Demonstrations , 566–578. Singapore: As-sociation for Computational Linguistics. Li, G.; Hammoud, H.; Itani, H.; Khizbullin, D.; and Ghanem, B. 2023b. CAMEL: Communicative Agents for ”Mind” Exploration of Large Language Model Society. In 
+
+Advances in Neural Information Processing Systems , vol-ume 36, 51991–52008. Curran Associates, Inc. Liang, T.; He, Z.; Jiao, W.; Wang, X.; Wang, Y.; Wang, R.; Yang, Y.; Shi, S.; and Tu, Z. 2024. Encouraging Divergent Thinking in Large Language Models through Multi-Agent Debate. In Proceedings of the 2024 Conference on Em-pirical Methods in Natural Language Processing , 17889– 17904. Miami, Florida, USA: Association for Computa-tional Linguistics. Liu, Z.; Zhang, Y.; Li, P.; Liu, Y.; and Yang, D. 2024. ADynamic LLM-Powered Agent Network for Task-Oriented Agent Collaboration. In First Conference on Language Modeling .Marro, S.; Malfa, E. L.; Wright, J.; Li, G.; Shadbolt, N.; Wooldridge, M. J.; and Torr, P. 2025. A Scalable Communi-cation Protocol for Networks of Large Language Models. Meng, S.; Wang, Y.; Yang, C.-F.; Peng, N.; and Chang, K.-W. 2024. LLM-A*: Large Language Model Enhanced Incre-mental Heuristic Search on Path Planning. Research Square .Patel, A.; Bhattamishra, S.; and Goyal, N. 2021. Are NLP Models really able to Solve Simple Math Word Problems? arXiv:2103.07191. Qian, C.; Xie, Z.; Wang, Y.; Liu, W.; Zhu, K.; Xia, H.; Dang, Y.; Du, Z.; Chen, W.; Yang, C.; Liu, Z.; and Sun, M. 29818 2025. Scaling Large Language Model-based Multi-Agent Collaboration. In The Thirteenth International Conference on Learning Representations .Roy, S.; and Roth, D. 2016. Solving General Arithmetic Word Problems. arXiv:1608.01413. Sun, D.; Vlasic, D.; Herrmann, C.; Jampani, V.; Krainin, M.; Chang, H.; Zabih, R.; Freeman, W. T.; and Liu, C. 2021. AutoFlow: Learning a Better Training Set for Optical Flow. In 2021 IEEE/CVF Conference on Computer Vision and Pat-tern Recognition (CVPR) , 10088–10097. Tran, K.-T.; Dao, D.; Nguyen, M.-D.; Pham, Q.-V.; O’Sullivan, B.; and Nguyen, H. D. 2025. Multi-Agent Collaboration Mechanisms: A Survey of LLMs. arXiv:2501.06322. Veerapaneni, R.; Saleem, M. S.; and Likhachev, M. 2023. Learning Local Heuristics for Search-Based Navigation Planning. Proceedings of the International Conference on Automated Planning and Scheduling , 33(1): 634–638. Wang, J.; WANG, J.; Athiwaratkun, B.; Zhang, C.; and Zou, J. 2025. Mixture-of-Agents Enhances Large Language Model Capabilities. In The Thirteenth International Confer-ence on Learning Representations .Wang, L.; Ma, C.; Feng, X.; Zhang, Z.; Yang, H.; Zhang, J.; Chen, Z.; Tang, J.; Chen, X.; Lin, Y.; Zhao, W. X.; Wei, Z.; and Wen, J. 2024. A survey on large language model based autonomous agents. Frontiers of Computer Science ,18: 186345. Wang, X.; Wei, J.; Schuurmans, D.; Le, Q.; Chi, E.; Narang, S.; Chowdhery, A.; and Zhou, D. 2023. Self-Consistency Improves Chain of Thought Reasoning in Language Models. arXiv:2203.11171. Wei, J.; Wang, X.; Schuurmans, D.; Bosma, M.; ichter, b.; Xia, F.; Chi, E.; Le, Q. V.; and Zhou, D. 2022. Chain-of-Thought Prompting Elicits Reasoning in Large Language Models. In Advances in Neural Information Processing Sys-tems , volume 35, 24824–24837. Curran Associates, Inc. Wu, Q.; Bansal, G.; Zhang, J.; Wu, Y.; Li, B.; Zhu, E.; Jiang, L.; Zhang, X.; Zhang, S.; Liu, J.; Awadallah, A. H.; White, R. W.; Burger, D.; and Wang, C. 2024. AutoGen: En-abling Next-Gen LLM Applications via Multi-Agent Con-versations. In First Conference on Language Modeling .Xi, Z.; Chen, W.; Guo, X.; He, W.; Ding, Y.; Hong, B.; Zhang, M.; Wang, J.; Jin, S.; Zhou, E.; Zheng, R.; Fan, X.; Wang, X.; Xiong, L.; Zhou, Y.; Wang, W.; Jiang, C.; Zou, Y.; Liu, X.; Yin, Z.; Dou, S.; Weng, R.; Cheng, W.; Zhang, Q.; Qin, W.; Zheng, Y.; Qiu, X.; Huang, X.; and Gui, T. 2023. The Rise and Potential of Large Language Model Based Agents: A Survey. arXiv:2309.07864. Yao, S.; Yu, D.; Zhao, J.; Shafran, I.; Griffiths, T.; Cao, Y.; and Narasimhan, K. 2023a. Tree of Thoughts: Delib-erate Problem Solving with Large Language Models. In 
+
+Advances in Neural Information Processing Systems , vol-ume 36, 11809–11822. Curran Associates, Inc. Yao, S.; Zhao, J.; Yu, D.; Du, N.; Shafran, I.; Narasimhan, K. R.; and Cao, Y. 2023b. ReAct: Synergizing Reasoning and Acting in Language Models. In The Eleventh Interna-tional Conference on Learning Representations .Zhang, G.; Niu, L.; Fang, J.; Wang, K.; BAI, L.; and Wang, X. 2025a. Multi-agent Architecture Search via Agentic Su-pernet. In Forty-second International Conference on Ma-chine Learning .Zhang, G.; Yue, Y.; Li, Z.; Yun, S.; Wan, G.; Wang, K.; Cheng, D.; Yu, J. X.; and Chen, T. 2025b. Cut the Crap: An Economical Communication Pipeline for LLM-based Multi-Agent Systems. In The Thirteenth International Conference on Learning Representations .Zhang, G.; Yue, Y.; Sun, X.; Wan, G.; Yu, M.; Fang, J.; Wang, K.; Chen, T.; and Cheng, D. 2025c. G-Designer: Architecting Multi-agent Communication Topologies via Graph Neural Networks. In Forty-second International Con-ference on Machine Learning .Zhang, J.; Xiang, J.; Yu, Z.; Teng, F.; Chen, X.-H.; Chen, J.; Zhuge, M.; Cheng, X.; Hong, S.; Wang, J.; Zheng, B.; Liu, B.; Luo, Y.; and Wu, C. 2025d. AFlow: Automating Agen-tic Workflow Generation. In The Thirteenth International Conference on Learning Representations .Zhang, J.; Xu, X.; Zhang, N.; Liu, R.; Hooi, B.; and Deng, S. 2023. Exploring Collaboration Mechanisms for LLM Agents: A Social Psychology View. arXiv:2310.02124. Zhao, W. X.; Zhou, K.; Li, J.; Tang, T.; Wang, X.; Hou, Y.; Min, Y.; Zhang, B.; Zhang, J.; Dong, Z.; Du, Y.; Yang, C.; Chen, Y.; Chen, Z.; Jiang, J.; Ren, R.; Li, Y.; Tang, X.; Liu, Z.; Liu, P.; Nie, J.-Y.; and Wen, J.-R. 2025. A Survey of Large Language Models. arXiv:2303.18223. Zhuang, Y.; Chen, X.; Yu, T.; Mitra, S.; Bursztyn, V.; Rossi, R. A.; Sarkhel, S.; and Zhang, C. 2024. ToolChain*: Effi-cient Action Space Navigation in Large Language Models with A* Search. In The Twelfth International Conference on Learning Representations .Zhuge, M.; Wang, W.; Kirsch, L.; Faccio, F.; Khizbullin, D.; and Schmidhuber, J. 2024. GPTSwarm: Language Agents as Optimizable Graphs. In Proceedings of the 41st Inter-national Conference on Machine Learning , volume 235 of 
+
+Proceedings of Machine Learning Research , 62743–62767. PMLR. 29819

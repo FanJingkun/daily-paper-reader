@@ -1,0 +1,432 @@
+Title: Policy Search, Retrieval, and Composition via Task Similarity in Collaborative Agentic Systems
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/39633/43594
+
+Number of Pages: 9
+
+Markdown Content:
+# Policy Search, Retrieval, and Composition via Task Similarity in Collaborative Agentic Systems 
+
+## Saptarshi Nath 1, Christos Peridis 1, Eseoghene Benjamin 4, Xinran Liu 2, Soheil Kolouri 2, Peter Kinnell 1, Zexin Li 3, Cong Liu 3, Shirin Dora 1, Andrea Soltoggio 1
+
+> 1
+
+Department of Computer Science, Loughborough University, Loughborough, UK 
+
+> 2
+
+Department of Electrical Engineering and Computer Science, Vanderbilt University, Nashville, USA 
+
+> 3
+
+Department of Electrical Engineering and Computer Engineering, University of California, Riverside, USA 
+
+> 4
+
+Alan Turing Institute, London, UK 
+
+{s.nath, c.peridis, p.kinnell, s.dora, a.soltoggio }@lboro.ac.uk, {xinran.liu, soheil.kolouri }@vanderbilt.edu, {zli536, congl }@ucr.edu, ebenjamin@turing.ac.uk 
+
+Abstract 
+
+Agentic AI aims to create systems that set their own goals, adapt proactively to change, and refine behavior through con-tinuous experience. Recent advances suggest that, when fac-ing multiple and unforeseen tasks, agents could benefit from sharing machine-learned knowledge and reusing policies that have already been fully or partially learned by other agents. However, how to query, select, and retrieve policies from a pool of agents, and how to integrate such policies remains a largely unexplored area. This study explores how an agent decides what knowledge to select, from whom, and when and how to integrate it in its own policy in order to accelerate its own learning. The proposed algorithm, Modular Sharing and Composition in Collective Learning (MOSAIC), improves learning in agentic collectives by combining (1) knowledge selection using performance signals and cosine similarity on Wasserstein task embeddings, (2) modular and transfer-able neural representations via masks, and (3) policy inte-gration, composition and fine-tuning. MOSAIC outperforms isolated learners and global sharing approaches in both learn-ing speed and overall performance, and in some cases solves tasks that isolated agents cannot. The results also demonstrate that selective, goal-driven reuse leads to less susceptibility to task interference. We also observe the emergence of self-organization, where agents solving simpler tasks accelerate the learning of harder ones through shared knowledge. 
+
+Code — https://github.com/DMIU-ShELL/MOSAIC 
+
+## 1 Introduction 
+
+The ability to solve complex, open-ended problems is an increasingly desirable objective as agentic AI principles become central in AI architectures. In open-ended real-world settings, these systems face challenges in generalizing and adapting to an ever-evolving stream of data and tasks (De Lange et al. 2022; Parisi et al. 2019). Although new lifelong learning algorithms (Kudithipudi et al. 2022) are being introduced to provide continual evolution and adap-tation, when agents learn in isolation, they can only benefit from their limited experiences, unlike humans who benefit 
+
+Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+from collaboration and sharing of experiences and skills. Re-cent studies suggest that a shift towards more collaborative types of learning, where agents selectively share and reuse modular knowledge from other agents, is key to reducing redundant learning, accelerating adaptation, and improving robustness (Tarale, Rietman, and Siegelmann 2025; Soltog-gio et al. 2024; DARPA/MTO 2021). In the context of self-adaptation, reinforcement signals provide an effective tool to achieve continuous improvement in a wide range of domains (Sutton and Barto 2018; Jader-berg et al. 2017). In addition, task similarities have been ex-ploited to benefit learning in areas such as transfer learning and multi-task RL (Hendawy, Peters, and D’Eramo 2024; Sun et al. 2022; D’Eramo et al. 2020). Lifelong learning approaches also leverage task similarity when previously learned tasks benefit the learning of subsequent tasks, with an advantage often named forward transfer (Ben-Iwhiwhu et al. 2023; Kirkpatrick et al. 2017). However, many ap-proaches to sharing knowledge, e.g., distributed RL (Sar-toretti et al. 2019) or Federated Learning (Yoon et al. 2021), often assume some form of centralization and uniformity of tasks, which is ill-suited to the requirements of agentic AI where each agent acts independently, asynchronously, and likely on a large variety of different tasks. Recent studies have begun to investigate the sharing and reuse of policies in evolving multi-agent contexts (Nath et al. 2023; Tarale, Rietman, and Siegelmann 2025; Gerstgrasser, Danino, and Keren 2023). These developments reflect a growing recog-nition that scalable AI systems increasingly depend on self-directed selective collaboration among autonomous learners. Knowledge and skill sharing among a set of indepen-dent and autonomous learners, while conceptually appeal-ing, presents significant challenges. In particular, open re-search questions reflect the problems of how to identify what knowledge to acquire, from whom to acquire it, how such knowledge is best represented, and how to integrate it to manifest robust lifelong learning properties (DARPA/MTO 2021; Soltoggio et al. 2024). Furthermore, it is still unclear to what extent collaborative learning offers an advantage over isolated or centralized learning. To address these questions, this study introduces Modu-lar Sharing and Composition in Collective Learning (MO-The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+24504 SAIC), which describes how agents can select appropriate knowledge from peers with the aim of implementing policy composition and reuse. Problem analysis and the following ablation studies indicate that essential components of such a system are (1) knowledge selection through task similarity, (2) modular and transferable neural representations, and (3) policy integration, composition, and fine-tuning. Specific algorithmic choices in MOSAIC to implement such components are Wasserstein embeddings for task sim-ilarity, transferable binary network masks for sharing, and learnable linear combinations of those to achieve integra-tion and fine tuning. In principle, analogous methods could be used to adapt MOSAIC to a variety of domains, e.g., LoRA-based modular composition for foundation models and LLMs (Hu et al. 2022; He et al. 2022) and embedding methods or descriptors to express task alignment (Achille et al. 2019; Grover et al. 2018; Rakelly et al. 2019). Simulations indicate that selectively acquiring relevant knowledge is essential to effectively reuse policies. The composition of policies is best achieved with a similarity-driven and reward-aware weighting. The results show how communicating MOSAIC agents learn faster than isolated learners by reusing knowledge from peers on similar tasks. In some cases, communicating agents can solve tasks that they could not learn alone. In addition, the analysis reveals an implicit self-organization, where agents discover and ex-ploit curriculum structures in the available knowledge, re-sulting in agents building on skills hierarchically, from sim-pler tasks to learn more complex ones. In summary, MOSAIC supports the hypothesis that task-relevant policy transfer and reuse, guided by agent-centered optimization objectives, is feasible and effective with advan-tages over learning in isolation or sharing global parame-ters, which could lead to task interference. To the best of our knowledge, this is the first study that combines modular and transferable task-specific knowledge with similarity-based selection and integration. Such a combination of compo-nents is sufficient to significantly improve sample efficiency and learning through collective knowledge sharing. 
+
+## 2 Related Work 
+
+Recent work in modular knowledge reuse for multi-agent RL explores various approaches to enable efficient knowl-edge transfer. Federated learning methods (Yoon et al. 2021) communicate task-specific masks or binary representations. These approaches lack principled task similarity metrics for selective reuse. MOSAIC addresses this gap through Wasserstein-based similarity measures that guide knowl-edge selection based on performance signals. Several frameworks allow parameter-efficient knowledge sharing through masking (Ge et al. 2023; Nath et al. 2023; Gerstgrasser, Danino, and Keren 2023), prototype aggregation (Tan et al. 2022), or decentralized training (Douillard et al. 2024; Jaghouar and Hagemann 2024). Communication-efficient methods reduce information ex-change through knowledge preservation and selective shar-ing (McMahan et al. 2017). These approaches rely on predefined sharing protocols or require synchronous up-dates. MOSAIC’s binary mask representation enables asyn-chronous, selective reuse and maintains modularity while minimizing communication overhead. Policy composition methods like PaCo (Sun et al. 2022) interpolate within shared subspaces. These methods lack mechanisms for similarity-driven integration. Peer-to-peer frameworks (Tarale, Rietman, and Siegelmann 2025; Yu, Vincent, and Schwager 2022) and model-based approaches (Jiang, Narayanan, and Li 2021) enable decentralized coor-dination. These frameworks do not combine selection with modular representations. MOSAIC combines Wasserstein-based task similarity with binary mask modularity and similarity-driven linear policy combinations. Further discus-sion of related works is provided in Appendix B. 
+
+## 3 Methodology 
+
+The following section describes the components of the MO-SAIC algorithm. A high level illustration is provided in Fig-ure 1. Pseudocode can be found in the Appendix F. 
+
+3.1 Policy Representations 
+
+Isolating task-specific knowledge in compact representa-tions (Alet, Lozano-Perez, and Kaelbling 2018) is a key to making policy transfer easier and more lightweight across agents. Lifelong learning parameter isolation approaches can achieve this goal (Rusu et al. 2016; Mallya and Lazebnik 2018; Wortsman et al. 2020; Ben-Iwhiwhu et al. 2023). This study adopts neural network masks (Ben-Iwhiwhu et al. 2023; Wortsman et al. 2020) that have shown strong results in lifelong reinforcement learning and supervised learning settings, and supports composition through linear combinations of mask modules. PPO is used for the exper-iments in this paper; however, the proposed modular com-position mechanism is, in principle, agnostic to the choice of RL algorithm. Mask representations rely on a frozen backbone network Φ that is homogeneous across all agents. Each policy πτ is implicitly parameterized through a sparse mask ϕτ , such that πτ = πΦ⊙g(ϕτ ), where ⊙ denotes the Hadamard product, and g(·) is a binarization function ap-plied during the forward pass. The mask ϕτ consists of a set of real-valued score vectors, one per layer of the shared backbone network Φ, which select a sparse task-specific subnetwork from Φ without modifying its parame-ters. Scores are binarized during the forward pass to select a discrete subnetwork from the backbone, given by the thresh-olding function, 
+
+g(ϕτ )ℓ =
+
+1 if (ϕτ )ℓ > ϵ 
+
+0 otherwise , with ϵ = 0 , (1) where g(ϕτ ) denotes the complete binary mask and ℓ in-dexes the layers of the backbone network Φ. During the backward pass, gradients are computed with respect to the real-valued mask parameters ϕτ , and updates are performed using the straight-through estimator (STE) (Wortsman et al. 2020) to enable learning through the non-differentiable bi-narization step. 24505 B 
+
+> A0 A3 A4 A1 A2
+
+C 
+
+> A0 A3 A4 A1 A2
+
+F G
+
+Query response (QR) Mask request (MR) Mask transfer (MTR) 
+
+Compute embedding <latexit sha1_base64="nQEvXhzjyVO+QKuvlwxaGLHG5Fg=">AAAB7XicbVBNS8NAEJ3Ur1q/qh69LBbBU0lEqseCF48V7Ae0oWy2m3btZhN2J4US+h+8eFDEq//Hm//GbZuDtj4YeLw3w8y8IJHCoOt+O4WNza3tneJuaW//4PCofHzSMnGqGW+yWMa6E1DDpVC8iQIl7ySa0yiQvB2M7+Z+e8K1EbF6xGnC/YgOlQgFo2il1qTfQ5r2yxW36i5A1omXkwrkaPTLX71BzNKIK2SSGtP13AT9jGoUTPJZqZcanlA2pkPetVTRiBs/W1w7IxdWGZAw1rYUkoX6eyKjkTHTKLCdEcWRWfXm4n9eN8Xw1s+ESlLkii0XhakkGJP562QgNGcop5ZQpoW9lbAR1ZShDahkQ/BWX14nrauqV6vWHq4rdTePowhncA6X4MEN1OEeGtAEBk/wDK/w5sTOi/PufCxbC04+cwp/4Hz+AK/Yjyo=</latexit>  <latexit sha1_base64="nQEvXhzjyVO+QKuvlwxaGLHG5Fg=">AAAB7XicbVBNS8NAEJ3Ur1q/qh69LBbBU0lEqseCF48V7Ae0oWy2m3btZhN2J4US+h+8eFDEq//Hm//GbZuDtj4YeLw3w8y8IJHCoOt+O4WNza3tneJuaW//4PCofHzSMnGqGW+yWMa6E1DDpVC8iQIl7ySa0yiQvB2M7+Z+e8K1EbF6xGnC/YgOlQgFo2il1qTfQ5r2yxW36i5A1omXkwrkaPTLX71BzNKIK2SSGtP13AT9jGoUTPJZqZcanlA2pkPetVTRiBs/W1w7IxdWGZAw1rYUkoX6eyKjkTHTKLCdEcWRWfXm4n9eN8Xw1s+ESlLkii0XhakkGJP562QgNGcop5ZQpoW9lbAR1ZShDahkQ/BWX14nrauqV6vWHq4rdTePowhncA6X4MEN1OEeGtAEBk/wDK/w5sTOi/PufCxbC04+cwp/4Hz+AK/Yjyo=</latexit>  <latexit sha1_base64="WGsI6G8A1kPeXM88aJu6vEpbLN0=">AAACSHicbVBNSyNBFOzJqqvxK65HL41BUIQwI+J6EYS9eIxgVEjHoafzJmmm54PuN2IY5+ftZY978zd48aCINzuTIH4VPCiq6tH9KsiUNOi6d07tx8zs3M/5hfri0vLKamPt17lJcy2gI1KV6suAG1AygQ5KVHCZaeBxoOAiiP6M/Ytr0EamyRmOMujFfJDIUAqOVvIbPsuG0mfI8yuGcIOFEiU9ogOmIMRtFgDyyqVvObpLmcljv4iOvPKquG37hdj1yttyEo6qYESZloMh7viNpttyK9CvxJuSJpmi7Tf+s34q8hgSFIob0/XcDHsF1yiFgrLOcgMZFxEfQNfShMdgekVVREm3rNKnYartJEgr9f1GwWNjRnFgkzHHofnsjcXvvG6O4WGvkEmWIyRi8lCYK4opHbdK+1KDQDWyhAst7V+pGHLNBdru67YE7/PJX8n5Xss7aB2c7jeP96d1zJMNskm2iUd+k2NyQtqkQwT5S+7JI3ly/jkPzrPzMonWnOnOOvmAWu0V/r+zBQ==</latexit> 
+
+> vω
+> vω
+> Forward pass:
+
+ωlc  
+
+> ω
+
+= g
+
+εω ωω +
+
+> |Pc+1 |
+
+∑
+
+> k=1
+
+εkωk
+
+ <latexit sha1_base64="kHo49XPttZma0Ixp+G2a7X4pEa0=">AAAB6HicbVBNS8NAEJ34WetX1aOXxSJ4kJKIVI8FLx5bsB/QhrLZTtq1m03Y3Qgl9Bd48aCIV3+SN/+N2zYHbX0w8Hhvhpl5QSK4Nq777aytb2xubRd2irt7+weHpaPjlo5TxbDJYhGrTkA1Ci6xabgR2EkU0igQ2A7GdzO//YRK81g+mEmCfkSHkoecUWOlhuqXym7FnYOsEi8nZchR75e+eoOYpRFKwwTVuuu5ifEzqgxnAqfFXqoxoWxMh9i1VNIItZ/ND52Sc6sMSBgrW9KQufp7IqOR1pMosJ0RNSO97M3E/7xuasJbP+MySQ1KtlgUpoKYmMy+JgOukBkxsYQyxe2thI2ooszYbIo2BG/55VXSuqp41Uq1cV2uXeZxFOAUzuACPLiBGtxDHZrAAOEZXuHNeXRenHfnY9G65uQzJ/AHzucP2hWM6w==</latexit>  <latexit sha1_base64="kHo49XPttZma0Ixp+G2a7X4pEa0=">AAAB6HicbVBNS8NAEJ34WetX1aOXxSJ4kJKIVI8FLx5bsB/QhrLZTtq1m03Y3Qgl9Bd48aCIV3+SN/+N2zYHbX0w8Hhvhpl5QSK4Nq777aytb2xubRd2irt7+weHpaPjlo5TxbDJYhGrTkA1Ci6xabgR2EkU0igQ2A7GdzO//YRK81g+mEmCfkSHkoecUWOlhuqXym7FnYOsEi8nZchR75e+eoOYpRFKwwTVuuu5ifEzqgxnAqfFXqoxoWxMh9i1VNIItZ/ND52Sc6sMSBgrW9KQufp7IqOR1pMosJ0RNSO97M3E/7xuasJbP+MySQ1KtlgUpoKYmMy+JgOukBkxsYQyxe2thI2ooszYbIo2BG/55VXSuqp41Uq1cV2uXeZxFOAUzuACPLiBGtxDHZrAAOEZXuHNeXRenHfnY9G65uQzJ/AHzucP2hWM6w==</latexit> <latexit sha1_base64="9ZYsZl7Ipex+Qj/PXsIr6P9paqk=">AAAB6HicbZC7SgNBFIbPxluMt6ilIItBsJCwaxHtDNhYJmAukCxhdnI2GTM7u8zMCmFJaWVjoYitb2Dnc9j5DPoQTi6FRn8Y+Pj/c5hzjh9zprTjfFiZhcWl5ZXsam5tfWNzK7+9U1dRIinWaMQj2fSJQs4E1jTTHJuxRBL6HBv+4GKcN25QKhaJKz2M0QtJT7CAUaKNVZWdfMEpOhPZf8GdQeH89fN2/636Venk39vdiCYhCk05UarlOrH2UiI1oxxHuXaiMCZ0QHrYMihIiMpLJ4OO7EPjdO0gkuYJbU/cnx0pCZUahr6pDInuq/lsbP6XtRIdnHkpE3GiUdDpR0HCbR3Z463tLpNINR8aIFQyM6tN+0QSqs1tcuYI7vzKf6F+UnRLxVLVLZSPYaos7MEBHIELp1CGS6hADSgg3MEDPFrX1r31ZD1PSzPWrGcXfsl6+QbVU5Fb</latexit> 
+
+> reward-adjusted by
+> r
+> r
+> current performance
+> r
+> r
+> Tasks
+
+AE HD <latexit sha1_base64="rNGZpBTbrpgsN9baAHwYXJfrV20=">AAACGHicbZDLSgMxFIYzXmu9jbp0EyyCqzojpboRCm5cVrAX6Iwlk6ZtaGYyJGfEMsxjuPFV3LhQxG13vo2ZtgttPRD48v/nkJw/iAXX4Djf1srq2vrGZmGruL2zu7dvHxw2tUwUZQ0qhVTtgGgmeMQawEGwdqwYCQPBWsHoJvdbj0xpLqN7GMfMD8kg4n1OCRipa597Me96QBJ8jXNMvfqQY0/2JJj7cOY9eMCeIBU0y7p2ySk708LL4M6hhOZV79oTrydpErIIqCBad1wnBj8lCjgVLCt6iWYxoSMyYB2DEQmZ9tPpYhk+NUoP96UyJwI8VX9PpCTUehwGpjMkMNSLXi7+53US6F/5KY/iBFhEZw/1E4FB4jwl3OOKURBjA4Qqbv6K6ZAoQsFkWTQhuIsrL0PzouxWy9W7SqlWmcdRQMfoBJ0hF12iGrpFddRAFD2jV/SOPqwX6836tL5mrSvWfOYI/Slr8gMglqB4</latexit> 
+
+> A3 A2
+
+ωω = ω!→εlc  <latexit sha1_base64="NCjUKTWspz1QZyaJVXs0bR+BmNg=">AAAB7HicbVBNSwMxEJ34WetX1aOXYBF6Krsi1WPBi8cKbltol5JNs21okl2SrFCW/gYvHhTx6g/y5r8xbfegrQ8GHu/NMDMvSgU31vO+0cbm1vbObmmvvH9weHRcOTltmyTTlAU0EYnuRsQwwRULLLeCdVPNiIwE60STu7nfeWLa8EQ92mnKQklGisecEuukoC+zgTeoVL26twBeJ35BqlCgNah89YcJzSRTlgpiTM/3UhvmRFtOBZuV+5lhKaETMmI9RxWRzIT54tgZvnTKEMeJdqUsXqi/J3IijZnKyHVKYsdm1ZuL/3m9zMa3Yc5Vmlmm6HJRnAlsEzz/HA+5ZtSKqSOEau5uxXRMNKHW5VN2IfirL6+T9lXdb9QbD9fVZq2IowTncAE18OEGmnAPLQiAAodneIU3pNALekcfy9YNVMycwR+gzx9+lo5q</latexit>  <latexit sha1_base64="NCjUKTWspz1QZyaJVXs0bR+BmNg=">AAAB7HicbVBNSwMxEJ34WetX1aOXYBF6Krsi1WPBi8cKbltol5JNs21okl2SrFCW/gYvHhTx6g/y5r8xbfegrQ8GHu/NMDMvSgU31vO+0cbm1vbObmmvvH9weHRcOTltmyTTlAU0EYnuRsQwwRULLLeCdVPNiIwE60STu7nfeWLa8EQ92mnKQklGisecEuukoC+zgTeoVL26twBeJ35BqlCgNah89YcJzSRTlgpiTM/3UhvmRFtOBZuV+5lhKaETMmI9RxWRzIT54tgZvnTKEMeJdqUsXqi/J3IijZnKyHVKYsdm1ZuL/3m9zMa3Yc5Vmlmm6HJRnAlsEzz/HA+5ZtSKqSOEau5uxXRMNKHW5VN2IfirL6+T9lXdb9QbD9fVZq2IowTncAE18OEGmnAPLQiAAodneIU3pNALekcfy9YNVMycwR+gzx9+lo5q</latexit> 
+
+> ω
+> Latent dimension 2 Latent dimension 1
+> Own task Similar Dissimilar Reference
+> μ0
+> μ0
+
+Selection via similarity Mask composition Selection via performance <latexit sha1_base64="tF4mUjQ/3tMmX4oXa1uvH7Y4CO0=">AAACLXicbVBNS8NAEN34bf2qevSyWAQFKYlI9SIU9OBRwbZCU8Jks9XFzSbuTqQl9A958a+I4EERr/4NNzUHvwZ2ebz3hpl5YSqFQdd9cSYmp6ZnZufmKwuLS8sr1dW1tkkyzXiLJTLRlyEYLoXiLRQo+WWqOcSh5J3w5rjQO3dcG5GoCxymvBfDlRJ9wQAtFVRPBgEebZsAdykUnw5wh/q3GUTURz7AHFQ0Kglrpb4RMfVjwGsGMj8ZBT5CFlRrbt0dF/0LvBLUSFlnQfXJjxKWxVwhk2BM13NT7OWgUTDJRxU/MzwFdgNXvGuhgpibXj6+dkS3LBPRfqLtU0jH7PeOHGJjhnFoncWe5rdWkP9p3Qz7h71cqDRDrtjXoH4mKSa0iI5GQnOGcmgBMC3srpRdgwaGNuCKDcH7ffJf0N6re41643y/1qyXccyRDbJJtolHDkiTnJIz0iKM3JNH8kJenQfn2Xlz3r+sE07Zs05+lPPxCfEIp/s=</latexit>       <latexit sha1_base64="nFoAnCa9ZboR5OuE87f3cX5GWeM=">AAACEXicbVDLSsNAFJ34rPUVdelmsAh1UxKR6kYouHFZwT6giWEynbRDJw9mbgol9Bfc+CtuXCji1p07/8ZpmoW2HrhwOOde7r3HTwRXYFnfxsrq2vrGZmmrvL2zu7dvHhy2VZxKylo0FrHs+kQxwSPWAg6CdRPJSOgL1vFHNzO/M2ZS8Ti6h0nC3JAMIh5wSkBLnlkdexlMHxwgKb7GTqK4I1gAVSdMPchlR/LBEM48s2LVrBx4mdgFqaACTc/8cvoxTUMWARVEqZ5tJeBmRAKngk3LTqpYQuiIDFhP04iETLlZ/tEUn2qlj4NY6ooA5+rviYyESk1CX3eGBIZq0ZuJ/3m9FIIrN+NRkgKL6HxRkAoMMZ7Fg/tcMgpiogmhkutbMR0SSSjoEMs6BHvx5WXSPq/Z9Vr97qLSqBVxlNAxOkFVZKNL1EC3qIlaiKJH9Ixe0ZvxZLwY78bHvHXFKGaO0B8Ynz+xr52D</latexit>      <latexit sha1_base64="/YALR7y13R6K/0/ZWJs4pNV6R4s=">AAAB6nicbVDLSgNBEOyNrxhfUY9eBoPgQcJukOgx4MVjRPOAJITZSW8yZHZ2mZkNhCWf4MWDIl79Im/+jZNkD5pY0FBUddPd5ceCa+O6305uY3Nreye/W9jbPzg8Kh6fNHWUKIYNFolItX2qUXCJDcONwHaskIa+wJY/vpv7rQkqzSP5ZKYx9kI6lDzgjBorPU76lX6x5JbdBcg68TJSggz1fvGrO4hYEqI0TFCtO54bm15KleFM4KzQTTTGlI3pEDuWShqi7qWLU2fkwioDEkTKljRkof6eSGmo9TT0bWdIzUivenPxP6+TmOC2l3IZJwYlWy4KEkFMROZ/kwFXyIyYWkKZ4vZWwkZUUWZsOgUbgrf68jppVspetVx9uC7VrrI48nAG53AJHtxADe6hDg1gMIRneIU3RzgvzrvzsWzNOdnMKfyB8/kDBxyNlA==</latexit>  <latexit sha1_base64="E5i+kJVdCMn+J23+DgqlmHq4ZVQ=">AAAB6nicbVDLSgNBEOyNrxhfUY9eBoPgQcKuSvQY8OIxonlAsoTZyWwyZHZ2mekNhJBP8OJBEa9+kTf/xkmyB00saCiquunuChIpDLrut5NbW9/Y3MpvF3Z29/YPiodHDROnmvE6i2WsWwE1XArF6yhQ8laiOY0CyZvB8G7mN0dcGxGrJxwn3I9oX4lQMIpWehx1r7rFklt25yCrxMtICTLUusWvTi9macQVMkmNaXtugv6EahRM8mmhkxqeUDakfd62VNGIG38yP3VKzqzSI2GsbSkkc/X3xIRGxoyjwHZGFAdm2ZuJ/3ntFMNbfyJUkiJXbLEoTCXBmMz+Jj2hOUM5toQyLeythA2opgxtOgUbgrf88ippXJa9SrnycF2qXmRx5OEETuEcPLiBKtxDDerAoA/P8ApvjnRenHfnY9Gac7KZY/gD5/MHCKCNlQ==</latexit>  <latexit sha1_base64="TuCbhZIdUx6EC88XfmGYxslwMUE=">AAAB6nicbVDLSgNBEOyNrxhfUY9eBoPgQcKuhOgx4MVjRPOAZAmzk95kyOzsMjMbCCGf4MWDIl79Im/+jZNkD5pY0FBUddPdFSSCa+O6305uY3Nreye/W9jbPzg8Kh6fNHWcKoYNFotYtQOqUXCJDcONwHaikEaBwFYwupv7rTEqzWP5ZCYJ+hEdSB5yRo2VHse9Sq9YcsvuAmSdeBkpQYZ6r/jV7ccsjVAaJqjWHc9NjD+lynAmcFbophoTykZ0gB1LJY1Q+9PFqTNyYZU+CWNlSxqyUH9PTGmk9SQKbGdEzVCvenPxP6+TmvDWn3KZpAYlWy4KU0FMTOZ/kz5XyIyYWEKZ4vZWwoZUUWZsOgUbgrf68jppXpe9arn6UCnVrrI48nAG53AJHtxADe6hDg1gMIBneIU3RzgvzrvzsWzNOdnMKfyB8/kDCiSNlg==</latexit>  <latexit sha1_base64="Mm26tbLJgmHsDO9hMf3QtlZtWGU=">AAACHnicbVDLSgMxFM34tr7qY+cmWARXZUbwsREKblyJgtVipx0yaaYGk5khuRHLMD/gL7jxN1y6caGI4Er9D5eC6WPh68CFk3PuJfeeMBVcg+u+OUPDI6Nj4xOThanpmdm54vzCsU6MoqxKE5GoWkg0EzxmVeAgWC1VjMhQsJPwfLfrn1wwpXkSH0EnZQ1J2jGPOCVgpaC44UsTZJA3fSAG72A/UoRmXp7t57420lo7Xt60L+y3mAASZJcB5EGx5JbdHvBf4g1IqbL0efV++3F6EBRf/FZCjWQxUEG0rntuCo2MKOBUsLzgG81SQs9Jm9UtjYlkupH1zsvxqlVaOEqUrRhwT/0+kRGpdUeGtlMSONO/va74n1c3EG03Mh6nBlhM+x9FRmBIcDcr3OKKURAdSwhV3O6K6RmxAYFNtGBD8H6f/Jccr5e9zfLmoVeqlFEfE2gZraA15KEtVEF76ABVEUXX6A49oEfnxrl3npznfuuQM5hZRD/gvH4B8tGoFQ==</latexit>     <latexit sha1_base64="UjWQ3BMcV6z6n7N1L6J58mjFd/M=">AAAB7XicbZDNSgMxFIWTqrVWq9Uu3QSL4ELKjIvqsuDGZQX7A+1QMmmmjc1khuROYRj6Dm5cKOLW93HnwwimPwttPRD4OOdecu/1YykMOM4Xzm1t7+R3C3vF/YPS4VH5+KRtokQz3mKRjHTXp4ZLoXgLBEjejTWnoS95x5/czvPOlGsjIvUAacy9kI6UCASjYK32dNAHmgzKVafmLEQ2wV1BtYH7le9SPm0Oyp/9YcSSkCtgkhrTc50YvIxqEEzyWbGfGB5TNqEj3rOoaMiNly2mnZFz6wxJEGn7FJCF+7sjo6ExaejbypDC2Kxnc/O/rJdAcONlQsUJcMWWHwWJJBCR+epkKDRnIFMLlGlhZyVsTDVlYA9UtEdw11fehPZVza3X6vdutXGJliqgU3SGLpCLrlED3aEmaiGGHtETekGvOMLP+A2/L0tzeNVTQX+EP34AqsORXA==</latexit>  <latexit sha1_base64="UjWQ3BMcV6z6n7N1L6J58mjFd/M=">AAAB7XicbZDNSgMxFIWTqrVWq9Uu3QSL4ELKjIvqsuDGZQX7A+1QMmmmjc1khuROYRj6Dm5cKOLW93HnwwimPwttPRD4OOdecu/1YykMOM4Xzm1t7+R3C3vF/YPS4VH5+KRtokQz3mKRjHTXp4ZLoXgLBEjejTWnoS95x5/czvPOlGsjIvUAacy9kI6UCASjYK32dNAHmgzKVafmLEQ2wV1BtYH7le9SPm0Oyp/9YcSSkCtgkhrTc50YvIxqEEzyWbGfGB5TNqEj3rOoaMiNly2mnZFz6wxJEGn7FJCF+7sjo6ExaejbypDC2Kxnc/O/rJdAcONlQsUJcMWWHwWJJBCR+epkKDRnIFMLlGlhZyVsTDVlYA9UtEdw11fehPZVza3X6vdutXGJliqgU3SGLpCLrlED3aEmaiGGHtETekGvOMLP+A2/L0tzeNVTQX+EP34AqsORXA==</latexit>  
+
+> xt= ( st, a t, r t)and xt→Dω
+> vω
+> t=ω(μω
+> t)
+> 2. Maintain moving average:
+> v2
+> v3
+> v4
+> μω
+> t=1
+> N
+> ∑Nt=1 ωxt
+> 1. Compute
+> vω
+> vωfrom recent batch:
+
+Task emb. query (TEQ) <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="WDQBNhjbLocW592jyCkBn47h4As=">AAACDHicbVDLSgMxFM3UV62vqks3wSK4KGXGSnVZcOOygm2FdhgymUwbmnmQ3CmWYT7Ajb/ixoUibv0Ad/6NaTuCth4InJxzLsk9biy4AtP8Mgorq2vrG8XN0tb2zu5eef+go6JEUtamkYjknUsUEzxkbeAg2F0sGQlcwbru6Grqd8dMKh6FtzCJmR2QQch9TgloySlX+sDuQdE0IGqUOT837mVVPHbqVSyduk6ZNXMGvEysnFRQjpZT/ux7EU0CFgIVRKmeZcZgp0QCp4JlpX6iWEzoiAxYT9OQBEzZ6WyZDJ9oxcN+JPUJAc/U3xMpCZSaBK5OBgSGatGbiv95vQT8SzvlYZwAC+n8IT8RGCI8bQZ7XDIKYqIJoZLrv2I6JJJQ0P2VdAnW4srLpHNWsxq1xs15pVnN6yiiI3SMTpGFLlATXaMWaiOKHtATekGvxqPxbLwZ7/NowchnDtEfGB/fxi+bWA==</latexit>   <latexit sha1_base64="WDQBNhjbLocW592jyCkBn47h4As=">AAACDHicbVDLSgMxFM3UV62vqks3wSK4KGXGSnVZcOOygm2FdhgymUwbmnmQ3CmWYT7Ajb/ixoUibv0Ad/6NaTuCth4InJxzLsk9biy4AtP8Mgorq2vrG8XN0tb2zu5eef+go6JEUtamkYjknUsUEzxkbeAg2F0sGQlcwbru6Grqd8dMKh6FtzCJmR2QQch9TgloySlX+sDuQdE0IGqUOT837mVVPHbqVSyduk6ZNXMGvEysnFRQjpZT/ux7EU0CFgIVRKmeZcZgp0QCp4JlpX6iWEzoiAxYT9OQBEzZ6WyZDJ9oxcN+JPUJAc/U3xMpCZSaBK5OBgSGatGbiv95vQT8SzvlYZwAC+n8IT8RGCI8bQZ7XDIKYqIJoZLrv2I6JJJQ0P2VdAnW4srLpHNWsxq1xs15pVnN6yiiI3SMTpGFLlATXaMWaiOKHtATekGvxqPxbLwZ7/NowchnDtEfGB/fxi+bWA==</latexit>   <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="eutFUxaTRAcSCWYzfpb/kVJoGw8=">AAACAHicbVDLSsNAFJ3UV62vqAsXbgaL4KKURKS6LLhxWcE+oA1hMpm0QycPZm6KJWTjr7hxoYhbP8Odf+O0zUJbD1w4nHMv997jJYIrsKxvo7S2vrG5Vd6u7Ozu7R+Yh0cdFaeSsjaNRSx7HlFM8Ii1gYNgvUQyEnqCdb3x7czvTphUPI4eYJowJyTDiAecEtCSa54MgD2CohnxfZnX8MS1ali6lmtWrbo1B14ldkGqqEDLNb8GfkzTkEVABVGqb1sJOBmRwKlgeWWQKpYQOiZD1tc0IiFTTjZ/IMfnWvFxEEtdEeC5+nsiI6FS09DTnSGBkVr2ZuJ/Xj+F4MbJeJSkwCK6WBSkAkOMZ2lgn0tGQUw1IVRyfSumIyIJBZ1ZRYdgL7+8SjqXdbtRb9xfVZu1Io4yOkVn6ALZ6Bo10R1qoTaiKEfP6BW9GU/Gi/FufCxaS0Yxc4z+wPj8AZR1la4=</latexit>  <latexit sha1_base64="PSpBupxbZd6YSlECg9AIH6Ma5Uo=">AAACDHicbVDLSgMxFM3UV62vqks3wSK4KGWmSHVZcOOygn1AOwyZTKYNzTxI7hTLMB/gxl9x40IRt36AO//GtB1BWw8ETs45l+QeNxZcgWl+GYW19Y3NreJ2aWd3b/+gfHjUUVEiKWvTSESy5xLFBA9ZGzgI1oslI4ErWNcdX8/87oRJxaPwDqYxswMyDLnPKQEtOeXKANg9KJoGRI0z5+fGvayKJ069iqVT1ymzZs6BV4mVkwrK0XLKnwMvoknAQqCCKNW3zBjslEjgVLCsNEgUiwkdkyHraxqSgCk7nS+T4TOteNiPpD4h4Ln6eyIlgVLTwNXJgMBILXsz8T+vn4B/Zac8jBNgIV085CcCQ4RnzWCPS0ZBTDUhVHL9V0xHRBIKur+SLsFaXnmVdOo1q1Fr3F5UmtW8jiI6QafoHFnoEjXRDWqhNqLoAT2hF/RqPBrPxpvxvogWjHzmGP2B8fENwyKbVg==</latexit>   <latexit sha1_base64="PSpBupxbZd6YSlECg9AIH6Ma5Uo=">AAACDHicbVDLSgMxFM3UV62vqks3wSK4KGWmSHVZcOOygn1AOwyZTKYNzTxI7hTLMB/gxl9x40IRt36AO//GtB1BWw8ETs45l+QeNxZcgWl+GYW19Y3NreJ2aWd3b/+gfHjUUVEiKWvTSESy5xLFBA9ZGzgI1oslI4ErWNcdX8/87oRJxaPwDqYxswMyDLnPKQEtOeXKANg9KJoGRI0z5+fGvayKJ069iqVT1ymzZs6BV4mVkwrK0XLKnwMvoknAQqCCKNW3zBjslEjgVLCsNEgUiwkdkyHraxqSgCk7nS+T4TOteNiPpD4h4Ln6eyIlgVLTwNXJgMBILXsz8T+vn4B/Zac8jBNgIV085CcCQ4RnzWCPS0ZBTDUhVHL9V0xHRBIKur+SLsFaXnmVdOo1q1Fr3F5UmtW8jiI6QafoHFnoEjXRDWqhNqLoAT2hF/RqPBrPxpvxvogWjHzmGP2B8fENwyKbVg==</latexit>   <latexit sha1_base64="6nzY45shHe0BPDJgTiDJXCBInQQ=">AAACDHicbVDLSgMxFM34rPVVdekmWAQXpcyIVJcFNy4r2Ae0ZchkMm1oMjMkd4plmA9w46+4caGIWz/AnX9j2o6grQcCJ+ecS3KPFwuuwba/rJXVtfWNzcJWcXtnd2+/dHDY0lGiKGvSSESq4xHNBA9ZEzgI1okVI9ITrO2Nrqd+e8yU5lF4B5OY9SUZhDzglICR3FK5B+weNE0l0aPM/blxP6vgsetUsHIdk7Kr9gx4mTg5KaMcDbf02fMjmkgWAhVE665jx9BPiQJOBcuKvUSzmNARGbCuoSGRTPfT2TIZPjWKj4NImRMCnqm/J1IitZ5IzyQlgaFe9Kbif143geCqn/IwToCFdP5QkAgMEZ42g32uGAUxMYRQxc1fMR0SRSiY/oqmBGdx5WXSOq86tWrt9qJcr+R1FNAxOkFnyEGXqI5uUAM1EUUP6Am9oFfr0Xq23qz3eXTFymeO0B9YH9/AFZtU</latexit>   <latexit sha1_base64="6nzY45shHe0BPDJgTiDJXCBInQQ=">AAACDHicbVDLSgMxFM34rPVVdekmWAQXpcyIVJcFNy4r2Ae0ZchkMm1oMjMkd4plmA9w46+4caGIWz/AnX9j2o6grQcCJ+ecS3KPFwuuwba/rJXVtfWNzcJWcXtnd2+/dHDY0lGiKGvSSESq4xHNBA9ZEzgI1okVI9ITrO2Nrqd+e8yU5lF4B5OY9SUZhDzglICR3FK5B+weNE0l0aPM/blxP6vgsetUsHIdk7Kr9gx4mTg5KaMcDbf02fMjmkgWAhVE665jx9BPiQJOBcuKvUSzmNARGbCuoSGRTPfT2TIZPjWKj4NImRMCnqm/J1IitZ5IzyQlgaFe9Kbif143geCqn/IwToCFdP5QkAgMEZ42g32uGAUxMYRQxc1fMR0SRSiY/oqmBGdx5WXSOq86tWrt9qJcr+R1FNAxOkFnyEGXqI5uUAM1EUUP6Am9oFfr0Xq23qz3eXTFymeO0B9YH9/AFZtU</latexit>   <latexit sha1_base64="kd5mMFf7ZgtWFjcYhd5BKgAffFE=">AAACDHicbVDLSgMxFM3UV62vqks3wSK4KGVGSnVZcOOygn1AOwyZTKYNzTxI7hTLMB/gxl9x40IRt36AO//GtB1BWw8ETs45l+QeNxZcgWl+GYW19Y3NreJ2aWd3b/+gfHjUUVEiKWvTSESy5xLFBA9ZGzgI1oslI4ErWNcdX8/87oRJxaPwDqYxswMyDLnPKQEtOeXKANg9KJoGRI0z5+fGvayKJ069iqVT1ymzZs6BV4mVkwrK0XLKnwMvoknAQqCCKNW3zBjslEjgVLCsNEgUiwkdkyHraxqSgCk7nS+T4TOteNiPpD4h4Ln6eyIlgVLTwNXJgMBILXsz8T+vn4B/Zac8jBNgIV085CcCQ4RnzWCPS0ZBTDUhVHL9V0xHRBIKur+SLsFaXnmVdC5qVqPWuK1XmtW8jiI6QafoHFnoEjXRDWqhNqLoAT2hF/RqPBrPxpvxvogWjHzmGP2B8fENyTybWg==</latexit>   <latexit sha1_base64="kd5mMFf7ZgtWFjcYhd5BKgAffFE=">AAACDHicbVDLSgMxFM3UV62vqks3wSK4KGVGSnVZcOOygn1AOwyZTKYNzTxI7hTLMB/gxl9x40IRt36AO//GtB1BWw8ETs45l+QeNxZcgWl+GYW19Y3NreJ2aWd3b/+gfHjUUVEiKWvTSESy5xLFBA9ZGzgI1oslI4ErWNcdX8/87oRJxaPwDqYxswMyDLnPKQEtOeXKANg9KJoGRI0z5+fGvayKJ069iqVT1ymzZs6BV4mVkwrK0XLKnwMvoknAQqCCKNW3zBjslEjgVLCsNEgUiwkdkyHraxqSgCk7nS+T4TOteNiPpD4h4Ln6eyIlgVLTwNXJgMBILXsz8T+vn4B/Zac8jBNgIV085CcCQ4RnzWCPS0ZBTDUhVHL9V0xHRBIKur+SLsFaXnmVdC5qVqPWuK1XmtW8jiI6QafoHFnoEjXRDWqhNqLoAT2hF/RqPBrPxpvxvogWjHzmGP2B8fENyTybWg==</latexit>     <latexit sha1_base64="DHdJ+F1WeMU0ar7uAUH9zAbeRpg=">AAACAnicbVDLSsNAFJ3UV62vqCtxEyyCCymJSHVZcOOygn1AG8JkMmmHziRh5kYsIbjxV9y4UMStX+HOv3HaRtDWAxfOnHMvc+/xE84U2PaXUVpaXlldK69XNja3tnfM3b22ilNJaIvEPJZdHyvKWURbwIDTbiIpFj6nHX90NfE7d1QqFke3ME6oK/AgYiEjGLTkmQd9oPegSCawGuXez4sFuWdW7Zo9hbVInIJUUYGmZ372g5ikgkZAOFaq59gJuBmWwAineaWfKppgMsID2tM0woIqN5uekFvHWgmsMJa6IrCm6u+JDAulxsLXnQLDUM17E/E/r5dCeOlmLEpSoBGZfRSm3ILYmuRhBUxSAnysCSaS6V0tMsQSE9CpVXQIzvzJi6R9VnPqtfrNebVxWsRRRofoCJ0gB12gBrpGTdRCBD2gJ/SCXo1H49l4M95nrSWjmNlHf2B8fAPaf5hQ</latexit>   <latexit sha1_base64="DHdJ+F1WeMU0ar7uAUH9zAbeRpg=">AAACAnicbVDLSsNAFJ3UV62vqCtxEyyCCymJSHVZcOOygn1AG8JkMmmHziRh5kYsIbjxV9y4UMStX+HOv3HaRtDWAxfOnHMvc+/xE84U2PaXUVpaXlldK69XNja3tnfM3b22ilNJaIvEPJZdHyvKWURbwIDTbiIpFj6nHX90NfE7d1QqFke3ME6oK/AgYiEjGLTkmQd9oPegSCawGuXez4sFuWdW7Zo9hbVInIJUUYGmZ372g5ikgkZAOFaq59gJuBmWwAineaWfKppgMsID2tM0woIqN5uekFvHWgmsMJa6IrCm6u+JDAulxsLXnQLDUM17E/E/r5dCeOlmLEpSoBGZfRSm3ILYmuRhBUxSAnysCSaS6V0tMsQSE9CpVXQIzvzJi6R9VnPqtfrNebVxWsRRRofoCJ0gB12gBrpGTdRCBD2gJ/SCXo1H49l4M95nrSWjmNlHf2B8fAPaf5hQ</latexit>   <latexit sha1_base64="DHdJ+F1WeMU0ar7uAUH9zAbeRpg=">AAACAnicbVDLSsNAFJ3UV62vqCtxEyyCCymJSHVZcOOygn1AG8JkMmmHziRh5kYsIbjxV9y4UMStX+HOv3HaRtDWAxfOnHMvc+/xE84U2PaXUVpaXlldK69XNja3tnfM3b22ilNJaIvEPJZdHyvKWURbwIDTbiIpFj6nHX90NfE7d1QqFke3ME6oK/AgYiEjGLTkmQd9oPegSCawGuXez4sFuWdW7Zo9hbVInIJUUYGmZ372g5ikgkZAOFaq59gJuBmWwAineaWfKppgMsID2tM0woIqN5uekFvHWgmsMJa6IrCm6u+JDAulxsLXnQLDUM17E/E/r5dCeOlmLEpSoBGZfRSm3ILYmuRhBUxSAnysCSaS6V0tMsQSE9CpVXQIzvzJi6R9VnPqtfrNebVxWsRRRofoCJ0gB12gBrpGTdRCBD2gJ/SCXo1H49l4M95nrSWjmNlHf2B8fAPaf5hQ</latexit>   <latexit sha1_base64="DHdJ+F1WeMU0ar7uAUH9zAbeRpg=">AAACAnicbVDLSsNAFJ3UV62vqCtxEyyCCymJSHVZcOOygn1AG8JkMmmHziRh5kYsIbjxV9y4UMStX+HOv3HaRtDWAxfOnHMvc+/xE84U2PaXUVpaXlldK69XNja3tnfM3b22ilNJaIvEPJZdHyvKWURbwIDTbiIpFj6nHX90NfE7d1QqFke3ME6oK/AgYiEjGLTkmQd9oPegSCawGuXez4sFuWdW7Zo9hbVInIJUUYGmZ372g5ikgkZAOFaq59gJuBmWwAineaWfKppgMsID2tM0woIqN5uekFvHWgmsMJa6IrCm6u+JDAulxsLXnQLDUM17E/E/r5dCeOlmLEpSoBGZfRSm3ILYmuRhBUxSAnysCSaS6V0tMsQSE9CpVXQIzvzJi6R9VnPqtfrNebVxWsRRRofoCJ0gB12gBrpGTdRCBD2gJ/SCXo1H49l4M95nrSWjmNlHf2B8fAPaf5hQ</latexit>   <latexit sha1_base64="iLDy+ZaSHJJwAmMAvNBJl6VBgqY=">AAAB9HicbVDLSgNBEOyNrxhfUY9eBoPgQcKuSPQY8OIxgnlAsoTZySQZMju7zvQGw5Lv8OJBEa9+jDf/xkmyB00saCiquunuCmIpDLrut5NbW9/Y3MpvF3Z29/YPiodHDRMlmvE6i2SkWwE1XArF6yhQ8lasOQ0DyZvB6HbmN8dcGxGpB5zE3A/pQIm+YBSt5HeQP6FhaUjNaNotltyyOwdZJV5GSpCh1i1+dXoRS0KukElqTNtzY/RTqlEwyaeFTmJ4TNmIDnjbUkVDbvx0fvSUnFmlR/qRtqWQzNXfEykNjZmEge0MKQ7NsjcT//PaCfZv/FSoOEGu2GJRP5EEIzJLgPSE5gzlxBLKtLC3EjakmjK0ORVsCN7yy6ukcVn2KuXK/VWpepHFkYcTOIVz8OAaqnAHNagDg0d4hld4c8bOi/PufCxac042cwx/4Hz+AIkfkow=</latexit>  <latexit sha1_base64="iLDy+ZaSHJJwAmMAvNBJl6VBgqY=">AAAB9HicbVDLSgNBEOyNrxhfUY9eBoPgQcKuSPQY8OIxgnlAsoTZySQZMju7zvQGw5Lv8OJBEa9+jDf/xkmyB00saCiquunuCmIpDLrut5NbW9/Y3MpvF3Z29/YPiodHDRMlmvE6i2SkWwE1XArF6yhQ8lasOQ0DyZvB6HbmN8dcGxGpB5zE3A/pQIm+YBSt5HeQP6FhaUjNaNotltyyOwdZJV5GSpCh1i1+dXoRS0KukElqTNtzY/RTqlEwyaeFTmJ4TNmIDnjbUkVDbvx0fvSUnFmlR/qRtqWQzNXfEykNjZmEge0MKQ7NsjcT//PaCfZv/FSoOEGu2GJRP5EEIzJLgPSE5gzlxBLKtLC3EjakmjK0ORVsCN7yy6ukcVn2KuXK/VWpepHFkYcTOIVz8OAaqnAHNagDg0d4hld4c8bOi/PufCxac042cwx/4Hz+AIkfkow=</latexit>  <latexit sha1_base64="iLDy+ZaSHJJwAmMAvNBJl6VBgqY=">AAAB9HicbVDLSgNBEOyNrxhfUY9eBoPgQcKuSPQY8OIxgnlAsoTZySQZMju7zvQGw5Lv8OJBEa9+jDf/xkmyB00saCiquunuCmIpDLrut5NbW9/Y3MpvF3Z29/YPiodHDRMlmvE6i2SkWwE1XArF6yhQ8lasOQ0DyZvB6HbmN8dcGxGpB5zE3A/pQIm+YBSt5HeQP6FhaUjNaNotltyyOwdZJV5GSpCh1i1+dXoRS0KukElqTNtzY/RTqlEwyaeFTmJ4TNmIDnjbUkVDbvx0fvSUnFmlR/qRtqWQzNXfEykNjZmEge0MKQ7NsjcT//PaCfZv/FSoOEGu2GJRP5EEIzJLgPSE5gzlxBLKtLC3EjakmjK0ORVsCN7yy6ukcVn2KuXK/VWpepHFkYcTOIVz8OAaqnAHNagDg0d4hld4c8bOi/PufCxac042cwx/4Hz+AIkfkow=</latexit>  <latexit sha1_base64="iLDy+ZaSHJJwAmMAvNBJl6VBgqY=">AAAB9HicbVDLSgNBEOyNrxhfUY9eBoPgQcKuSPQY8OIxgnlAsoTZySQZMju7zvQGw5Lv8OJBEa9+jDf/xkmyB00saCiquunuCmIpDLrut5NbW9/Y3MpvF3Z29/YPiodHDRMlmvE6i2SkWwE1XArF6yhQ8lasOQ0DyZvB6HbmN8dcGxGpB5zE3A/pQIm+YBSt5HeQP6FhaUjNaNotltyyOwdZJV5GSpCh1i1+dXoRS0KukElqTNtzY/RTqlEwyaeFTmJ4TNmIDnjbUkVDbvx0fvSUnFmlR/qRtqWQzNXfEykNjZmEge0MKQ7NsjcT//PaCfZv/FSoOEGu2GJRP5EEIzJLgPSE5gzlxBLKtLC3EjakmjK0ORVsCN7yy6ukcVn2KuXK/VWpepHFkYcTOIVz8OAaqnAHNagDg0d4hld4c8bOi/PufCxac042cwx/4Hz+AIkfkow=</latexit>  <latexit sha1_base64="V9wwj86/NcoJO5Z8puKut/bv/h0=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBbBg5REpHosePFY0dpCG8pmO2mXbjZhd1MooT/BiwdFvPqLvPlv3LY5aOuDgcd7M8zMCxLBtXHdb6ewtr6xuVXcLu3s7u0flA+PnnScKoZNFotYtQOqUXCJTcONwHaikEaBwFYwup35rTEqzWP5aCYJ+hEdSB5yRo2VHsY9r1euuFV3DrJKvJxUIEejV/7q9mOWRigNE1Trjucmxs+oMpwJnJa6qcaEshEdYMdSSSPUfjY/dUrOrNInYaxsSUPm6u+JjEZaT6LAdkbUDPWyNxP/8zqpCW/8jMskNSjZYlGYCmJiMvub9LlCZsTEEsoUt7cSNqSKMmPTKdkQvOWXV8nTZdWrVWv3V5X6RR5HEU7gFM7Bg2uowx00oAkMBvAMr/DmCOfFeXc+Fq0FJ585hj9wPn8ABZiNkw==</latexit>  <latexit sha1_base64="/YALR7y13R6K/0/ZWJs4pNV6R4s=">AAAB6nicbVDLSgNBEOyNrxhfUY9eBoPgQcJukOgx4MVjRPOAJITZSW8yZHZ2mZkNhCWf4MWDIl79Im/+jZNkD5pY0FBUddPd5ceCa+O6305uY3Nreye/W9jbPzg8Kh6fNHWUKIYNFolItX2qUXCJDcONwHaskIa+wJY/vpv7rQkqzSP5ZKYx9kI6lDzgjBorPU76lX6x5JbdBcg68TJSggz1fvGrO4hYEqI0TFCtO54bm15KleFM4KzQTTTGlI3pEDuWShqi7qWLU2fkwioDEkTKljRkof6eSGmo9TT0bWdIzUivenPxP6+TmOC2l3IZJwYlWy4KEkFMROZ/kwFXyIyYWkKZ4vZWwkZUUWZsOgUbgrf68jppVspetVx9uC7VrrI48nAG53AJHtxADe6hDg1gMIRneIU3RzgvzrvzsWzNOdnMKfyB8/kDBxyNlA==</latexit>  <latexit sha1_base64="em6HsAAW5jT/Qr2vmU5D7osEx5M=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBbBg5REpHosePFY0dpCG8pmO2mXbjZhd1MooT/BiwdFvPqLvPlv3LY5aOuDgcd7M8zMCxLBtXHdb6ewtr6xuVXcLu3s7u0flA+PnnScKoZNFotYtQOqUXCJTcONwHaikEaBwFYwup35rTEqzWP5aCYJ+hEdSB5yRo2VHsY9t1euuFV3DrJKvJxUIEejV/7q9mOWRigNE1Trjucmxs+oMpwJnJa6qcaEshEdYMdSSSPUfjY/dUrOrNInYaxsSUPm6u+JjEZaT6LAdkbUDPWyNxP/8zqpCW/8jMskNSjZYlGYCmJiMvub9LlCZsTEEsoUt7cSNqSKMmPTKdkQvOWXV8nTZdWrVWv3V5X6RR5HEU7gFM7Bg2uowx00oAkMBvAMr/DmCOfFeXc+Fq0FJ585hj9wPn8ABBSNkg==</latexit>  <latexit sha1_base64="E5i+kJVdCMn+J23+DgqlmHq4ZVQ=">AAAB6nicbVDLSgNBEOyNrxhfUY9eBoPgQcKuSvQY8OIxonlAsoTZyWwyZHZ2mekNhJBP8OJBEa9+kTf/xkmyB00saCiquunuChIpDLrut5NbW9/Y3MpvF3Z29/YPiodHDROnmvE6i2WsWwE1XArF6yhQ8laiOY0CyZvB8G7mN0dcGxGrJxwn3I9oX4lQMIpWehx1r7rFklt25yCrxMtICTLUusWvTi9macQVMkmNaXtugv6EahRM8mmhkxqeUDakfd62VNGIG38yP3VKzqzSI2GsbSkkc/X3xIRGxoyjwHZGFAdm2ZuJ/3ntFMNbfyJUkiJXbLEoTCXBmMz+Jj2hOUM5toQyLeythA2opgxtOgUbgrf88ippXJa9SrnycF2qXmRx5OEETuEcPLiBKtxDDerAoA/P8ApvjnRenHfnY9Gac7KZY/gD5/MHCKCNlQ==</latexit>  <latexit sha1_base64="TuCbhZIdUx6EC88XfmGYxslwMUE=">AAAB6nicbVDLSgNBEOyNrxhfUY9eBoPgQcKuhOgx4MVjRPOAZAmzk95kyOzsMjMbCCGf4MWDIl79Im/+jZNkD5pY0FBUddPdFSSCa+O6305uY3Nreye/W9jbPzg8Kh6fNHWcKoYNFotYtQOqUXCJDcONwHaikEaBwFYwupv7rTEqzWP5ZCYJ+hEdSB5yRo2VHse9Sq9YcsvuAmSdeBkpQYZ6r/jV7ccsjVAaJqjWHc9NjD+lynAmcFbophoTykZ0gB1LJY1Q+9PFqTNyYZU+CWNlSxqyUH9PTGmk9SQKbGdEzVCvenPxP6+TmvDWn3KZpAYlWy4KU0FMTOZ/kz5XyIyYWEKZ4vZWwoZUUWZsOgUbgrf68jppXpe9arn6UCnVrrI48nAG53AJHtxADe6hDg1gMIBneIU3RzgvzrvzsWzNOdnMKfyB8/kDCiSNlg==</latexit>  <latexit sha1_base64="XsCiD6AeBqEA9QoZsooiSoOJmFs=">AAAB73icbVBNS8NAEN3Ur1q/qh69LBbBg5REpHosePFYwX5AG8pmO2mXbjZxdyKU0D/hxYMiXv073vw3btsctPXBwOO9GWbmBYkUBl332ymsrW9sbhW3Szu7e/sH5cOjlolTzaHJYxnrTsAMSKGgiQIldBINLAoktIPx7cxvP4E2IlYPOEnAj9hQiVBwhlbq9HAEyPpev1xxq+4cdJV4OamQHI1++as3iHkagUIumTFdz03Qz5hGwSVMS73UQML4mA2ha6liERg/m987pWdWGdAw1rYU0rn6eyJjkTGTKLCdEcORWfZm4n9eN8Xwxs+ESlIExReLwlRSjOnseToQGjjKiSWMa2FvpXzENONoIyrZELzll1dJ67Lq1aq1+6tK/SKPo0hOyCk5Jx65JnVyRxqkSTiR5Jm8kjfn0Xlx3p2PRWvByWeOyR84nz/KW4/B</latexit>  <latexit sha1_base64="zsVD/DiHmizNnmwicZmY3pauB58=">AAAB73icbVBNS8NAEJ34WetX1aOXxSJ4kJIUqR4LXjxWsB/QhrLZbtqlm03cnQgl9E948aCIV/+ON/+N2zYHbX0w8Hhvhpl5QSKFQdf9dtbWNza3tgs7xd29/YPD0tFxy8SpZrzJYhnrTkANl0LxJgqUvJNoTqNA8nYwvp357SeujYjVA04S7kd0qEQoGEUrdXo44kj71X6p7FbcOcgq8XJShhyNfumrN4hZGnGFTFJjup6boJ9RjYJJPi32UsMTysZ0yLuWKhpx42fze6fk3CoDEsbalkIyV39PZDQyZhIFtjOiODLL3kz8z+umGN74mVBJilyxxaIwlQRjMnueDITmDOXEEsq0sLcSNqKaMrQRFW0I3vLLq6RVrXi1Su3+qly/zOMowCmcwQV4cA11uIMGNIGBhGd4hTfn0Xlx3p2PReuak8+cwB84nz/L34/C</latexit>  <latexit sha1_base64="dngLApAjNB6RtuvHwZn5m2B63Io=">AAAB73icbVBNS8NAEJ34WetX1aOXxSJ4kJKoVI8FLx4r2A9oQ9lsN+3SzSbuToQS+ie8eFDEq3/Hm//GbZuDtj4YeLw3w8y8IJHCoOt+Oyura+sbm4Wt4vbO7t5+6eCwaeJUM95gsYx1O6CGS6F4AwVK3k40p1EgeSsY3U791hPXRsTqAccJ9yM6UCIUjKKV2l0ccqS9y16p7FbcGcgy8XJShhz1Xumr249ZGnGFTFJjOp6boJ9RjYJJPil2U8MTykZ0wDuWKhpx42ezeyfk1Cp9EsbalkIyU39PZDQyZhwFtjOiODSL3lT8z+ukGN74mVBJilyx+aIwlQRjMn2e9IXmDOXYEsq0sLcSNqSaMrQRFW0I3uLLy6R5UfGqler9Vbl2nsdRgGM4gTPw4BpqcAd1aAADCc/wCm/Oo/PivDsf89YVJ585gj9wPn8AzWOPww==</latexit>  <latexit sha1_base64="a+mHIXPseVwEXg2kyP2JQMKQqlA=">AAAB73icbVBNS8NAEN3Ur1q/qh69LBbBg5RESvVY8OKxgq2FNpTNdtIu3Wzi7kQooX/CiwdFvPp3vPlv3LY5aOuDgcd7M8zMCxIpDLrut1NYW9/Y3Cpul3Z29/YPyodHbROnmkOLxzLWnYAZkEJBCwVK6CQaWBRIeAjGNzP/4Qm0EbG6x0kCfsSGSoSCM7RSp4cjQNav9csVt+rOQVeJl5MKydHsl796g5inESjkkhnT9dwE/YxpFFzCtNRLDSSMj9kQupYqFoHxs/m9U3pmlQENY21LIZ2rvycyFhkziQLbGTEcmWVvJv7ndVMMr/1MqCRFUHyxKEwlxZjOnqcDoYGjnFjCuBb2VspHTDOONqKSDcFbfnmVtC+rXr1av6tVGhd5HEVyQk7JOfHIFWmQW9IkLcKJJM/klbw5j86L8+58LFoLTj5zTP7A+fwBzuePxA==</latexit>  <latexit sha1_base64="raaVtvrqhZlS2o82tKke6vPBSIs=">AAAB6XicbVBNS8NAEJ3Ur1q/qh69LBbBg5REpHosePFYxX5AG8pmO2mXbjZhdyOU0H/gxYMiXv1H3vw3btsctPXBwOO9GWbmBYng2rjut1NYW9/Y3Cpul3Z29/YPyodHLR2nimGTxSJWnYBqFFxi03AjsJMopFEgsB2Mb2d++wmV5rF8NJME/YgOJQ85o8ZKD72sX664VXcOskq8nFQgR6Nf/uoNYpZGKA0TVOuu5ybGz6gynAmclnqpxoSyMR1i11JJI9R+Nr90Ss6sMiBhrGxJQ+bq74mMRlpPosB2RtSM9LI3E//zuqkJb/yMyyQ1KNliUZgKYmIye5sMuEJmxMQSyhS3txI2oooyY8Mp2RC85ZdXSeuy6tWqtfurSv0ij6MIJ3AK5+DBNdThDhrQBAYhPMMrvDlj58V5dz4WrQUnnzmGP3A+fwCYeI1a</latexit>
+
+> addr , v 0, r 0
+> addr , v 0, r 0
+> mask id , v 3, r 3
+> mask id , v 3, r 3
+> addr , v 0, r 0
+> addr , v 0, r 0
+> addr , v 0, r 0
+> addr , v 0, r 0
+> addr , v 0, r 0
+> addr , v 0, r 0
+> mask id , v 2, r 2
+> mask id , v 2, r 2
+> mask id , v 1, r 1
+> mask id , v 1, r 1
+> mask id , v 4, r 4
+> mask id , v 4, r 4
+> A0 A3 A4 A1 A2
+> A0 A3 A4 A1 A2
+> mask id
+> mask id
+> mask id
+> mask id
+> mask
+> mask
+> mask
+> mask
+> v1
+> v2
+> v0
+> v3
+> v4
+> ω1
+> ω2
+> ω3
+> ω4
+> selected peers
+> {
+
+A2 A3 A4 A2 A3 A4 <latexit sha1_base64="YKVvH3CqG6cFt+hUDKzZAl0w59U=">AAACJnicbVC7SgNBFJ2NrxhfUbGyGQyCIoTdFNEmELCxsIhgHpCNy+xkNhmcfTBzNxCW/RBrG3/FQouIiJ2FH+LkUUTjgYHDOedy5x43ElyBaX4amaXlldW17HpuY3Nreye/u9dQYSwpq9NQhLLlEsUED1gdOAjWiiQjvitY072/HPvNAZOKh8EtDCPW8Ukv4B6nBLTk5CsDJ4EzK72zgcQV25OEJlaalFJbMA9O8MCBiYXP8HzSlrzXh1MnXzCL5gR4kVgzUqgeXH93H1Zfak5+ZHdDGvssACqIUm3LjKCTEAmcCpbm7FixiNB70mNtTQPiM9VJJmem+FgrXeyFUr8A8ESdn0iIr9TQd3XSJ9BXf72x+J/XjsG76CQ8iGJgAZ0u8mKBIcTjznCXS0ZBDDUhVHL9V0z7RFcFutmcLsH6e/IiaZSKVrlYvrEK1SKaIosO0RE6QRY6R1V0hWqojih6RM9ohN6MJ+PVeDc+ptGMMZvZR79gfP0AijGoyg==</latexit>     
+
+> vω
+> t+1 =12
+> (vω
+> t+vω
+> t+1
+> )
+
+Figure 1: High-level illustration of the main MOSAIC algorithmic steps. (A) A Wasserstein task embedding vτ is computed from a SAR batch by Agent A0 (representing any agent in the collective). (B) Periodically, the agent A0 broadcasts a task embedding query (TEQ) to all known peers. (C) Peers send back a query response (QR) that contains their task’s vτ , r , and the corresponding mask ID; (D) Agent A0 selects relevant embeddings using cosine similarity on the Wasserstein embeddings. (E) A0 further selects relevant embeddings using Criterion 1 and Criterion 2. (F) A0 sends mask requests (MR). (G) The contacted agents respond by sending the requested mask through a mask transfer (MTR). (H) Incoming masks from A2 and A3 are incorporated into A0. The training of the agent’s policy occurs in parallel (not represented in the figure). 
+
+3.2 Wasserstein Task Embeddings for Online Reinforcement Learning 
+
+To identify suitable policies for a given task, MOSAIC ex-tends Liu et al. (2025) to RL by computing embeddings over batches of state-action-reward (SAR) data collected online (see Figure 1(A)). For task τ , the agent maintains an empir-ical task distribution 
+
+μτ = 1
+
+N
+
+> N
+
+X
+
+> t=1
+
+δxt ∈ P (Rd), (2) where xt = ( st, a t, r t) and xt ∼ D τ . Here, Dτ denotes the replay buffer for τ , and each xt ∈ Rd is a state-action-reward (SAR) tuple. The tuple dimensionality is d = ds +
+
+da +dr , where ds, da, and dr are the dimensions of the state, action, and scalar reward, respectively. We use N = 128 
+
+samples in our experiments. δxt denotes the Dirac measure centered on the sample xt. A fixed synthetic reference dis-tribution μ0 is defined as 
+
+μ0 = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+δx0 
+
+> m
+
+, (3) where x0 
+
+> m
+
+∼ Uniform (−1, 1) d is sampled once during ini-tialization and fixed thereafter. We fix M = 50 as the num-ber of reference points in the synthetic distribution. This shared reference is used across all agents and enables them to align their embeddings in a shared latent space without centralized training or supervision. The 2-Wasserstein dis-tance between μτ and μ0 is computed by solving the optimal transport problem, 
+
+γ∗ = arg min  
+
+> γ∈RN×M
+> N
+
+X
+
+> t=1
+> M
+
+X
+
+> m=1
+
+γtm ∥xt − x0
+
+> m
+
+∥2
+
+s.t. γtm ≥ 0, γ 1M = 1 
+
+> N
+
+1N , γ ⊤1N = 1 
+
+> M
+
+1M ,
+
+(4) where 1N and 1M are vectors of ones in RN and RM ,respectively. The Wasserstein task embedding operator ψ
+
+maps the task distribution μτ to a vector vτ ∈ RM ×d via the barycenter projection of γ∗ on {xt}Nt=1 ,
+
+vτ = ψ(μτ ) = 
+
+" NX
+
+> t=1
+
+γ∗
+
+> tm
+
+xt
+
+#Mm=1 
+
+. (5) This mapping places each task τ in a shared latent space, where metrics can be used to quantify task relationships. A moving average is maintained to smooth fluctuations as the agent’s policy evolves, r.
+
+3.3 Knowledge Selection and Sharing 
+
+Agents communicate by maintaining a list of IP addresses and ports for other agents, which allows them to be located anywhere on the Internet. Each agent i ∈ I can communi-cate directly with all other agents j ∈ I , j ̸ = i at any time. 
+
+Phase 1: Embedding queries At any time, an agent i can initiate a task embedding query (TEQ) by broadcasting its current task embedding vi, iteration performance ri, and its IP/port (see Figure 1(B)(C)). Upon receiving the TEQ, each peer agent j̸ = i responds with its most recent task embed-ding vj and associated performance rj .24506 Phase 2: Policy selection. Once the agent has received query responses (QR) (see Figure 1(F)(G)) with relevant em-beddings from other agents, it computes the cosine similarity between its own embedding and those of each peer, cos (vi, v j ) = ⟨vec (vi), vec (vj )⟩|vec (vi)| · | vec (vj )| , cos ∈ [−1, 1] . (6) To identify useful policies, agent i applies two heuristic fil-ters based on similarity and performance: 
+
+Ialign (i, j ) = 
+
+1 if cos (vi, v j ) > θ, 
+
+0 otherwise (Criterion 1) 
+
+Iperf (i, j ) = 
+
+1 if rj > r i,
+
+0 otherwise (Criterion 2) with θ = 0 .5 in all experiments. The first criterion promotes semantic alignment between tasks, revealing latent similari-ties that can lead to effective transfer (see Section 4.4). The second ensures that agents only acquire masks from peers whose performance exceeds their own, avoiding noisy or under-trained policies that can degrade performance. Cri-terion 2 guards against the frequent false positives seen when comparing poorly trained policies that yield decep-tively similar embeddings. The two phases and the selection criteria also result in a bandwidth-efficient approach, since policies are trans-ferred only when considered potentially useful. The peer masks that pass both criteria are stored as the set Pc+1 =
+
+{ϕ1, ..., ϕ K }, where each ϕk denotes a mask received from a selected peer. 
+
+3.4 Knowledge Composition and Fine Tuning 
+
+Masks received from other agents meeting the two selection criteria above have been pretrained on tasks that are likely related to or share similarities with the agent’s current task. As previously shown in Ben-Iwhiwhu et al. (2023), a linear combination of masks, weighted with trainable parameters 
+
+β, can lead to beneficial policy search in RL. MOSAIC ex-ploits this idea by combining policies that have been trained on the local agent, plus those acquired from other agents. In this study, the β values are computed using softmax on a set of beta parameters, optimized in log-space, ˜β ∈ R1+ |Pc|,where Pc is the number of masks acquired during a com-munication event c. During the forward pass, the agent con-structs the linearly combined, binarized mask, 
+
+ϕlc  
+
+> τ
+
+= g
+
+βτ ϕτ +
+
+> |Pc+1 |
+
+X
+
+> k=1
+
+βkϕk
+
+ , (7) where ϕτ is the agent’s own task mask, and ϕk is the k-th peer mask. The parameters βτ and βk are the softmax-normalized values derived from ˜β, for ϕτ and ϕk, respec-tively. |Pc+1 | is the number of masks acquired in the next communication event. The resulting binary mask, ϕlc  
+
+> τ
+
+, is then used to modulate the backbone parameters, which gives the final policy πτ . As training continues on the local task, the agent updates the β parameters and the real value ϕτ via backpropagation (keeping all ϕk masks fixed) thus fine tun-ing the overall resulting policy determined by ϕlc  
+
+> τ
+
+.
+
+Reward-Guided Initialization (RGI). The trainable pa-rameters, β, allow gradient descent to determine which poli-cies are most useful for the current task. The initial weight-ing as the masks are received is given by, 
+
+βτ = 0 .5 + 0 .5r, βk = 0.5(1 − r)
+
+|Pc+1 | , (8) where r ∈ [0 , 1] is the agent’s normalized return from the last iteration. This scheme biases low-performing agents to-ward external knowledge and high-performing agents to-ward their own policies. Ablation studies show that such an initialization provides a strong advantage, even though β is later tuned by gradient descent. Before integrating a new set of peer masks Pc+1 , the agent consolidates its current task mask ϕτ with the previous peer masks Pc using a weighted linear combination, 
+
+ϕτ ← βτ ϕτ +
+
+> |Pc|
+
+X
+
+> k=1
+
+βkϕk . (9) The consolidation collapses multiple masks into one without affecting the policy, managing memory scalability. 
+
+## 4 Experiments 
+
+MOSAIC is evaluated on three sparse-reward reinforcement learning benchmarks. The CT-graph (Soltoggio et al. 2023) and the MiniHack MultiRoom (Samvelyan et al. 2021) are used to assess the advantage of communicating agents versus isolated agents. The MiniGrid Crossing (Chevalier-Boisvert, Willems, and Pal 2018) is used to assess the per-formance of MOSAIC against the chosen baselines. Each benchmark includes tasks with similar, dissimilar, and in-terfering tasks to assess whether MOSAIC can identify and leverage the available task similarities, while avoiding in-terfering policies. Each agent is assigned a unique task and trained in parallel with other agents. PPO (Schulman et al. 2017) was used in all experiments, with an FCN for Min-iGrid and CT-graph, and a CNN for MiniHack. Individual results are shown in Appendix E, Figures 14, 15, and 16. De-tails on computing infrastructure, hyperparameters, architec-tures and libraries are reported in the Appendix F, Tables 5, 6, 7, and 8. Appendix A, Table 3 reports significance testing. 
+
+4.1 Image Sequence Learning 
+
+The image sequence learning (ISL) benchmark, imple-mented with the Configurable Tree Graph (CT-Graph) en-vironment (Soltoggio et al. 2023), consists of procedurally generated tree navigation problems where each node is an RL state encoded as an image. We define a curriculum of 28 tasks organized into four independent image sets, each containing seven related tasks of increasing tree depth (2–8). This configuration produces four distinct and unre-lated task groups with internal hierarchies of difficulty, from easy (depth 2) to very hard (depth 8). Sparse rewards and ex-ponential branching make the benchmark challenging, with reward probabilities as low as ≈ 7.74 × 10 −9 for depth-8 tasks (Soltoggio et al. 2023). 24507 Iteration Summed Return           
+
+> 0010 20 50 100 150 200 0250 500 750 1000 10
+> 50510
+> MOSAIC MOSAIC-NoComm
+> AB
+
+Figure 2: Performance of communicating MOSAIC agents versus isolated agents on the same tasks. (A) Image se-quence learning, 28 tasks, five seeds/task: average of 140 runs with 95% confidence intervals (Colas, Sigaud, and Oudeyer 2018). (B) MiniHack Multiroom, 14 tasks, five seeds/task: average of 70 runs with 95% confidence inter-vals. MOSAIC agents achieve relative gains of 170.8% and 128.2% over the isolated baseline in the image sequence and MiniHack benchmarks, respectively. Results in Figure 2(A) show that MOSAIC achieves sig-nificantly faster learning and broader task coverage, outper-forming MOSAIC-NoComm (no sharing among agents) by 2.7 ×, reaching a maximum total return of 26.0 across all 28 tasks. MOSAIC reaches 50% performance (total return of 14) in 37 iterations (18,944 steps). MOSAIC-NoComm plateaus at a maximum of 9.6. On average, MOSAIC-NoComm fails on 18 tasks, whereas MOSAIC fails on only 2. 
+
+4.2 MiniHack MultiRoom 
+
+MiniHack is a grid-based navigation task with sparse re-wards and pixel observations. Agents must traverse con-nected rooms to reach a final goal. We evaluate MOSAIC on 14 tasks grouped into two difficulty clusters: room sizes of 4 × 4 and 6 × 6. Each level adds a room connected by a closed but unlocked door. Agents receive +1 for task com-pletion and -0.01 for collisions. Task layouts are random-ized every episode to enable learning of behavioral strategies as opposed to trajectories. As shown in Figure 2(B), MO-SAIC agents reach zero reward by iteration 132 (270,336 steps) versus iteration 176 (360,448 steps) for MOSAIC-NoComm, which is a 25% reduction in the required sam-ples. Over the full run, MOSAIC attains a maximum total re-turn of 9.04 across all tasks, compared to 3.96 for MOSAIC-NoComm. 
+
+4.3 MiniGrid Crossing 
+
+The MiniGrid benchmark is a sparse-reward grid-world nav-igation task with symbolic observations. MOSAIC is evalu-ated on 14 tasks spanning seven SimpleCrossing and seven LavaCrossing variants, which differ in layout, object place-ment, and room structure. Total return curves for all methods are shown in Figure 3, with final and intermediate metrics in Table 1. MOSAIC is compared against the following base-lines: Multi-Task PPO (MTPPO) uses a shared backbone without modularity or interference mitigation. Multi-DQN 0 200 100 Iteration 300 400 500 0.0 2.5 5.0 7.5 10.0 12.5 Summed Return 
+
+> MOSAIC MOORE PCGrad+MoE MDQN MTPPO MOSAIC-NoComm
+
+Figure 3: Comparison of MOSAIC to baseline approaches on the 14 task MiniGrid curricula made up of SimpleCross-ing and LavaCrossing task variations: average performance for 70 runs with 95% confidence intervals.                          
+
+> Method Final perf 25% perf 50% perf 75% perf MOSAIC (ours) 11.67 55 90 119 MTPPO 4.64 48 --MDQN 0.31 ---PCGrad+MoE 6.66 24 54 -MOORE 8.83 13 24 -MOSAIC-NoComm 10.78 46 87 291
+
+Table 1: Performance metrics on the MiniGrid Crossing benchmark. The table reports the final average return and the number of iterations to reach 25%, 50% and 75% of the the-oretical maximum. Dashes indicate that the thresholds were not reached during the training. (MDQN) (D’Eramo et al. 2020) attaches task-specific Q-heads to a shared encoder but has no mechanism to avoid in-terference. PCGrad+MoE (Yu et al. 2020) combines a shared encoder, expert subnetworks, and gradient projection to re-solve conflicts. Mixture of Orthogonal Experts (MOORE) (Hendawy, Peters, and D’Eramo 2024) promotes expert di-versity via orthogonalization with learned gating to reduce overlap. MOSAIC achieves the highest final return (11.67), outperforming all baselines. MTPPO peaks at 4.64 (30% of the theoretical maximum), while MDQN fails to learn any tasks, peaking at 0.31. MOORE and PCGrad+MoE improve faster early, reaching 50% thresholds in 24 (49,152 steps) and 54 iterations (110,592 steps) respectively, but plateau well below MOSAIC and never exceed 75%. We speculate that centralized models with gradient sharing (MTPPO, PC-Grad+MoE) achieve early gains through shared features but suffer interference that limits long-term specialization. 
+
+4.4 How Similarity Helps Targeted Policy Transfers 
+
+Figure 4 illustrates the average cosine similarity in the CT-graph benchmark between task embeddings and the con-verged consolidation parameters ˆβij (see Eq. (9)), which pro-vides an indication of the influence of policies derived from task j when learning task i.The cosine similarities of tasks presented in random order (Figure 4(A)), when clustered with WPGMA (Figure 4(C)), 24508 0.8 0.6 0.4 0.2 0.0 Cosine Similarity Converged Beta Parameters Clustered Cosine Similarity Clustered Converged Beta Parameters To Task To Task To Task To Task From Task From Task From Task From Task  
+
+> DA1.0 0.8 0.6 0.4 0.2 0.0 0.8 0.6 0.4 0.2 0.0 1.0 0.8 0.6 0.4 0.2 0.0
+> EB
+> 21 22 23 24 25 26 27 78912 13 11 10 14 15 16 17 18 19 20 0123465
+> C
+> 0.0 0.5 1.0 1.5 Task Index 1 - Similarity
+
+Figure 4: Pairwise cosine similarity and ˆβ statistics in the image sequence learning benchmark. (A) Cosine similarity matrix. (B) ˆβ values indicating policy use per task. (C) Co-sine similarities clustered using WPGMA, shown as a den-drogram. (D) Cosine similarity matrix reordered by cluster-ing. (E) Clustered ˆβ values show that similar tasks exhibit the highest policy reuse. Annotated heatmaps of individual clusters are in Appendix E.1, Figure 18. allow for the reconstruction of the four groups of tasks, and even the inter-group difficulty relationship. By reordering the matrix using a such clustering, Figure 4(D) illustrates visually the successful reconstruction of task relationships. The ˆβ matrices (Figures 4(B) and (E)) confirm that policy reuse and task similarity remain similar even after fine tun-ing of the policies. Note that, unlike the symmetric similarity matrix, ˆβ values are asymmetric, reflecting source-to-target policy reuse. Figure 5 presents the performance of agents in the CT-graph grouped by difficulty levels. Interestingly, comparing with isolated learning (B) suggests that the policies of eas-ier tasks are progressively shared with agents solving harder tasks. This coordination enabling those agents to find suc-cessful policies that the same RL algorithm fails to discover when learning in isolation. This analysis helps explain the 170.8% performance gain of communicating agents over isolated agents (Figure 2(A)): agents tackling harder tasks retrieve, combine, and refine policies from simpler tasks to solve complex problems. 0 25 50 70 125 150 175 200 100 Iteration             
+
+> 025 50 70 125 150 175 200 100 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 Return  Return
+> Level 2 Level 3 Level 4 Level 5 Level 6 Level 7 Level 8
+> AB
+
+Figure 5: Performance grouped by task complexity, i.e., seven different levels, corresponding to different graph depths, in the image sequence learning problem. Average performance for 20 runs (four tasks and five seeds/task) with 95% confidence intervals. (A) Communicating MOSAIC agents are compared with (B) isolated MOSAIC agents . Communicating agents solve tasks progressively, from the simplest to the hardest tasks. Isolated agents only manage to solve the two simplest tasks, and partially the third, but fail on the four most complex tasks. 
+
+4.5 Ablation Studies 
+
+Ablation studies were conducted to assess the effect on per-formance of MOSAIC’s knowledge selection criteria and reward-guided initialization (RGI) on performance. Fig-ure 6 compares three ablated variants of MOSAIC: with-out cosine similarity-based selection ( ¬ Criterion 1), with-out performance-based selection ( ¬ Criterion 2), and with-out reward-guided weight initialization ( ¬ RGI). MOSAIC-NoComm is included as a reference baseline. 
+
+¬ Criterion 1 reaches a total return of 20.1, whereas MO-SAIC reaches 26.0, outperforming it by a factor of 1.29. We speculate that this gap could widen further in settings in which the number of unrelated tasks grows, i.e., where selecting the most relevant knowledge becomes critical. 
+
+¬ Criterion 2 performs comparable to MOSAIC at the end of training (25.6), but exhibits significantly slower learning. This behavior makes sense because as agents improve their performance, prioritizing higher reward becomes less crit-ical. These two ablations ¬ Criterion 1 and ¬ Criterion 2 reach 50% of the theoretical maximum (14.0) in 76 (38,912 steps) and 71 iterations (36,352 steps), respectively. MO-SAIC reaches this threshold in 37 iterations (18,944 steps), reaching 50% performance 1.9 × and 2.0 × faster, respec-tively. 
+
+¬ RGI removes reward-guided initialization and instead uses a fixed weighting of 0.5 for the local policy and 0.5 for external policies. This experiment performs comparably with MOSAIC; however, the average return shows periodic instability, characterized by sharp performance drops coin-ciding with communication events, resembling a sawtooth pattern. This behavior suggests that RGI is crucial to learn-ing stability when integrating external masks. Further ablation studies are shown in Appendix D to test the impact of query frequency on the performance of MO-24509 0 25 50 75 125 150 175 200 010 20 Summed Return 
+
+> MOSAIC ¬ (Criterion 1) ¬ (Criterion 2) ¬ RGI MOSAIC-NoComm 100 Iteration
+
+Figure 6: Ablation studies showing average performance over 140 runs (28 tasks, five seeds per task), with 95% confidence intervals. Variants tested include MOSAIC with no similarity criterion ( ¬ Criterion 1), no reward crite-rion ( ¬ Criterion 2), or no reward-guided initialization ( ¬
+
+RGI). MOSAIC-NoComm is included as a baseline. Remov-ing any of these components significantly degrades perfor-mance, highlighting their combined importance. SAIC, and the impacts of the number of samples and size of the reference distribution on embedding accuracy and per-formance. 
+
+## 5 Discussion 
+
+The results show that MOSAIC’s principles are effective across diverse settings. Agents achieved faster and more suc-cessful learning dynamics than isolated agents. In particu-lar, transferring masks from some tasks accelerated learn-ing in other tasks, consistent with findings in centralized lifelong learning (Ben-Iwhiwhu et al. 2023). These gains were most evident in reward-sparse and hierarchical envi-ronments, where agents that learned simpler tasks supported those that learned harder ones (Florensa et al. 2018; Nachum et al. 2018). The ablation study highlights the importance of selec-tion based on relevance and utility and of reward-adjusted weighting when integrating new policies. Na¨ ıve sharing overwrites stable learning (Isele and Cosgun 2018), deterio-rating performance. These results emphasize the importance of selection when the available tasks and curriculum are un-known (Foerster et al. 2016). The effect of reward-guided initialization suggests that careful policy weighting is im-portant to avoid performance disruption before fine tuning. It is worth noting that MOSAIC’s design takes inspiration from lifelong learning algorithms. Thus, policy composition can easily be extended to previously learned policies of pre-vious tasks. Such an extension could deal with continuous streams of evolving tasks (Serra et al. 2018), supporting scal-able and open-ended lifelong learning. 
+
+Limitations. Although the experiments were conducted in simulation, MOSAIC is designed for decentralized, bandwidth-limited deployments (e.g., robot fleets, on-device perception). Agents exchange only compact embeddings and mask scores while inference stays on-device. Key de-ployment considerations are cross-site normalization, pri-vate/authenticated exchange, and tuning query frequency and size to fit bandwidth. MOSAIC relies on raw per-iteration reward as a selection and weighting signal, which limits generalization to environ-ments with differing reward functions. Reward-normalized scores or task-progress metrics could improve environment-agnostic reuse. Adaptive or sparse topologies would bet-ter mitigate bandwidth scalability constraints (Tang et al. 2024). The policy composition used in MOSAIC is limited to positive combinations only. Other composition or mix-ture approaches could be tested (He et al. 2022). Alterna-tive modular skill representations could be used for applica-tions to larger neural networks, e.g., LoRA-like modules and adapters for transformer architectures (Hu et al. 2022; He et al. 2022). In all such cases, the requirement for a shared backbone or foundation model can reduce the pool of agents able to share knowledge and limit long-term development of progressively more complex skills (Houlsby et al. 2019). Communication and selection mechanisms in MOSAIC were introduced as a proof-of-concept to test whether se-lective transfer is essential for agentic knowledge reuse (DARPA/MTO 2021; Soltoggio et al. 2024). Allowing poli-cies to learn when and how to communicate could further in-crease autonomy (Foerster et al. 2016), but dynamic commu-nication policies raise safety concerns. Agents could learn uncooperative strategies, exploit collective knowledge with-out contributing, or share harmful policies. Such risks mirror classic game-theoretic challenges and require safeguards. MOSAIC-like systems may also face adversarial attacks that exploit the agent-to-agent nature through model poisoning or policy extraction. 
+
+## 6 Conclusion 
+
+This work introduced Modular Sharing and Composition in Collective Learning (MOSAIC), where agents search, re-trieve, and compose policies obtained from peers learning other tasks. The collective was shown to significantly out-perform isolated agents by selecting and fine-tuning task-aligned knowledge. Results show that policy sharing is most effective when implemented selectively, with policy weight-ing and fine-tuning. Selection also results in the discovery of implicit curricula where simpler tasks help agents learn complex ones faster. MOSAIC improves interpretability, as composed policies are traceable to their sources and the approach could extend to domains such as language, perception, and control. How-ever, autonomous knowledge sharing carries risks: flawed or misaligned policies may spread rapidly. Future work must ensure that transfers remain safe and aligned with agent ob-jectives. Using selective and modular reuse, MOSAIC can support scalable, adaptive, and collaborative agentic AI in real-world applications. 
+
+## Acknowledgements 
+
+This material is based upon work supported by the De-fense Advanced Research Projects Agency (DARPA) under contract No. HR001121901 (Shared Experience Lifelong Learning) and the Industrial Robots-as-a-Service (IRaaS) project funded by the EPSRC (EP/V050966/1). 24510 References 
+
+Achille, A.; Lam, M.; Tewari, R.; Ravichandran, A.; Maji, S.; Fowlkes, C.; Soatto, S.; and Perona, P. 2019. Task2Vec: Task Embedding for Meta-Learning. In 2019 IEEE/CVF In-ternational Conference on Computer Vision (ICCV) , 6429– 6438. Alet, F.; Lozano-Perez, T.; and Kaelbling, L. P. 2018. Mod-ular Meta-Learning. In Billard, A.; Dragan, A.; Peters, J.; and Morimoto, J., eds., Proceedings of The 2nd Conference on Robot Learning , volume 87 of Proceedings of Machine Learning Research , 856–868. PMLR. Ben-Iwhiwhu, E.; Nath, S.; Pilly, P. K.; Kolouri, S.; and Soltoggio, A. 2023. Lifelong Reinforcement Learning with Modulating Masks. Transactions on Machine Learning Re-search .Chevalier-Boisvert, M.; Willems, L.; and Pal, S. 2018. Min-imalistic Gridworld Environment for OpenAI Gym. https: //github.com/maximecb/gym-minigrid. Colas, C.; Sigaud, O.; and Oudeyer, P.-Y. 2018. How Many Random Seeds? Statistical Power Analysis in Deep Reinforcement Learning Experiments. arXiv preprint arXiv:1806.08295 .DARPA/MTO. 2021. Artificial Intelligence Explo-ration (AIE) Opportunity DARPA-PA-20-02-11 Shared-Experience Lifelong Learning (ShELL). https://sam.gov/ opp/1afbf600f2e04b26941fad352c08d1f1/view. Accessed 2023/10/10. De Lange, M.; Aljundi, R.; Masana, M.; Parisot, S.; Jia, X.; Leonardis, A.; Slabaugh, G.; and Tuytelaars, T. 2022. AContinual Learning Survey: Defying Forgetting in Classifi-cation Tasks. IEEE Transactions on Pattern Analysis and Machine Intelligence , 44(7): 3366–3385. D’Eramo, C.; Tateo, D.; Bonarini, A.; Restelli, M.; and Pe-ters, J. 2020. Sharing Knowledge in Multi-Task Deep Rein-forcement Learning. In International Conference on Learn-ing Representations .Douillard, A.; Feng, Q.; Rusu, A. A.; Kuncoro, A.; Donchev, Y.; Chhaparia, R.; Gog, I.; Ranzato, M.; Shen, J.; and Szlam, A. 2024. DiPaCo: Distributed Path Composition. arXiv:2403.10616. Florensa, C.; Held, D.; Geng, X.; and Abbeel, P. 2018. Auto-matic Goal Generation for Reinforcement Learning Agents. In Dy, J.; and Krause, A., eds., Proceedings of the 35th In-ternational Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , 1515–1528. PMLR. Foerster, J. N.; Assael, Y. M.; de Freitas, N.; and Whiteson, S. 2016. Learning to Communicate with Deep Multi-Agent Reinforcement Learning. In Proceedings of the 30th Inter-national Conference on Neural Information Processing Sys-tems , NIPS’16, 2145–2153. Red Hook, NY, USA: Curran Associates Inc. ISBN 9781510838819. Ge, Y.; Li, Y.; Wu, D.; Xu, A.; Jones, A. M.; Rios, A. S.; Fos-tiropoulos, I.; Huang, P.-H.; Murdock, Z. W.; Sahin, G.; et al. 2023. Lightweight Learner for Shared Knowledge Lifelong Learning. Transactions on Machine Learning Research .Gerstgrasser, M.; Danino, T.; and Keren, S. 2023. Se-lectively Sharing Experiences Improves Multi-Agent Rein-forcement Learning. In Thirty-seventh Conference on Neu-ral Information Processing Systems .Grover, A.; Al-Shedivat, M.; Gupta, J.; Burda, Y.; and Ed-wards, H. 2018. Learning Policy Representations in Multi-agent Systems. In Dy, J.; and Krause, A., eds., Proceedings of the 35th International Conference on Machine Learning ,volume 80 of Proceedings of Machine Learning Research ,1802–1811. PMLR. He, J.; Zhou, C.; Ma, X.; Berg-Kirkpatrick, T.; and Neubig, G. 2022. Towards a Unified View of Parameter-Efficient Transfer Learning. In International Conference on Learning Representations .Hendawy, A.; Peters, J.; and D’Eramo, C. 2024. Multi-Task Reinforcement Learning with Mixture of Orthogonal Ex-perts. In The Twelfth International Conference on Learning Representations .Houlsby, N.; Giurgiu, A.; Jastrzebski, S.; Morrone, B.; De Laroussilhe, Q.; Gesmundo, A.; Attariyan, M.; and Gelly, S. 2019. Parameter-Efficient Transfer Learning for NLP. In Chaudhuri, K.; and Salakhutdinov, R., eds., Pro-ceedings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learning Research , 2790–2799. PMLR. Hu, E. J.; yelong shen; Wallis, P.; Allen-Zhu, Z.; Li, Y.; Wang, S.; Wang, L.; and Chen, W. 2022. LoRA: Low-Rank Adaptation of Large Language Models. In International Conference on Learning Representations .Isele, D.; and Cosgun, A. 2018. Selective Experience Replay for Lifelong Learning. Proceedings of the AAAI Conference on Artificial Intelligence , 32(1). Jaderberg, M.; Mnih, V.; Czarnecki, W. M.; Schaul, T.; Leibo, J. Z.; Silver, D.; and Kavukcuoglu, K. 2017. Rein-forcement Learning with Unsupervised Auxiliary Tasks. In 
+
+International Conference on Learning Representations .Jaghouar, S.; and Hagemann, J. 2024. OpenDiLoCo: An Open-Source Framework for Globally Distributed Low-Communication Training. In Workshop on Efficient Systems for Foundation Models II @ ICML2024 .Jiang, W. C.; Narayanan, V.; and Li, J. S. 2021. Model Learning and Knowledge Sharing for Cooperative Multia-gent Systems in Stochastic Environment. IEEE Transactions on Cybernetics , 51(12): 5717–5727. Kirkpatrick, J.; Pascanu, R.; Rabinowitz, N.; Veness, J.; Des-jardins, G.; Rusu, A. A.; Milan, K.; Quan, J.; Ramalho, T.; Grabska-Barwinska, A.; et al. 2017. Overcoming catas-trophic forgetting in neural networks. Proceedings of the national academy of sciences , 114(13): 3521–3526. Kudithipudi, D.; Aguilar-Simon, M.; Babb, J.; Bazhenov, M.; Blackiston, D.; Bongard, J.; Brna, A. P.; Chakravarthi Raja, S.; Cheney, N.; Clune, J.; Daram, A.; Fusi, S.; Helfer, P.; Kay, L.; Ketz, N.; Kira, Z.; Kolouri, S.; Krichmar, J. L.; Kriegman, S.; Levin, M.; Madireddy, S.; Manicka, S.; Marjaninejad, A.; McNaughton, B.; Mi-ikkulainen, R.; Navratilova, Z.; Pandit, T.; Parker, A.; Pilly, P. K.; Risi, S.; Sejnowski, T. J.; Soltoggio, A.; Soures, N.; 24511 Tolias, A. S.; Urbina-Mel´ endez, D.; Valero-Cuevas, F. J.; Van de Ven, G. M.; Vogelstein, J. T.; Wang, F.; Weiss, R.; Yanguas-Gil, A.; Zou, X.; and Siegelmann, H. 2022. Biological underpinnings for lifelong learning machines. 
+
+Nature Machine Intelligence , 4(3): 196–210. Liu, X.; Bai, Y.; Lu, Y.; Soltoggio, A.; and Kolouri, S. 2025. Wasserstein Task Embedding for Measuring Task Similari-ties. Neural Networks , 181: 106796. Mallya, A.; and Lazebnik, S. 2018. Packnet: Adding Multi-ple Tasks to a Single Network by Iterative Pruning. In Pro-ceedings of the IEEE conference on Computer Vision and Pattern Recognition , 7765–7773. McMahan, B.; Moore, E.; Ramage, D.; Hampson, S.; and Arcas, B. A. y. 2017. Communication-Efficient Learning of Deep Networks from Decentralized Data. In Singh, A.; and Zhu, J., eds., Proceedings of the 20th International Con-ference on Artificial Intelligence and Statistics , volume 54 of Proceedings of Machine Learning Research , 1273–1282. PMLR. Nachum, O.; Gu, S. S.; Lee, H.; and Levine, S. 2018. Data-Efficient Hierarchical Reinforcement Learning. In Bengio, S.; Wallach, H.; Larochelle, H.; Grauman, K.; Cesa-Bianchi, N.; and Garnett, R., eds., Advances in Neural Information Processing Systems , volume 31. Curran Associates, Inc. Nath, S.; Peridis, C.; Ben-Iwhiwhu, E.; Liu, X.; Dora, S.; Liu, C.; Kolouri, S.; and Soltoggio, A. 2023. Sharing Life-long Reinforcement Learning Knowledge via Modulating Masks. In Second Conference on Lifelong Learning Agents (CoLLAs) 2023 .Parisi, G. I.; Kemker, R.; Part, J. L.; Kanan, C.; and Wermter, S. 2019. Continual Lifelong Learning with Neural Net-works: A Review. Neural Networks , 113: 54–71. Rakelly, K.; Zhou, A.; Finn, C.; Levine, S.; and Quillen, D. 2019. Efficient Off-Policy Meta-Reinforcement Learn-ing via Probabilistic Context Variables. In Chaudhuri, K.; and Salakhutdinov, R., eds., Proceedings of the 36th In-ternational Conference on Machine Learning , volume 97 of Proceedings of Machine Learning Research , 5331–5340. PMLR. Rusu, A. A.; Rabinowitz, N. C.; Desjardins, G.; Soyer, H.; Kirkpatrick, J.; Kavukcuoglu, K.; Pascanu, R.; and Had-sell, R. 2016. Progressive Neural Networks. arXiv preprint arXiv:1606.04671 .Samvelyan, M.; Kirk, R.; Kurin, V.; Parker-Holder, J.; Jiang, M.; Hambro, E.; Petroni, F.; Kuttler, H.; Grefenstette, E.; and Rockt¨ aschel, T. 2021. MiniHack the Planet: A Sandbox for Open-Ended Reinforcement Learning Research. In Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 1) .Sartoretti, G.; Wu, Y.; Paivine, W.; Kumar, T. S.; Koenig, S.; and Choset, H. 2019. Distributed reinforcement learn-ing for multi-robot decentralized collective construction. In 
+
+Distributed Autonomous Robotic Systems: The 14th Interna-tional Symposium , 35–49. Springer. Schulman, J.; Wolski, F.; Dhariwal, P.; Radford, A.; and Klimov, O. 2017. Proximal Policy Optimization Algorithms. 
+
+arXiv preprint arXiv:1707.06347 .Serra, J.; Suris, D.; Miron, M.; and Karatzoglou, A. 2018. Overcoming Catastrophic Forgetting with Hard Attention to the Task. In International Conference on Machine Learning ,4548–4557. PMLR. Soltoggio, A.; Ben-Iwhiwhu, E.; Braverman, V.; Eaton, E.; Epstein, B.; Ge, Y.; Halperin, L.; How, J.; Itti, L.; Jacobs, M. A.; Kantharaju, P.; Le, L.; Lee, S.; Liu, X.; Monteiro, S. T.; Musliner, D.; Nath, S.; Panda, P.; Peridis, C.; Pirsi-avash, H.; Parekh, V.; Roy, K.; Shperberg, S.; Siegelmann, H. T.; Stone, P.; Vedder, K.; Wu, J.; Yang, L.; Zheng, G.; and Kolouri, S. 2024. A Collective AI via Lifelong Learn-ing and Sharing at the Edge. Nature Machine Intelligence ,6(3): 251–264. Soltoggio, A.; Ben-Iwhiwhu, E.; Peridis, C.; Ladosz, P.; Dick, J.; Pilly, P. K.; and Kolouri, S. 2023. The config-urable tree graph (CT-graph): measurable problems in par-tially observable and distal reward environments for lifelong reinforcement learning. arXiv:2302.10887. Sun, L.; Zhang, H.; Xu, W.; and Tomizuka, M. 2022. PaCo: Parameter-Compositional Multi-task Reinforcement Learn-ing. In Oh, A. H.; Agarwal, A.; Belgrave, D.; and Cho, K., eds., Advances in Neural Information Processing Systems .Sutton, R. S.; and Barto, A. G. 2018. Reinforcement Learn-ing: An Introduction . Cambridge, MA, USA: A Bradford Book. ISBN 0262039249. Tan, Y.; Long, G.; Liu, L.; Zhou, T.; Lu, Q.; Jiang, J.; and Zhang, C. 2022. FedProto: Federated Prototype Learning across Heterogeneous Clients. In AAAI Conference on Arti-ficial Intelligence .Tang, S.; Ye, R.; Xu, C.; Dong, X.; Chen, S.; and Wang, Y. 2024. Decentralized and Lifelong-Adaptive Multi-Agent Collaborative Learning. CoRR , abs/2403.06535. Tarale, P.; Rietman, E.; and Siegelmann, H. T. 2025. Dis-tributed Multi-Agent Lifelong Learning. Transactions on Machine Learning Research .Wortsman, M.; Ramanujan, V.; Liu, R.; Kembhavi, A.; Rastegari, M.; Yosinski, J.; and Farhadi, A. 2020. Super-masks in Superposition. Advances in Neural Information Processing Systems , 33: 15173–15184. Yoon, J.; Jeong, W.; Lee, G.; Yang, E.; and Hwang, S. J. 2021. Federated Continual Learning with Weighted Inter-client Transfer. In Meila, M.; and Zhang, T., eds., Pro-ceedings of the 38th International Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Research , 12073–12086. PMLR. Yu, J.; Vincent, J. A.; and Schwager, M. 2022. DiNNO: Dis-tributed Neural Network Optimization for Multi-Robot Col-laborative Learning. IEEE Robotics and Automation Letters ,7(2): 1896–1903. Yu, T.; Kumar, S.; Gupta, A.; Levine, S.; Hausman, K.; and Finn, C. 2020. Gradient Surgery for Multi-Task Learning. In Larochelle, H.; Ranzato, M.; Hadsell, R.; Balcan, M.; and Lin, H., eds., Advances in Neural Information Processing Systems , volume 33, 5824–5836. Curran Associates, Inc. 24512

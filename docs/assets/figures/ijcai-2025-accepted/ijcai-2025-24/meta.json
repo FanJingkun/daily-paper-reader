@@ -1,0 +1,69 @@
+{
+  "version": 2,
+  "extractor": "papercropper",
+  "figures": [
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-001.webp",
+      "caption": "",
+      "page": 0,
+      "index": 1,
+      "width": 1282,
+      "height": 632,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-002.webp",
+      "caption": "",
+      "page": 0,
+      "index": 2,
+      "width": 1637,
+      "height": 386,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-003.webp",
+      "caption": "",
+      "page": 0,
+      "index": 3,
+      "width": 1324,
+      "height": 429,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-004.webp",
+      "caption": "",
+      "page": 0,
+      "index": 4,
+      "width": 1287,
+      "height": 748,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-005.webp",
+      "caption": "",
+      "page": 0,
+      "index": 5,
+      "width": 891,
+      "height": 294,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-006.webp",
+      "caption": "",
+      "page": 0,
+      "index": 6,
+      "width": 889,
+      "height": 701,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/ijcai-2025-accepted/ijcai-2025-24/fig-007.webp",
+      "caption": "",
+      "page": 0,
+      "index": 7,
+      "width": 792,
+      "height": 328,
+      "label": "Figure"
+    }
+  ]
+}

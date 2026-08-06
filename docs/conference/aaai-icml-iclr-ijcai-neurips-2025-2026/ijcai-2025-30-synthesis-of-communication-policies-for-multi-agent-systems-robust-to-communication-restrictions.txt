@@ -1,0 +1,1371 @@
+Title: Synthesis of Communication Policies for Multi-Agent Systems Robust to Communication Restrictions
+
+URL Source: https://www.ijcai.org/proceedings/2025/0030.pdf
+
+Published Time: Thu, 18 Sep 2025 12:04:18 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Synthesis of Communication Policies for Multi-Agent Systems Robust to Communication Restrictions 
+
+## Saleh Soudijani , Rayna Dimitrova 
+
+## CISPA Helmholtz Center for Information Security, Germany 
+
+## {saleh.soudijani, dimitrova }@cispa.de 
+
+## Abstract 
+
+We study stochastic multi-agent systems in which agents must cooperate to maximize the probability of achieving a common reach-avoid objective. In many applications, during the execution of the sys-tem, the communication between the agents can be constrained by restrictions on the bandwidth cur-rently available for exchanging local-state informa-tion between the agents. In this paper, we propose a method for computing joint action and communica-tion policies for the group of agents that aim to sat-isfy the communication restrictions as much as pos-sible while achieving the optimal reach-avoid prob-ability when communication is unconstrained. Our method synthesizes a pair of action and communi-cation policies robust to restrictions on the number of agents allowed to communicate. To this end, we introduce a novel cost function that measures the amount of information exchanged beyond what the communication policy allows. We evaluate our ap-proach experimentally on a range of benchmarks and demonstrate that it is capable of computing pairs of action and communication policies that sat-isfy the communication restrictions, if such exist. 
+
+## 1 Introduction 
+
+In cooperative multi-agent systems (MAS), individual agents are required to collaborate to achieve a joint task. One way to achieve this collaboration is to provide a centralized joint policy that the agents must adhere to. Typically, such poli-cies need to correlate the actions of different agents. As a result, their successful execution requires communication be-tween the agents to exchange, for example, local state infor-mation, and to coordinate their actions. However, in many real-world settings, agents have to operate in environments where communication could be restricted due to physical lim-itations, such as limited bandwidth or signal interference. As such restrictions can severely impact the coordination be-tween agents and, hence, their performance, it is imperative that communication restrictions be considered in the design of joint policies for MAS. This requires devising policies that prescribe how the limited resources available for communi-cation should be allocated. In this paper, we focus on cooperative MAS with joint reach-avoid objectives (which require the agents to reach some target set of joint states while avoiding some unsafe states), possibly operating under communication restrictions on the number of agents allowed to communicate. We con-sider the setting where communicating agents exchange full current state information and jointly select actions. This re-quires policies that determine which subset of agents should communicate at the current state of system execution, which we term communication policies . Clearly, communication policies cannot depend on the full information about agents’ local states, as this would defeat their purpose. In this work, we assume that communication policies can use some pub-lic information about the agents’ states, which, in practice, could be very limited or even non-existent. A typical exam-ple is a system in which agents know the coarse regions in which other agents are located but not their precise locations. The rationale is that this public information is significantly less costly to communicate and changes less frequently. We study the problem of synthesizing communication poli-cies, together with joint policies that govern the agents’ ac-tions, which we call action policies . The challenge is that these two policies should be synthesized in tandem since the joint action policy should be adapted to the communi-cation policy, requiring as little communication as possible beyond that allowed by the communication policy. To ad-dress this challenge, we introduce a cost function that, in-tuitively, measures the information exchange between agents required by the action policy that goes beyond what is al-lowed by the communication policy . We show that this cost function can be used in an upper bound on the performance loss when the action policy is executed under restricted com-munication and following the communication policy. Based on this bound, we propose a method for synthesizing pairs of action and communication policies that minimizes an over-approximation of the cost function and achieves optimal reach-avoid probability under unrestricted communication. 1
+
+Related work. Decision-theoretic models for MAS [Rizk 
+
+et al. , 2018] such as decentralized MDPs (Dec-MDPs) and decentralized partially observable MDPs (Dec-POMDPs) [Goldman and Zilberstein, 2004] and their 
+
+> 1An extended version of this paper is available at: https://arxiv. org/abs/2505.13311 Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25)
+> 257
+
+respective policy synthesis problems have been extensively studied. A key characteristic of these models is that agents cannot communicate. In contrast, in our setting, agents are al-lowed to communicate and exchange information about their independent local states and transitions, but this communica-tion must be minimized relative to a communication policy. A number of MAS models exist where communication is allowed but used sparsely to simplify the policy synthesis task. These include [Guestrin et al. , 2001], where a coor-dination graph representing the dependencies between the agents is given, and [Melo and Veloso, 2011], where the decentralized model is equipped with information about the states in which the agents need to interact. Other methods [Wu et al. , 2011] use online planning to use communication dynamically on demand. These approaches enable the synthesis of optimal policies that conform to given communication structures or minimize communication. On the other hand, our method synthesizes optimal action policies equipped with communication policies that make them robust to communication restrictions. The closest to our work is [Karabag et al. , 2022], which proposes a technique for constructing joint policies for coop-erative MAS that are robust to temporary or permanent loss of communication. In contrast, the policies we compute must be 
+
+robust to communication restrictions , and thus benefit from 
+
+associated communication policies . Thus, while [Karabag et al. , 2022] can use total correlation to synthesize policies min-imizing dependency between the agents, we need to develop a cost function whose values depend on the sought commu-nication policy. Similarly to [Karabag et al. , 2022], our cost function uses information-theoretic measures, but the chal-lenge is to account for the unknown communication policy. 
+
+## 2 Preliminaries 
+
+In this section, we review some definitions and concepts. For n ∈ N, we define [n] := {1, . . . , n }. We denote the set of discrete probability distributions over a set X with ∆( X).Markov decision processes (MDPs) provide a framework for modeling and analysis of sequential decision processes. 
+
+Definition 1. A Markov decision process (MDP) is a tuple 
+
+M = ( S, A, P, s init ) where S is a finite set of states, A is a finite set of actions, P : S ×A → ∆( S) is a partial transition probability function, and sinit ∈ S is an initial state. 
+
+For simplicity we sometimes write P (s, a, s ′) instead of 
+
+P (s, a )( s′), for s, s ′ ∈ S and a ∈ A. We denote with 
+
+A(s) := {s ∈ S | ∃ s′ ∈ S . P (s, a, s ′) > 0} the set of actions enabled in s ∈ S . We assume that A(s)̸ = ∅ for every 
+
+s ∈ S .A path in an MDP M is a finite or infinite sequence τ =
+
+s0a1s1 . . . s t−1atst, . . . of alternating states and actions such that P (st, a t+1 , s t+1 ) > 0 for all t ∈ N.A policy for an MDP M = ( S, A, P, s init ) is a function 
+
+π : ( S · A )∗ · S → ∆( A), that maps each finite path ending in a state to a probability distribution over actions and is such that if π(s0a1 . . . s t)( a) > 0, then a ∈ A (st). A policy is called positional , if its decisions depend solely on the current state. Formally, we can represent a positional policy π as a function π : S → ∆( A). For simplicity, we write π(τ, a ) and 
+
+π(s, a ) instead of π(τ )( a) and π(s)( a), respectively. 
+
+Definition 2. A Markov chain is a triple C = ( S, P, s init )
+
+where S is the set of states, P : S → ∆( S) is the transition probability function, and sinit ∈ S is the initial state. 
+
+Given an MDP M , a policy π for M induces an (potentially infinite-state) Markov chain. We denote this Markov chain with Mπ , which is defined as Mπ = (( S ·A )∗ ·S , P Mπ , s init ),where for every τ = s0a1 . . . s t−1atst ∈ (S · A )∗ · S , a ∈A and s ∈ S we have that PMπ (τ, τ · a · s) = π(τ, a ) ·
+
+P (st, a, s ). For a positional policy π for an MDP M , the induced Markov chain has a finite set of states. Formally, 
+
+Mπ = ( S, P Mπ , s init ), where for every s ∈ S and s′ ∈ S we have PMπ (s, s ′) = P 
+
+> a∈A (s)
+
+π(s, a ) · P (s, a, s ′).A Markov chain C = ( S, P, s init ) can be seen as a se-quence of discrete stochastic variables (St, t ∈ N), which generates a stationary process S where P(St = s) is the probability of the chain visiting state s ∈ S at time t. The 
+
+occupancy measure of a state s is νs := P∞ 
+
+> t=0
+
+P(St = s).Given a policy π for an MDP M = ( S, A, P, s init ), we denote with νs,a the occupancy measure of the state-action pair (s, a ), i.e., the expected number of times that action a is taken at state s, defined as νs,a := P∞ 
+
+> t=0
+
+P(St = s, A t = a).By definition, we have that νs,a = P∞ 
+
+> t=0
+
+P(St = s, A t =
+
+a) = P∞ 
+
+> t=0
+
+P(St = s) · P(At = a | St = s) = π(s, a ) · νs.
+
+Entropy of Stochastic Processes 
+
+The entropy is a measure of uncertainty about the outcome of a random variable [Shannon and Weaver, 1949]. 
+
+Definition 3. For a discrete random variable X, its support 
+
+V defines a countable sample space from which X takes a value v ∈ V according to a probability mass function (pmf) 
+
+p(v) := P(X = v). The entropy of X is defined as H(X) := 
+
+− P 
+
+> v∈V
+
+p(v) log p(v). By convention, 0 log 0 = 0 .
+
+The entropy is always non-negative. It vanishes for a de-terministic X (i.e., if X is completely determined). Let (X1, X 2) be a pair of random variables with joint pmf p(v1, v 2) and support V1 × V2. The joint entropy of (X1, X 2) is defined by H(X1, X 2) := 
+
+− P
+
+> v1∈V1
+
+P 
+
+> v2∈V2
+
+p(v1, v 2) log p(v1, v 2).
+
+The conditional entropy of a random vari-able X1 given X2 is defined as H(X1|X2) := 
+
+− P
+
+> v1∈V1
+
+P 
+
+> v2∈V2
+
+p(v1, v 2) log p(v1 | v2).
+
+The joint and conditional entropy definitions extend to the collection of n random variables [Cover and Thomas, 2006]. The entropy of a Markov chain C = ( S, P, s init ) is de-fined as the joint entropy over all random variables St for 
+
+t ∈ N. That is, H(C) := H(S0, S 1, S 2, . . . ) = P∞ 
+
+> t=0
+
+H(St |
+
+St−1 . . . S 0). The entropy of a Markov chain is in general in-finite. The entropy of a Markov chain is finite if and only if it is absorbing [Biondi et al. , 2014]. In this paper, we restrict our analysis to absorbing Markov chains. [Biondi et al. , 2014] showed that the entropy of a Markov chain can be characterized in terms of the occupancy mea-sure of the states and their so-called local entropy . The lo-cal entropy L(s) of a state s in a Markov chain is the en-tropy of the probability distribution over the next states de-fined by P , formally, L(s) := H(St+1 | St = s) =Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 258
+
+− P 
+
+> s′∈S
+
+P (s, s ′) log P (s, s ′). Then, as shown in [Biondi et al. , 2014], the entropy H(C) can be expressed as H(C) = P 
+
+> s∈S
+
+L(s) · νs, where νs is the occupancy measure of s.
+
+Multi-Agent Markov Decision Processes 
+
+Multi-agent Markov decision processes (MMDPs) describe sequential decision-making tasks in which multiple agents select actions in order to collaboratively maximize a given common reward-based optimization criterion. A joint policy prescribes actions for all agents. During the execution of such a policy, all agents have access to the joint state of the system. 
+
+Definition 4. Formally, a Multi-agent Markov decision pro-cess (MMDP) is a tuple M = ( N, S, A, P, s init ) where: 
+
+• N is the number of agents; 
+
+• S = S1 × S 2 × . . . × S N is a finite set of global states; 
+
+• A = A1 × A 2 × . . . × A N is a finite set of joint actions; 
+
+• P : S × A → ∆( S) is the joint transition probability function such that for every s = ⟨s1, . . . , s N ⟩ ∈ S , a =
+
+⟨a1, . . . , a N ⟩ ∈ A and u = ⟨u1, . . . , u N ⟩ ∈ S it holds that P (s, a )( u) := QNi=1 P i(si, a i)( ui), where Si, Ai
+
+and P i : Si × A i → ∆( Si) are the local states, actions and transition probability function of agent i ∈ [N ];
+
+• sinit = ⟨s1 
+
+> init
+
+, . . . , s N 
+
+> init
+
+⟩ ∈ S is the initial state. 
+
+We identify agents with the elements of the set [N ].Each agent i ∈ [N ] is modeled by an MDP M i =(Si, Ai, P i, s i 
+
+> init
+
+). Note that the transition probability func-tions P i of the agents are independent and the joint transition probability function in Definition 4 is defined as their product. We denote with i the set [N ] \ { i} of agents other than i.All agents have access to a centralized view and operate in the environment by executing a positional joint policy πact :
+
+S → ∆( A). We denote with Πpos act (M ) := S → ∆( A) the set of positional joint policies for an MMDP M .In this paper, we consider MMDPs with joint reach-avoid objectives . Such an objective is defined as a pair 
+
+(Starget , Savoid ) of sets of states such that Starget ∩ S avoid =
+
+∅. It requires that the agents maximize the probability of reaching a joint state in Starget , while avoiding Savoid .Given a joint policy πact for an MMDP M with areach-avoid objective (Starget , Savoid ), we denote with 
+
+PMπact (( ¬S avoid )US target ) the probability of reaching 
+
+Starget while avoiding Savoid in the Markov Chain Mπact .Given a reach-avoid objective in an MMDP M , the optimal joint policy synthesis problem requires find-ing a policy π∗ such that PMπ∗ (( ¬S avoid )US target ) =sup π PMπ (( ¬S avoid )US target ). The optimal policy that maximizes the reach-avoid probability is denoted as π∗, and the optimal value is denoted as v∗(M, Starget , Savoid ).Since a joint policy in an MMDP has access to the full state, it is essentially a policy in the product MDP. Thus, for reach-avoid objectives, it suffices to consider positional joint policies. An optimal joint policy πact for the reach-avoid ob-jective (Starget , Savoid ) in the MMDP M can be computed using standard techniques by solving a linear program.           
+
+> Figure 1: Environment #1 for a robots navigation problem, with robots R1,R2, and R3and their respective targets ( T1,T2,T3).
+
+## 3 Problem Formulation 
+
+Implementing joint policies in environments with uncertainty requires effective coordination among the agents. Achieving this coordination often depends on establishing robust com-munication. However, agents may face limitations in their communication capabilities, including restrictions on the type and amount of information they can share. Additionally, at certain time steps, the environment might limit the number of agents allowed to communicate. Let us consider an example. 
+
+Example 1. Figure 1 depicts a simple robot navigation prob-lem where three robots must coordinate to reach their respec-tive targets while avoiding collision. The target locations of robots R1, R2, and R3 are labeled with T 1, T 2, and T 3,respectively. Each of R1 and R2 has two potential target lo-cations. Once each of the robots has reached one of their targets, the team’s task is complete. To maximize the probability of reaching their targets while avoiding collision, the robots must communicate, exchang-ing information about their current locations and actions. What communication is necessary depends on the executed joint policy and the resulting execution paths. For example, if R1 and R2 decide to swap their locations to reach their respective targets at the top of the grid, communication be-tween these two agents is essential to avoid collisions, while 
+
+R3 can navigate to its target independently, disregarding the positions of the other robots. On the other hand, if one of R1
+
+or R2 decides to reach its target at the bottom of the grid, communication between this robot and R3 will be needed. Finally, if both R1 and R2 decide to reach their targets at the bottom of the grid, then all three robots must communicate. Consider the scenario where the communication is con-strained, and at any given time at most two robots are allowed to communicate . In order to be robust to this restriction, the joint policy should minimize the need for communica-tion between all three robots at the same time , and should be equipped with a communication policy that prescribes which pair of robots should communicate at a given time. 
+
+We study the cooperative execution of a joint policy under specific conditions. Consider a scenario where agents can, without restriction, share some public information , such as, for example, their current region. Additionally, they can share precise state and local information, but there is a limitation on the number of agents permitted to do this at any given time. We now extend the policy execution in this scenario, which we refer to as ’restricted communication’ , and present our problem formulation. We formalize our problem as a Markov Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 259
+
+game with one and a half players: the multi-agent system, and the stochastic environment. The objective of the system is to reach the set of target states while avoiding the ”avoid“ states. The game is played in a sequence of rounds, starting at an ini-tial state. At each step, public information is freely exchanged between all agents, and based on this information the agents collaboratively select a subset of agents for further informa-tion exchange, which includes the sharing of agents’ local states. Communication is established within this subset, with the selected agents sharing information and making collective decisions. Conversely, the remaining agents cannot commu-nicate and share local state information. Consequently, the remaining agents must act independently and make decisions solely based on locally available information and estimates of other agents’ states. After all agents execute the respective policies to select actions, the process transitions to the next state according to the probabilistic transition relation. 
+
+Definition 5. We formulate the team’s decision problem as a cooperative Markov game represented as a tuple cM =(M, O1, . . . , ON , L1, . . . LN , K ) where 
+
+• for each i ∈ [N ], Oi and Li are finite sets of respectively 
+
+publicly observable and local states of agent i;
+
+• M = ( N, S, A, P, s init ) is an MMDP such that Si =
+
+Oi × L i for each agent i ∈ [N ];
+
+• K ∈ { 0, 1, . . . , N } is the number of agents allowed to communicate at each point in time. 
+
+In the above definition, we consider MMDPs of a special form where the states of each agent are factored into a public 
+
+part Oi that can be observed by all the other agents and local 
+
+part Li that cannot be directly observed by the other agents. In order for agent i’s local state information to become known to another agent, agent i must communicate that information to that agent. We consider a setting where there can be a disruption in the communication, resulting in the restriction that only K out of the N agents are allowed to communicate. When K = N we are in the full-communication case where any joint policy can be executed due to the unrestricted com-munication between the agents. In the other extreme, when 
+
+K = 0 no communication is allowed. When communica-tion is restricted, that is, K < N , we assume that agents rely on the notion of imaginary play introduced in [Karabag et al. , 2022] in order to estimate the current local states of other agents. Furthermore, when 0 < K < N , agents need to agree at each step of the execution on a subset of at most K agents that will communicate, that is, exchange state information, at this step. This is done by choosing the so-called commu-nication actions prescribed by a communication policy . The communication policy is a joint policy that is guaranteed to be implementable because it relies only on the public part of the agents’ states, which can be always shared by all agents. In Definition 5, the number K of agents allowed to ex-change information when communication is restricted is fixed. Our results can be extended to the case when K
+
+changes dynamically in the course of the execution. We define the set of communication actions consisting of the sets of agents of size exactly K, that is Acomm := {c ⊆
+
+[N ] | | c|= K}. While we could allow communication ac-tions selecting sets with fewer than K agents, such actions are dominated by those with maximal allowed cardinality. For c ∈ A comm , the set of remaining agents is c := [ N ] \ c.We denote by O := O1 × . . . × O N the set of joint pub-lic states. A communication policy is a function of the form 
+
+πcomm : O+ → ∆( Acomm ). We let Πcomm (O, K ) be the class of all communication policies for given O and K. We denote with Πpos comm (O, K ) := O → ∆( Acomm ) the set of positional communication policies for cM .The agents operate in the environment by executing a pair of joint policies π = ( πcomm , π act ) where πcomm ∈ Πcomm 
+
+and πact ∈ Πact . We refer to πact as an action policy and to πcomm as a communication policy. Each agent maintains a local imaginary copy of the current local states of the other agents. At each decision step, all agents first share the pub-lic parts of their states. The agents execute jointly the policy 
+
+πcomm to select a subset c of K agents that will communicate with each other at the current step. The subset of agents el-igible for communication shares the local part of their states with each other, and each agent updates their local imaginary copy based on the received information. Thus, the agents in 
+
+c have accurate knowledge of each other’s current local state, while this can be inaccurate for the rest of the agents. Subse-quently, the agents in c jointly execute the action policy πact 
+
+to determine a joint action. Each of the other agents executes 
+
+πact independently. Its state gets updated accordingly, and the local imaginary copies of the states of the agents in i are sampled from the respective distributions. After that, the sys-tem proceeds to the next decision step. This continues until a state in Starget ∪ S avoid is reached. At each step, the agents selected for communication operate in a centralized manner. 
+
+Execution under Restricted Communication 
+
+The evolution of the system given a pair of communi-cation and action policies can be formalized as follows. Given cM = ( M, O1, . . . , ON , L1, . . . LN , K ) with M =(N, S, A, P, s init ), a pair of positional joint policies π =(πcomm , π act ) ∈ Πpos comm (O, K ) × Πpos act (M ) induces a Markov chain cMπ = ( bS, bP , bsinit ) defined as follows. • The set of states is bS = bS1 × . . . × bSN , where for each agent i ∈ [N ] we have bSi := Si × Q 
+
+> j∈i
+
+Lj .• Let bs1 = ⟨bs11, . . . , bsN 
+
+> 1
+
+⟩ ∈ bS and bs2 =
+
+⟨bs12, . . . , bsN 
+
+> 2
+
+⟩ ∈ bS where bsi 
+
+> 1
+
+= ⟨⟨ oi
+
+> 1
+
+, l i
+
+> 1
+
+⟩, ⟨li,j  
+
+> 1
+
+⟩j∈i⟩
+
+and bsi 
+
+> 2
+
+= ⟨⟨ oi
+
+> 2
+
+, l i
+
+> 2
+
+⟩, ⟨li,j  
+
+> 2
+
+⟩j∈i⟩ for all i ∈ [N ].Let bP (bs1, bs2) = P
+
+> c∈A comm
+
+P
+
+> a∈A
+
+P aj ∈A  
+
+> for all j∈c
+
+q ·
+
+Q 
+
+> i∈c
+
+pi,a,c · Q 
+
+> j∈c
+
+pj,a j ,c where the quantities q, and 
+
+pi,a,c , and pj,a j ,c are defined below. We pick the small-est imin ∈ c and define the element lkc ∈ L k for k ∈ [N ],where lkc = lk 
+
+> 1
+
+if k ∈ c and lkc = limin ,k  
+
+> 1
+
+otherwise. Then, we define 
+
+q := πcomm (o11, . . . , o N 
+
+> 1
+
+)( c)·
+
+πact (⟨⟨ o11, l 1 
+
+> c
+
+⟩, . . . ⟨oN 
+
+> 1
+
+, l Nc ⟩⟩ )( a)·Q 
+
+> j∈c
+
+πact (⟨⟨ o11, l j, 1⟩, . . . ⟨oN 
+
+> 1
+
+, l j,N ⟩⟩ )( aj ).
+
+For i ∈ c and a = ⟨a1, . . . , a N ⟩ ∈ A , let Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 260
+
+pi,a,c := P i(⟨oi
+
+> 1
+
+, l i
+
+> 1
+
+⟩, a i, ⟨oi
+
+> 2
+
+, l i
+
+> 2
+
+⟩)·
+
+Q               
+
+> k∈iPk(⟨ok
+> 1,l kc⟩,a k,⟨ok
+> 2,l i,k
+> 2⟩)
+> P
+> l∈L kPk(⟨ok
+> 1,l kc⟩,a k,⟨ok
+> 2,l ⟩)
+
+.
+
+For j ∈ c and aj = ⟨a1, . . . , a N ⟩ ∈ A , let 
+
+pj,a j ,c := P j (⟨oj
+
+> 1
+
+, l j
+
+> 1
+
+⟩, a j , ⟨oj
+
+> 2
+
+, l j
+
+> 2
+
+⟩)·
+
+Q               
+
+> k∈jPk(⟨ok
+> 1,l j,k ⟩,a k,⟨ok
+> 2,l j,k
+> 2⟩)
+> P
+> l∈L jPk(⟨ok
+> 1,l j,k ⟩,a k,⟨ok
+> 2,l ⟩)
+
+.
+
+• bsinit = ⟨bs1 
+
+> init
+
+, . . . , bsN 
+
+> init
+
+⟩, where si 
+
+> init
+
+= ⟨oi 
+
+> init
+
+, l i 
+
+> init
+
+⟩
+
+and bsi 
+
+> init
+
+= ⟨⟨ oi 
+
+> init
+
+, l i 
+
+> init
+
+⟩, ⟨lj 
+
+> init
+
+⟩j∈i⟩.For U ⊆ S , we define bU ⊆ bS as bU = {⟨⟨ si, m i⟩⟩ i∈[N ] ∈
+
+bS | ⟨si⟩i∈[N ] ∈ U }. We thus lift Starget and Savoid 
+
+to bStarget and bSavoid . For a pair π = (πcomm , π act ) ∈
+
+Πpos comm (O, K )×Πpos act (M ) of communication and action poli-cies, PcMπ (( ¬ bSavoid )U bStarget ) is the probability of reaching 
+
+Starget while avoiding Savoid , executing πcomm and πact .Our goal is to compute a pair (π∗
+
+> comm
+
+, π ∗
+
+> act
+
+) of positional communication and action policies such that π∗ 
+
+> act
+
+is optimal for M under unrestricted communication, and among all pairs with optimal action policies, π∗ is optimal for cM .
+
+Problem 1. Given a cooperative Markov game cM =(M = (N, S, A, P, s init ), O1, . . . , ON , L1, . . . LN , K ) as in Definition 5 and a reach-avoid objective (Starget , Savoid )
+
+for M , find a pair of positional policies π∗ =(π∗
+
+> comm
+
+, π ∗
+
+> act
+
+) ∈ Πpos comm (O, K ) × Πpos act (M ) such that 
+
+PMπ∗
+
+> act
+
+(( ¬S avoid )US target ) = v∗(M, Starget , Savoid ) and for every π = (πcomm , π act ) ∈ Πpos comm (O, K ) ×
+
+Πpos act (M ) for which we have PMπact (( ¬S avoid )US target ) = 
+
+v∗(M, Starget , Savoid ), it also holds that 
+
+PcMπ∗ (( ¬ bSavoid )U bStarget ) ≥ PcMπ (( ¬ bSavoid )U bStarget ).
+
+We restrict Problem 1 to positional communication and action policies. By considering a cooperative Markov game where |O| = 1 but different sets of agents need to communi-cate over time, it is easy to see that communication policies with memory are strictly more powerful. However, for the sake of efficient synthesis, we focus on positional policies. 
+
+## 4 Policy Synthesis 
+
+For the rest of this section, we fix a cooperative Markov game cM = (M, O1, . . . , ON , L1, . . . LN , K ) with M =(N, S, A, P, s init ) as in Definition 5, and a reach-avoid ob-jective (Starget , Savoid ). Our goal is to compute a joint ac-tion policy that is both optimal and robust to communication restrictions. To this end, we introduce a cost function based on entropy for information sharing among agents. We first present this cost function, followed by our approach for com-puting a pair of action and communication policies. 
+
+4.1 Cost Function for Information Sharing Relative to a Communication Policy 
+
+Recall that we denote O := O1 × . . . ON and L := L1 ×
+
+. . . LN . For each communication action c ∈ A comm , we de-fine Oc := Q 
+
+> i∈c
+
+Oi and Lc := Q 
+
+> i∈c
+
+Li.Let π = ( πcomm , π act ) ∈ Πpos comm (O, K ) × Πpos act (M ) be a pair of positional joint communication and action policies. The cost function D(πcomm ,π act ) which we define, measures the information exchange between agents required by the ac-tion policy that goes beyond what is allowed by the com-munication policy. It considers all agents i and all possible coalitions c of K agents. With each, it associates a value 
+
+Gi(πcomm , π act ) or Gc(πcomm , π act ), respectively. These are sums of entropy over time, with additional conditioning on the global observations O and weighted by the probability that at the respective time step the process is “relevant”. 
+
+D(πcomm ,π act ) := X 
+
+> i∈[N]
+
+Gi(πcomm , π act )+ X
+
+> c∈A comm
+
+Gc(πcomm , π act )
+
+−
+
+> ∞
+
+X
+
+> t=1
+
+H (AtSt|S0A1S1 . . . A t−1St−1) ,
+
+where 
+
+Gi(πcomm , π act ) := 
+
+> ∞
+
+X
+
+> t=1
+
+X
+
+> o∈O
+> li∈L i
+
+w′(o, i )p′(o, l i)L′(i, o, l i)
+
+Gc(πcomm , π act ) := 
+
+> ∞
+
+X
+
+> t=1
+
+X
+
+> o∈O
+> lc∈L c
+
+w′′ (o, c )p′′ (o, l c)L′′ (c, o, l c)
+
+w′(o, i ) := P
+
+> c∈A comm ,i ̸∈ c
+
+πcomm (o)( c)
+
+w′′ (o, c ) := πcomm (o)( c)
+
+p′(o, l i) := P(Ot−1 = o, L it−1 = li)
+
+p′′ (o, l c) := P(Ot−1 = o, L ct−1 = lc)
+
+L′(i, o, l i) := − P
+
+> ai∈A i
+> oi
+> 1∈O i,l i
+> 1∈L i
+
+p′(ai, o i
+
+> 1
+
+, l i
+
+> 1
+
+, o, l i)
+
+L′′ (c, o, l c):= − P
+
+> ac∈A c
+> oc
+> 1∈O c,l c
+> 1∈L c
+
+p′′ (ac, o c
+
+> 1
+
+, l c
+
+> 1
+
+, o, l c)
+
+p′(ai, o i
+
+> 1
+
+, l i
+
+> 1
+
+, o, l i) := 
+
+P(Ait = ai, O it = oi
+
+> 1
+
+, L it = li 
+
+> 1
+
+| Ot−1 = o, L it−1 = li)·
+
+log( P(Ait = ai, O it = oi
+
+> 1
+
+, L it = li 
+
+> 1
+
+| Ot−1 = o, L it−1 = li)); 
+
+p′′ (ac, o c
+
+> 1
+
+, l c
+
+> 1
+
+, o, l c) := 
+
+P(Act = ac, O ct = oc
+
+> 1
+
+, L ct = lc 
+
+> 1
+
+| Ot−1 = o, L ct−1 = lc)·
+
+log( P(Act = ac, O ct = oc
+
+> 1
+
+, L ct = lc 
+
+> 1
+
+| Ot−1 = o, L ct−1 = lc)) .
+
+Note that if K = 0 , that is, Acomm = {∅} , then πcomm is a constant function and no communication between any agents is allowed. In such case, D(πcomm ,π act ) is the total correlation from [Karabag et al. , 2022]. When K > 0, only the corre-lation between agents that are outside of what is allowed by 
+
+πcomm contributes to the value of D(πcomm ,π act ). If D(πcomm ,π act )
+
+is 0, this means that all dependencies between the agents in 
+
+πact are covered by the respective agents being allowed by 
+
+πcomm to communicate at the necessary points in time. The cost function D(πcomm ,π act ) has a key property, namely it allows us to provide an upper bound on the performance loss under restricted communication. This is established in the next theorem. Complete proofs are provided in the extended version of this paper [Soudijani and Dimitrova, 2025]. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+261 Theorem 1. For any cooperative Markov game cM with MMDP M , reach-avoid objective (Starget , Savoid ), and π =(πcomm , π act ) ∈ Πpos comm (O, K ) × Πpos act (M ), it holds that 
+
+PMπact (( ¬S avoid )US target ) − PcMπ (( ¬ bSavoid )U bStarget )
+
+≤
+
+q
+
+1 − exp  −D(πcomm ,π act )
+
+.
+
+Due to the form of D(πcomm ,π act ), in our method for comput-ing a pair of communication and action policies, described in the rest of the section, we will use a proxy function. 
+
+4.2 Policy Synthesis 
+
+Our approach proceeds in two steps. 
+
+Optimistic Optimal Value for Reach-Avoid Probability 
+
+As we require the action policy to be optimal under unre-stricted communication, in the first step, we compute the op-timal value v∗(M, Starget , Savoid ) for the reach-avoid proba-bility assuming unrestricted communication. 
+
+Minimizing the Cost of Communication 
+
+In the second step, we use the value v∗(M, Starget , Savoid )
+
+as a threshold in the computation of a pair (πcomm , π act )
+
+of policies. This threshold constrains the action policy πact 
+
+to be optimal under unrestricted communication. Addi-tionally, we formulate an objective function based on the cost function D(πcomm ,π act ). To this end, we provide a proxy to D(πcomm ,π act ), expressed in terms of occupancy measures. The term P∞ 
+
+> t=1
+
+H (AtSt|S0A1S1 . . . A t−1St−1) can be ex-pressed in terms of occupancy measure using existing re-sults [Biondi et al. , 2014]. For the other two terms in 
+
+D(πcomm ,π act ), we provide upper bounds. Consider a pair of joint policies π = ( πcomm , π act ) and the Markov chain Mπact induced from the MMDP M . This Markov chain generates a stationary process X, which is the joint path of the agents. The entropy H (X) of X has a closed form expression in terms of νs,a .
+
+Proposition 1. The entropy of the joint state–action process until reaching the target can be expressed in terms of the state-action occupancy measure νs,a as 
+
+H(S0) + P∞ 
+
+> t=1
+
+H (AtSt|S0A1S1 . . . A t−1St−1) = 
+
+−
+
+P 
+
+> s,a ′
+
+νs,a ′ · log 
+
+ νs,a ′ 
+
+> P
+> bνs,b
+
+ 
+
+−
+
+P 
+
+> s,a ′,s ′
+
+νs,a ′ · P (s, a ′, s ′) · log P (s, a ′, s ′)
+
+
+
+.
+
+The path of a single agent i or a group of agents c fol-lows a hidden Markov model where X is the underlying pro-cess and Xi, or Xc, respectively, is the observed process. Therefore, the terms Gi(πcomm , π act ) and Gc(πcomm , π act ) do not have closed-form expressions based on occupancy mea-sures. Instead, we employ stationary processes which induce the same occupancy measures, and derive expressions that are upper bounds for Gi(πcomm , π act ) and Gc(πcomm , π act ).As si = ⟨oi, l i⟩ for some oi ∈ Oi, li ∈ Li,we write νoi,l i,a i instead of νsi,a i . For o ∈ O and 
+
+c ∈ Acomm , we define νo,c := νo · πcomm (o)( c) =(P 
+
+> l∈L ,a ∈A
+
+νo,l,a )πcomm (o)( c).For each agent i ∈ [N ] and each set of agents c ∈ A comm ,we consider the stationary process that induces the same oc-cupancy measures νo,l i,a i and νo,l c,a c , respectively, as the joint policy. We establish the following proposition. 
+
+Proposition 2. Let 
+
+¯Gi(πcomm , π act ) = 
+
+−
+
+P 
+
+> o,l i,a i
+
+νo,l i,a i · w′(o, i ) · log 
+
+ νo,l i,a i 
+
+> P
+> biνo,l i,b i
+
+ 
+
+−
+
+P
+
+> o,l i,a i,o i
+> 1,l i
+> 1
+
+νo,l i,a i · w′(o, i ) · h′(oi, l i, a i, o i
+
+> 1
+
+, l i
+
+> 1
+
+)
+
+
+
+,
+
+¯Gc(πcomm , π act ) = 
+
+−
+
+P 
+
+> o,l c,a c
+
+νo,l c,a c · w′′ (o, c ) · log 
+
+ νo,l c,a c 
+
+> P
+> bcνo,l c,b c
+
+ 
+
+−
+
+P
+
+> o,l c,a c,o c
+> 1,l c
+> 1
+
+νo,l c,a c · w′′ (o, c ) · h′′ (oc, l c, a c, o c
+
+> 1
+
+, l c
+
+> 1
+
+)
+
+
+
+w′(o, i ) = P  
+
+> c∈A comm ,i ̸∈ cνo,c P
+> c′∈A comm νo,c ′
+
+,w′′ (o, c ) = νo,c P  
+
+> c′∈A comm νo,c ′
+
+,h′(oi, l i, a i, o i
+
+> 1
+
+, l i
+
+> 1
+
+) := 
+
+P i(oi, l i, a i)( oi
+
+> 1
+
+, l i
+
+> 1
+
+) · log P i(oi, l i, a i)( oi
+
+> 1
+
+, l i
+
+> 1
+
+),h′′ (oc, l c, a c, o c
+
+> 1
+
+, l c
+
+> 1
+
+) := 
+
+P c(oc, l c, a c)( oc
+
+> 1
+
+, l c
+
+> 1
+
+) · log P c(oc, l c, a c)( oc
+
+> 1
+
+, l c
+
+> 1
+
+),P c(⟨oj ⟩j∈c, ⟨lj ⟩j∈c, ⟨aj ⟩j∈c)( ⟨oj
+
+> 1
+
+⟩j∈c, ⟨lj
+
+> 1
+
+⟩j∈c) = Πj∈cP j (oj , l j , a j )( oj
+
+> 1
+
+, l j
+
+> 1
+
+).
+
+Then, it holds that Gi(πcomm , π act ) ≤ ¯Gi(πcomm , π act ) and 
+
+Gc(πcomm , π act ) ≤ ¯Gc(πcomm , π act ).
+
+Combining Proposition 1 and Proposition 2, we obtain an upper bound ¯D(πcomm ,π act ) on D(πcomm ,π act ) based on occupancy measures. That is, we have D(πcomm ,π act ) ≤ ¯D(πcomm ,π act ) for 
+
+¯D(πcomm ,π act ) := − H(X) + X 
+
+> i∈[N]
+
+¯Gi(πcomm , π act )+ X
+
+> c∈A comm
+
+¯Gc(πcomm , π act ).
+
+(1) 
+
+Cost optimization problem. Using the function ¯D defined in eq. (1), we formulate bellow, in (2), the optimization problem with decision variables xo,l,a and xo,c , represent-ing the occupancy measures for each joint public state-local state-action triplet (o, l, a ) and for each joint public state-communication action pair (o, c ), respectively. Through ap-propriate marginalization, xo,l i,a i and xo,l c,a c represent the public state-local state-action occupancy measures for indi-vidual agents and groups of agents, respectively. For syn-thesis, we assume that the occupancy measure is finite for all states s ∈ S \ (Savoid ∪ S target ). We add absorbing sink-states and corresponding actions to cM , denoted with 
+
+(oα, l α) =  (o1
+
+> α
+
+, l 1
+
+> α
+
+), . . . , (onα, l nα) and aα =  a1
+
+> α
+
+, . . . , a nα
+
+,respectively. These states represent the end of the game con-cerning the reach-avoid objective, that is, for all (o, l ) ∈
+
+(Starget ∪ S avoid ) we have P (( o, l ), a α)(( oα, l α)) = 1 .We consider the optimization problem (2) with the objec-tive (2a) and constraints (2b) – (2h) given below. The value 
+
+v∗ computed in the first step is used to constrain from below the reach-avoid probability of the action policy. Additionally, the value of the function ¯D must be minimized. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+262 min  
+
+> (xo,l,a ,x o,c )
+
+¯d = −h + X 
+
+> i∈[N]
+
+gi + X
+
+> c∈A comm
+
+gc s.t. (2a) 
+
+gi = . . . ∀i ∈ [N ] /* encodes ¯Gi */ (2b) 
+
+gc = . . . ∀c ∈ A comm /* encodes ¯Gc */ (2c) 
+
+h = . . . /* encodes H(X) */ (2d) 
+
+w′(o, i ) = . . . , w ′′ (o, c ) = . . . ∀o, i, c (2e) 
+
+v∗ ≤ . . . /* reach-avoid probability v */ (2f) 
+
+X 
+
+> a∈A∪{ aα}
+
+xo,l,a = . . . ∀(o, l ) ∈ S (2g) 
+
+xo,l,a ≥ 0, xoα,l α,a = 0 ∀ (o, l ) ∈ S , a ∈ A ∪ { aα}
+
+xo,c ≥ 0, xoα,c = 0 ∀o ∈ O , c ∈ A comm 
+
+X 
+
+> l∈L ,a ∈A
+
+xo,l,a = X
+
+> c∈A comm
+
+xo,c ∀o ∈ O (2h) The constraints (2b) – (2g) are presented below. Constraints (2b), (2c) and (2d) capture the definitions of the expressions ¯Gi(πcomm , π act ), ¯Gc(πcomm , π act ) and H (X)
+
+from Proposition 2 and Proposition 1 respectively. Formally, 
+
+gi = −
+
+ P 
+
+> o,l i,a i
+
+xo,l i,a i · w(o, i ) · log( xo,l i,a i  
+
+> P
+> bixo,l i,b i
+
+)
+
+
+
+−
+
+ P
+
+> o,l i,a i
+> oi
+> 1,l i
+> 1
+
+xo,l i,a i · w(o, i ) · P i(oi, l i, a i)( oi
+
+> 1
+
+, l i
+
+> 1
+
+)
+
+· log P i(oi, l i, a i)( oi
+
+> 1
+
+, l i
+
+> 1
+
+)
+
+
+
+gc = −
+
+ P 
+
+> o,l c,a c
+
+xo,l c,a c · w(o, c ) · log( xo,l c,a c  
+
+> P
+> bcxo,l c,b c
+
+)
+
+
+
+−
+
+ Po,l c,a c
+
+> oc
+> 1,l c
+> 1
+
+xo,l c,a c · w(o, c ) · P c(oc, l c, a c)( oc
+
+> 1
+
+, l c
+
+> 1
+
+)
+
+· log P c(oc, l c, a c)( oc
+
+> 1
+
+, l c
+
+> 1
+
+)
+
+
+
+h = −
+
+ P 
+
+> s,a ′
+
+xs,a ′ · log( xs,a ′  
+
+> P
+> bxs,b
+
+)) 
+
+−( P 
+
+> s,a ′,s ′
+
+xs,a ′ · P (s, a ′)( s′) · log P (s, a ′)( s′)
+
+
+
+.
+
+Similarly, constraints (2e) encode the respective definitions from Proposition 2. Formally, we have 
+
+w(o, i ) = P
+
+> c∈A comm ,i ̸∈ cxo,c P
+> c′∈A comm
+> xo,c ′
+
+w(o, c ) = xo,c P 
+
+> c′∈A comm
+> xo,c ′
+
+.
+
+Constraint (2f) lower-bounds the reach-avoid probability for the sought action policy, and constraint (2g) enforces the usual flow constraint for occupancy measures: 
+
+v∗ ≤ X  
+
+> (o,l )∈S\ (Savoid ∪S target )
+> a∈A ,(o′,l ′)∈S target
+
+xo,l,a P (o, l, a )( o′, l ′),
+
+X
+
+> a∈A∪{ aα}
+
+xo,l,a = X
+
+> (o′,l ′)∈S
+> b∈A∪{ aα}
+
+xo′,l ′,b P (o′, l ′, b )( o, l ) + 1{sinit =s}.
+
+Finally, constraints (2h) express the relationship between the occupancy measures xo,l,a and xo,c via the occupancy measure of o ∈ O .
+
+Policies from an optimal solution. Let ( x∗
+
+> o,l,a
+
+, x∗
+
+> o,c
+
+) be an optimal solution to the optimization problem (2). We define the pair (π∗
+
+> comm
+
+, π ∗
+
+> act
+
+) of policies by 
+
+π∗
+
+> comm
+
+(o)( c) = x∗
+
+> o,c
+
+P 
+
+> d∈A comm
+
+x∗
+
+> o,d
+
+,π∗
+
+> act
+
+(o, l )( a) = x∗
+
+> o,l,a
+
+P 
+
+> b∈A
+
+x∗
+
+> o,l,b
+
+.
+
+(3) The next theorem states that (π∗
+
+> comm
+
+, π ∗
+
+> act
+
+) has the desired properties, namely π∗ 
+
+> act
+
+ensures v∗ under unrestricted com-munication, and (π∗
+
+> comm
+
+, π ∗
+
+> act
+
+) minimizes the value of ¯D.
+
+Theorem 2. Let cM be a cooperative Markov game with MMDP M , (Starget , Savoid ) be a reach-avoid objective, and (π∗
+
+> comm
+
+, π ∗
+
+> act
+
+) be the pair of poli-cies defined by (3) for an optimal solution to (2a). Then, we have PMπ∗
+
+> act
+
+(( ¬S avoid )US target ) =sup π PMπ (( ¬S avoid )US target ). Furthermore, for every pair 
+
+(π′
+
+> comm
+
+, π ′
+
+> act
+
+) ∈ Πpos comm (O, K ) × Πpos act (M ) of positional joint communication and action policies, if the policy 
+
+π′ 
+
+> act
+
+is optimal, that is, if PMπ′
+
+> act
+
+(( ¬S avoid )US target ) =sup π PMπ (( ¬S avoid )US target ), then for function ¯D defined in eq. (1) we have ¯D(π∗ 
+
+> comm ,π ∗
+> act )
+
+≤ ¯D(π′
+
+> comm ,π ′
+> act )
+
+.
+
+## 5 Experimental Evaluation 
+
+We evaluated our approach on four multi-robot navigation scenarios. In each scenario, we consider a MAS with three agents and K = 2 . We used the formalization in Section 4 to synthesize for each problem a pair of communication and ac-tion policies. All experiments were performed on a Macbook Pro with an Apple M2 chip and 32GB memory. The two opti-mization problems are solved using GLPK [Makhorin, 2000] and SNOPT [Gill et al. , 2018], respectively. The detailed setup and results of all scenarios are included in [Soudijani and Dimitrova, 2025]. With this evaluation we aim to demonstrate the following. 1. Our method synthesizes policies with zero communica-tion cost (which means they fully conform to the com-munication restrictions) when such policies exist. 2. Our method is capable of synthesizing policies that adhere to communication restriction while incurring zero communication cost—an outcome that cannot be achieved through approaches based solely on minimiz-ing total correlation as an objective function. 3. Our method can synthesize communication policies that adapt dynamically to the current state of public informa-tion so that the set of communicating agents changes. 4. There is a trade-off between performance (the reach-avoid probability) and the value of our cost function. Next, we describe the four scenarios and the respective re-sults. Further details can be found in the extended version of this paper [Soudijani and Dimitrova, 2025]. 
+
+Scenario #1 with Navigation Tasks 
+
+We consider the environment in Figure 1. The task of the robots, initialized as marked in the figure, is to navigate to one of their target cells, labeled T 1, T 2, and T 3, respectively, Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+263 (a) Public information labeled regions for Scenario #1.          
+
+> (b) Environment for Scenario #2.
+> (c) Public information labeled regions for Scenario #2.
+> (d) Environment for Scenario #3.
+> (e) Public information labeled regions for Scenario #3.
+> (f) Environment for Scenario #4.
+> (g) Public information labeled regions for Scenario #4. Figure 2: Grid environments and regions labeled with public information for the scenarios in Section 5. Robots’ initial positions are indicated by R1,R2, and R3, and their target positions by T1,T2, and T3.
+
+avoiding collision. At any given time, only two robots can communicate and share precise locations. Which ones com-municate is decided based on public information, which is the current regions of the robots. The regions, labeled o = 0 ,
+
+o = 1 , and o = 2 are shown in Figure 2a. The possible actions are moving in one of the four cardinal directions or remaining in place. Moves succeed with probability 0.9 and fail, resulting in remaining in the current cell, with probability 
+
+0.1. The remain action and impossible actions stay in place. 
+
+Result. The method proposed in Section 4 generates a pair of policies where the action policy is optimal under unre-stricted communication, with reach-avoid probability 0.99 .The synthesized communication policy results in cost zero .It assigns probability 1 to robots R1 and R2 communicating. The synthesized action policy matches that, unlike other pos-sible action policies with reach-avoid probability 0.99 . Thus, our method identifies a suitable action policy that can be equipped with a communication policy achieving cost zero. 
+
+Scenario #2 with a Swarm Intersection 
+
+The goal of this scenario is to compare our method with the approach based on minimizing the total correlation. In the scenario depicted in Figure 2b, three robots are required to navigate to their respective target locations while avoiding collisions. The publicly available information corresponding to each region is illustrated in Figure 2c. Again, only two out of three agents can communicate their precise location with-out an extra communication cost. The work closest to ours is [Karabag et al. , 2022], which employs total correlation to measure dependencies between agents and to synthesize an (action) policy that is robust to communication loss. However, [Karabag et al. , 2022] does not consider communication policies since robustness is w.r.t. complete loss of communication, not to partial lim-itation of the communication. Thus, there is a baseline for comparison only for the action policies synthesized by our approach (which are optimal), namely the policies computed using total correlation in the objective function. Minimizing total correlation cannot yield action policies that satisfy com-munication restrictions, whereas our method can do so, and also generates a matching communication policy. 
+
+Result. In scenario #2, our approach finds a pair of ac-tion and communication policies that satisfy the reach-avoid property with probability 1 and ensure communication cost 0.Thus, it finds policies that satisfy the communication restric-tion. In contrast, the action policy generated using total cor-relation violates the communication restriction at time t = 2 
+
+when it requires coordination among three agents. Here, the minimum total correlation is 0.591 , while the total correla-tion of the policy computed by our method is 0.693 , and thus it will not be computed by minimizing total correlation. 
+
+Scenario #3 with a Hallway 
+
+In this scenario, we consider the environment in Figure 2d. The public information regions, labeled o = 0 , o = 1 , and 
+
+o = 2 , are depicted in Figure 2e. In this scenario, coordi-nation among certain robots is critical at certain time steps to avoid collisions. As before, only two of the robots are allowed to communicate at any given time. 
+
+Result. The synthesized action policy achieves a reach-avoid probability of 1, and the communication policy ensures zero communication cost by selecting the appropriate set of robots to communicate in different public information states. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 264
+
+Scenario #4 with High Uncertainty 
+
+The robots in the environment shown in Figure 2f must navi-gate to their respective target cells while avoiding collisions. The public information regions here correspond to the rows, as shown in Figure 2g. The actions are the same as in Sce-nario #1. Here, however, the move actions lead to the desired cell with probability 0.9, and the remaining 0.1 probability is redistributed across the current cell and all other neighboring cells. For impossible move actions, the full transition proba-bility 1.0 is redistributed among the current cell and all valid neighboring cells. As in previous scenarios, when commu-nication is restricted, only two of three agents can commu-nicate. In this scenario, a crowded intersection necessitates communication among all agents to avoid collisions. 
+
+Result. Here, the optimal reach-avoid probability under full communication is 0.958 . No pair of action and communi-cation policies exists that achieves this probability with zero communication cost. If, however, we lower the threshold and only ask for a policy that guarantees 0.92 reach-avoid prob-ability under unrestricted communication, then our method synthesizes one with zero cost. 
+
+Performance 
+
+Our evaluation is focused on evaluating the quality of our ap-proach on a range of relatively small but interesting problem instances, as well as its principle feasibility. Although our method requires solving large nonlinear optimization prob-lems to synthesize a pair of policies, the running time re-mains reasonable for the considered benchmarks. The run-times range from a few minutes for Environment #3 (with 528 constraints and 62,581 variables) to one hour for Envi-ronment #4 (with 531 constraints and 62,956 variables) and Environment #2 (with 1,332 constraints and 163,081 vari-ables), and up to three hours for Environment #1 (with 1,344 constraints and 164,581 variables). Clearly, the performance depends on the number of agents and the sparsity of the tran-sition probability matrices. In the future, we plan to conduct larger-scale experiments and develop techniques for further improving performance. 
+
+## 6 Discussions and Future Work 
+
+Limitations and extensions. One limitation of the model we study in this paper is that the number K of agents always allowed to communicate is fixed. We can incorporate a dy-namically changing K as part of the state, making the model and cost function more complex. Another limitation is the re-striction to positional policies, which allows us to formulate the problem via occupancy measures. In the future we will consider extensions with bounded memory communication policies. Another challenge is the scalability, in particular with growing number of agents, which we plan to address by developing methods that iteratively improve the policies for subsets of agents. Additionally, we assume that the model, including public information is given. While in many cases identifying public information is natural (regions, fixed capa-bilities), exploring relations to agents’ observations and ap-proaches to deriving such information is an interesting direc-tion. 
+
+Richer communication models. The focus of our work is to establish a rigorous theoretical foundation and provide novel insights and methodology. Our main aim is to pro-vide the necessary basis for further theoretical exploration and practical applications. Moving forward, we plan to study extensions with richer communication restrictions (such as dynamic changes in communication availability) and explore ways to make the approach robust to implementation aspects such as delayed or noisy communication. 
+
+Identifying public information. The granularity of the public information affects the number of decision variables (for the communication policy) and hence the performance of policy synthesis. More (i.e., finer) public information leads to higher computation times. The choice of public informa-tion depends on the application and available communication bandwidth. In many cases, this is natural, such as coarser geographic regions or agents’ capabilities. Developing tech-niques for identifying public information is one interesting direction for future work. 
+
+## References 
+
+[Biondi et al. , 2014] Fabrizio Biondi, Axel Legay, Bo Friis Nielsen, and Andrzej Wasowski. Maximizing entropy over markov processes. J. Log. Algebraic Methods Program. ,83(5-6):384–399, 2014. [Cover and Thomas, 2006] Thomas M. Cover and Joy A. Thomas. Elements of information theory (2. ed.) . Wiley, 2006. [Gill et al. , 2018] Philip E Gill, Walter Murray, Michael A Saunders, and Elizabeth Wong. User’s guide for snopt 7.7: Software for large-scale nonlinear programming. Cen-ter for Computational Mathematics Report CCoM , 15(3), 2018. [Goldman and Zilberstein, 2004] Claudia V. Goldman and Shlomo Zilberstein. Decentralized control of cooperative systems: Categorization and complexity analysis. J. Artif. Intell. Res. , 22:143–174, 2004. [Guestrin et al. , 2001] Carlos Guestrin, Daphne Koller, and Ronald Parr. Multiagent planning with factored mdps. 
+
+Advances in neural information processing systems , 14, 2001. [Karabag et al. , 2022] Mustafa O. Karabag, Cyrus Neary, and Ufuk Topcu. Planning not to talk: Multiagent sys-tems that are robust to communication loss. In Piotr Faliszewski, Viviana Mascardi, Catherine Pelachaud, and Matthew E. Taylor, editors, 21st International Confer-ence on Autonomous Agents and Multiagent Systems, AA-MAS 2022, Auckland, New Zealand, May 9-13, 2022 ,pages 705–713. International Foundation for Autonomous Agents and Multiagent Systems (IFAAMAS), 2022. [Makhorin, 2000] Andrew Makhorin. Modeling language gnu mathprog. Relat´ orio T´ ecnico, Moscow Aviation In-stitute , 63, 2000. [Melo and Veloso, 2011] Francisco S Melo and Manuela Veloso. Decentralized mdps with sparse interactions. Ar-tificial Intelligence , 175(11):1757–1789, 2011. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+> 265
+
+[Rizk et al. , 2018] Yara Rizk, Mariette Awad, and Edward W Tunstel. Decision making in multiagent systems: A sur-vey. IEEE Transactions on Cognitive and Developmental Systems , 10(3):514–529, 2018. [Shannon and Weaver, 1949] Claude E Shannon and Warren Weaver. The mathematical theory of communication. uni-versity of illinois. Urbana , 117:10, 1949. [Soudijani and Dimitrova, 2025] Saleh Soudijani and Rayna Dimitrova. Synthesis of communication policies for multi-agent systems robust to communication restrictions. 
+
+https://arxiv.org/abs/2505.13311 , 2025. [Wu et al. , 2011] Feng Wu, Shlomo Zilberstein, and Xiaop-ing Chen. Online planning for multi-agent systems with bounded communication. Artif. Intell. , 175(2):487–511, 2011. Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI-25) 
+
+266
