@@ -81,6 +81,7 @@ subscriptions:
           source: manual
           note: ''
       updated_at: '2026-08-04T02:48:30.899Z'
+      paused: true
     - tag: maspd
       description: MAPF、LMAPF、导航、运动规划、路由及隐式空间移动与协同决策研究。
       enabled: true
@@ -137,6 +138,61 @@ subscriptions:
           source: manual
           note: ''
       updated_at: '2026-08-04T02:55:38.652Z'
+      paused: true
+    - tag: hetero-marl
+      description: >-
+        请检索异构多智能体系统中的强化学习、协同决策、任务规划和策略优化研究。这里的异构性包括但不限于智能体在能力、角色、传感器、观测空间、动作空间、动力学模型、运动方式、通信能力、策略结构、奖励目标、实体类型或物理形态方面存在差异。
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: heterogeneous multi-agent systems
+          keyword_cn: 异构多智能体系统
+          query: reinforcement learning for heterogeneous multi-agent systems
+        - keyword: heterogeneous multi-agent reinforcement learning
+          keyword_cn: 异构多智能体强化学习
+          query: reinforcement learning for heterogeneous multi-agent systems
+        - keyword: multi-agent cooperative decision making
+          keyword_cn: 多智能体协同决策
+          query: cooperative decision making among multiple agents with heterogeneous capabilities
+        - keyword: role assignment multi-agent
+          keyword_cn: 多智能体角色分配
+          query: role assignment and role discovery in multi-agent reinforcement learning
+        - keyword: multi-agent reinforcement learning
+          keyword_cn: 多智能体强化学习
+          query: cooperative multi-agent reinforcement learning with heterogeneous agents
+        - keyword: heterogeneous agent coordination
+          keyword_cn: 异构智能体协调
+          query: coordination and cooperation among heterogeneous agents
+      intent_queries:
+        - query: >-
+            How can heterogeneous agents with different action spaces and observation models learn cooperative policies
+            through multi agent reinforcement learning?
+          query_cn: 异构智能体（具有不同动作空间和观测模型）如何通过多智能体强化学习学习协同策略？
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            What methods enable role specialization and flexible team composition for heterogeneous multi robot teams in
+            task allocation and path planning?
+          query_cn: 哪些方法能够实现异构多机器人团队在任务分配和路径规划中的角色专业化和灵活团队组成？
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            What methods optimize cooperative policies for heterogeneous agents with different action spaces and motion
+            models?
+          query_cn: 哪些方法能够为具有不同动作空间和运动模型的异构智能体优化协作策略？
+          enabled: true
+          source: manual
+          note: ''
+        - query: How to design reward functions for heterogeneous multi agent teams in task planning and decision making?
+          query_cn: 如何在任务规划和决策中为异构多智能体团队设计奖励函数？
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-08-06T02:37:55.937Z'
 source_backends:
   arxiv:
     papers_table: arxiv_papers
