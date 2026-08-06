@@ -1,0 +1,627 @@
+Title: Communication-efficient Multi-Agent Reinforcement Learning with Spatiotemporal Information Hub
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/39219/43180
+
+Number of Pages: 9
+
+Markdown Content:
+# Communication-efficient Multi-Agent Reinforcement Learning with Spatiotemporal Information Hub 
+
+# Ling Ding 1, Tianbai Lyu 1, Zhiliang Bi 1, Hao Wang 1* , Shanshan Feng 1, Wei Yu 2* 
+
+> 1
+
+School of Computer Science, Wuhan University, China 
+
+> 2
+
+School of Artificial Intelligence, Wuhan University, China 
+
+{lingding, lyutianbai, bizhiliang, wanghao.cs, victor fengss, yuwei }@whu.edu.cn 
+
+Abstract 
+
+Centralized training with decentralized execution (CTDE) is a framework for MARL with wide applications. In the CTDE paradigm, agents leverage global state information during training to mitigate the non-stationarity of the MARL envi-ronment, but must rely solely on partial observations during execution. Recent work has highlighted the growing impor-tance of inter-agent communication for more effective learn-ing and coordination. However, most existing methods over-look the fact that real-world communication channels are of-ten bandwidth-constrained and imperfectly reliable. Toward more communication-efficient and robust MARL, we extend the conventional CTDE framework with an information hub. The hub collects local observations from the agents to re-store the global state, which is then delivered to the agents on demand. To this end, technical mechanisms are designed to enable effective global reconstruction with incomplete ob-servations, as well as agent-specific attention to the recon-structed global information. Experiments on multiple co-operative MARL benchmarks demonstrate that our method achieves state-of-the-art performance compared to popular MARL algorithms while substantially reducing communica-tion overhead and exhibiting strong robustness under imper-fect communication channels. 
+
+# 1 Introduction 
+
+Multi-Agent Reinforcement Learning (MARL) has recently garnered widespread attention, achieving impressive results across various complex domains, such as traffic signal con-trol (Bie, Ji, and Ma 2024), droplet routing (Liang 2021), active voltage regulation (Wang et al. 2021), dynamic al-gorithm configuration (Xue et al. 2022). In practice, multi-agent systems are typically driven by the joint decisions of agents with limited perception and are thus essentially non-stationary. To implement effective multi-agent learning, the 
+
+Centralized Training with Decentralized Execution (CTDE) paradigm has been widely adopted (Kraemer and Banerjee 2016; Rashid et al. 2020; Sunehag et al. 2017), where agents may access the global (total) information during training but should rely solely on individual (partial) observations dur-ing execution (Jianye et al. 2022; Rashid et al. 2020; Wang 
+
+> *
+
+Corresponding authors Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+et al. 2020). The basic idea of CTDE is quite straightfor-ward: Using the global information provided during train-ing, each agent learns a policy to react to its observations, which is then applied independently during execution. The joint action of all agents is effective if the policy of each agent serves the system goal well via local reactions. Despite the success of CTDE in various applications, it has been noted that execution-time information exchanges via proper communication mechanisms could still be benefi-cial toward more effective learning (Wang et al. 2019; Guan et al. 2024). NDQ (Wang et al. 2019) broadcasts the obser-vation histories of the agents to ensure expressive and suc-cinct communication. To mitigate communication overhead, TMC (Zhang, Zhang, and Lin 2020) broadcasts messages only when the deviation from previous transmissions is sig-nificant, otherwise reusing historical information. In MAIC (Yuan et al. 2022), each agent models its teammates to gen-erate tailored incentive messages, which are then broadcast to influence the Q-value updates of others. Recently, MA-SIA (Guan et al. 2024) enables all agents to broadcast their local observations, and introduces self-supervised objectives to ensure that the aggregated representation is both com-pact and sufficient. TGCNet (Zhang et al. 2025) leverages a multi-key gated mechanism to dynamically construct a di-rected communication graph, and leverages this structure to reduce reliance on global state information. Although effective in terms of the learned policies, most existing solutions are inefficient in communication as they rely on the broadcasting mechanism. For example, MASIA (Guan et al. 2024) relies on message broadcasting from all agents to estimate the global state at each timestep. TGCNet (Zhang et al. 2025) requires access to all agents’ hidden rep-resentations at each timestep to construct the communication graph. Assuming a constant cost for each message transmis-sion, these methods incur a substantial quadratic communi-cation overhead at each timestep. In many real-world applications, such as traffic sig-nal control (Bie, Ji, and Ma 2024) and real-time strat-egy games (Samvelyan et al. 2019), communication chan-nels are bandwidth-constrained . Excessive message passing may congest the system, preventing the agents from making timely decisions. In addition, the communication is often im-perfectly reliable due to various factors, subject to message losses and delays. Ignoring the imperfections of communi-The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+20799 cation may lead to the ultimate failure of decision-making or multi-agent coordination. These practical constraints high-light a pressing need for multi-agent communication mech-anisms that are both cost-efficient and failure-tolerant. 
+
+In response to the above needs, we propose a novel communication-efficient MARL framework by augment-ing CTDE with an information hub. The framework, named Multi-Agent spatioTemporal Communication Hub (MATCH), can effectively capture spatiotemporal depen-dencies among agents for robust state reconstruction. Specifically, the information hub collects agent-centric ob-servations and uses a Transformer-based spatiotemporal in-terpolator to restore the global information. The agents may request the global information from the hub. To keep the agents focused on their local circumstances and tasks, the hub employs a position-aware attention module to personal-ize global information for each agent. The information hub operates independently and asynchronously with the agents. In the worst case, if there is a fatal failure in the information hub during execution, the entire multi-agent system can still operate following the conventional CTDE paradigm. Thus, our proposed method is both efficient (with linear commu-nication costs) and robust. In summary, our main contributions are as follows: • First, we propose a novel paradigm for cooperative MARL with a centralized information hub, which can significantly reduce communication overhead and remain robust to unstable communication channels. • Second, we design a communication mechanism be-tween agents and the information hub, which enables ef-fective global information restoration and personaliza-tion. The techniques are based on recent advances in Transformer and attention mechanisms. • Last but not least, we evaluate our method using vari-ous tasks in the benchmarks of SMAC (Samvelyan et al. 2019) and MPE (Lowe et al. 2017). Our method outper-forms state-of-the-art approaches, achieving up to 12.9× lower communication volume while maintaining robust performance under message loss. 
+
+# 2 Related Work 
+
+Centralized Training with Decentralized Execution (CTDE) has become the dominant framework in cooperative multi-agent reinforcement learning (MARL). CTDE-based ap-proaches can be broadly categorized into policy-based and value-based methods. Representative policy-based methods include COMA (Foerster et al. 2018), MADDPG (Lowe et al. 2017), and MAPPO (Yu et al. 2022), while value-based methods such as VDN (Sunehag et al. 2017), QMIX (Rashid et al. 2020), and QPLEX (Wang et al. 2020) have demon-strated strong empirical performance across a range of co-operative tasks. While CTDE offers a strong foundation for training, introducing communication allows agents to com-pensate for their limited local observations and promotes more effective collaboration (Wang et al. 2019). Early works explored neighbor-based communication to address limited local observability (Guo, Shi, and Fan 2023; Jiang et al. 2018). For instance, ATOC (Jiang and Lu 2018) allows agents to dynamically form communication groups and share information. But the similarity of local observa-tions often limits the diversity. Broadcasting enables more thorough information exchange among agents (Guan et al. 2024; Yuan et al. 2022; Zhang, Zhang, and Lin 2020). RIAL and DIAL (Foerster et al. 2016) enhance communication by employing a broadcasting mechanism that shares messages across time steps. TarMAC (Das et al. 2019) leverages key-value broadcasting to differentiate the importance of incom-ing messages. To further reduce communication overhead, the concept of dynamic communication topology has been introduced (Meng and Tan 2024; Wang and Sartoretti 2022). For example, MAGIC (Niu, Paleja, and Gombolay 2021) constructs communication graphs to determine message tar-gets, G2ANet (Liu et al. 2020) builds an interaction graph via a two-stage attention mechanism, and TGCNet (Zhang et al. 2025) designs a multi-key gated network to learn a dynamic directed graph structure. Nevertheless, peer-to-peer communication still incurs substantial bandwidth consump-tion and redundant message processing. Besides, centralized communication enables agents to transmit information to and from a central unit, resulting in lower communication overhead (Meng and Tan 2023; Liu et al. 2021). For instance, CommNet (Sukhbaatar, Fergus et al. 2016) aggregates messages from all agents at each timestep to construct a centralized global signal. Gated-ACML (Mao et al. 2020) and IC3Net (Singh, Jain, and Sukhbaatar 2018) introduce gating mechanisms that allow agents to selectively transmit information to the central module. Nevertheless, most centralized communication ap-proaches assume that all messages can be stably collected within a single timestep, which is hardly attainable under real-world communication constraints. In real-world communication environments, where band-width is limited and connections are inherently unstable, ex-isting methods, to the best of our knowledge, fail to fully adapt to such imperfect conditions. MATCH employs a cen-tralized communication module that captures spatiotempo-ral dependence to simulate the global state, thereby reducing communication overhead and improving robustness. 
+
+# 3 Dec-POMDP with Communication 
+
+In this work, we model cooperative MARL as a slightly ex-tended Decentralized Partially Observable Markov Decision Process (Dec-POMDP) (Oliehoek, Amato et al. 2016): 
+
+⟨N , S, A, P, Ω, O, R, γ ; M, C⟩ .
+
+Here, N = {1, 2, · · · , n + m} denotes the set of n agent entities ( 1, 2, · · · , n ) and m non-agent entities ( n + 1 , n +2, · · · , n + m) in the system; S is the global state space; 
+
+A = Qni=1 Ai is the joint action space, spanned by the in-dividual action spaces Ai of the agents. The transition prob-ability function P : S × A × S → [0 , 1] defines the dy-namics of the environment; Ω is the set of possible observa-tions; O : S × N → Ω is the observation function mapping the global state into individual observations of the agents; 
+
+R : S × A → R is a shared reward function of the multi-agent system; and γ ∈ (0 , 1) is the discount factor. 20800 Our extension to Dec-POMDP is the explicit inclusion of the message space M and the communication mechanism 
+
+C for inter-agent information exchange. At each timestep t,agent i ∈ N works in the following routine: • Observe oit = O (st, i ) ∈ Ω based on the current envi-ronment state st ∈ S .• Inquire message mit ∈ M , if necessary, via the commu-nication mechanism C.• Decide action ait using a policy function πi  ait τ it , m it
+
+,where τ it =  oi
+
+> 1
+
+, a i
+
+> 1
+
+, o i
+
+> 2
+
+, a i
+
+> 2
+
+, · · · , o it−1, a it−1, o it
+
+ is the lo-cal interaction history. • Send message zit ∈ M via the communication mecha-nism C, if necessary. The joint action of all the agents at = a1 
+
+> t
+
+, a 2 
+
+> t
+
+, · · · , a nt
+
+leads to a state transition from st to st+1 with probability 
+
+P (st+1 |st, a t ), for which the agents receive a global re-ward of R(st, a t). The primary objective of the agents is to learn a joint policy π = π1, π 2, · · · , π n that maximizes the expected cumulative reward through the global action-value function 
+
+Qπ, C 
+
+> tot
+
+(τ, a ) = Es,a 
+
+" ∞X
+
+> t=0
+
+γtR(st, a t) s0 = s, a 0 = a, π, C
+
+#
+
+,
+
+where τ = ⟨τ 1, τ 2, · · · , τ n⟩ denotes the joint interaction history of all agents. Considering real-world application scenarios, we want the learning process to be communication-efficient and robust .Specifically, we assume that the cost of sending/receiving a message m is proportional to the size of the message, i.e., cost (m) = O(|m|). In addition, to model message losses, we introduce an information loss rate κ ∈ [0 , 1] , denoting the probability that a message fails to reach its destination. The learning agents are expected to be capable of dealing with such real-world imperfections at a relatively low cost. 
+
+# 4 Method 
+
+In this section, we describe our proposed method, MATCH (Multi-Agent SpatioTemporal Communication Hub), an ex-tension to the CTDE paradigm with efficient and robust communication. We first introduce the design methodology and overall framework of MATCH, and then explain the main modules in detail. 
+
+4.1 Methodology and Overall Framework 
+
+To reduce the quadratic communication overhead while keeping the effectiveness of learning, we extend the CTDE framework with a centralized information hub , as shown in Fig. 1. The information hub, as its name suggests, is a cen-tralized mechanism to coordinate communication between agents. The main function is to receive local observations from the agents and aggregate them into estimations of the global state, which are then redistributed to the agents for more effective learning and decision-making. Following the routine of the extended Dec-POMDP, at each timestep t, agent i observes oit. In this work, we con-sider entity-based observations , i.e., 
+
+oit =
+
+n 
+
+j, pij t , vjt
+
+o 
+
+> j∈N
+
+,
+
+where j is the entity ID, pij t the relative position of entity j
+
+with respect to agent i, and vjt the feature data of entity j.Agent i also packs the observation and sends it to the hub. The hub works asynchronously with the agents. After col-lecting a batch of messages Bt = oit i∈N , the hub attempts to restore (or, more generally, estimate) a global representa-tion of the entities ˆst from Bt, i.e., 
+
+ˆst = ESTIMATE (Bt) . (1) Since the global representation ˆst is often rich in informa-tion and large in size, a query mechanism enables each agent to fetch self-related data from ˆst, avoiding information over-load and unnecessary network communication. Specifically, the query qit is generated with τ it , the historical observations of agent i at time t:
+
+qit = QUERY 
+
+ τ it
+
+ . (2) On receiving a query qit, the information hub answers the query to generate a reply message 
+
+mit = ANSWER 
+
+ ˆst, qit
+
+ . (3) The message mit is then used by the agent in the action-value function Qi  τ it , mit, a it
+
+ for action selection. 
+
+4.2 Information Hub 
+
+As depicted in Fig. 1, the hub receives messages in a batch 
+
+Bt = o1 
+
+> t
+
+, o2 
+
+> t
+
+, · · · , ont , where 
+
+oit =
+
+
+
+oi1 
+
+> t
+
+, oi2 
+
+> t
+
+, · · · , oi(n+m)
+
+> t
+
+
+
+,
+
+with oij t =
+
+
+
+pij t , vjt
+
+
+
+referring to the relative position (con-cerning agent i, the observer) and feature of entity j.
+
+Information Aggregation. Since the same entity may be observed by multiple agents from different perspectives, the received messages often contain redundant information and viewpoint inconsistencies. The hub employs a self-attentive pooling mechanism to integrate multi-view features and re-solve conflicts. Specifically, the aggregated embedding of entity j is computed as 
+
+ejt =
+
+> n
+
+X
+
+> i=1
+
+αij t ·
+
+
+
+Wpool oij t
+
+
+
+,
+
+where 
+
+αij t =exp 
+
+
+
+w⊤
+
+> pool
+
+Wpool oij t
+
+
+
+> n
+
+P
+
+> k=1
+
+exp 
+
+
+
+w⊤
+
+> pool
+
+Wpool okj t
+
+
+
+are softmax weights and (wpool , Wpool ) are parameters. Through pooling, we obtain an initial representation of entities et =  e1 
+
+> t
+
+, e2 
+
+> t
+
+, · · · , en+mt
+
+. Nonetheless, et may still be incomplete due to restricted observation scope or commu-nication failures. Thus, we investigate how missing informa-tion can be effectively reconstructed. The key insight here is that messages from agents are strongly connected in both space and time . Spatially, the local observations of agents are correlated as they depict the same global state; Tempo-rally, missing information of an entity can often be inferred from its past due to the temporal continuity of intention. 20801 Figure 1: An illustration of our proposed framework. The framework is CTDE augmented with a shared information hub. The information hub functions independently and asynchronously with the agents. 
+
+Spatiotemporal Reconstruction. To exploit these pat-terns, we introduce a Transformer-based interpolation mod-ule that captures both spatial and temporal correlations to re-construct the global information ˆst ∈ R(n+m)×d, consisting of a d-dimensional representation of each of the n + m enti-ties. This reconstruction module concretely implements the estimation step defined in Equation 1. To incorporate tempo-ral context, we buffer a list of the past L reconstructed global information Ht = [ ˆst−L, ˆst−L+1 , · · · , ˆst−1]. At time t, we reshape the concatenated Xt = ( H′ 
+
+> t
+
+∥ et) into a sequence of (L + 1) × (n + m) tokens, where H′ 
+
+> t
+
+is a lightly projected form of Ht matching the dimensionality of et. To preserve structural priors, we incorporate position encodings using separable 2D embeddings (temporal and entity indices). The resulting token sequence is then fed into a stack of Trans-former blocks for spatiotemporal reconstruction 
+
+˜Xt = Transformer (Xt) .
+
+After such a process, the missing information is recovered in 
+
+˜Xt. By passing ˜Xt through a lightweight decoder, the global information ˆst =  ˆs1 
+
+> t
+
+, ˆs2 
+
+> t
+
+, · · · , ˆsn+mt
+
+ is reconstructed, with component ˆsjt ∈ Rd for entity j.
+
+Distance-aware Attention. Directly distributing an iden-tical global information ˆst to all agents makes it difficult for them to focus on individually relevant content (Chen et al. 2022). Intuitively, the attention of an agent often ex-hibits locality , focusing primarily on nearby entities. There-fore, we use a distance-aware attention module, serving as a concrete implementation of Equation 3, to generate agent-specific global information, which assigns higher weights to nearby entities and attenuates the influence of those farther away. Specifically, given a query qit from agent i and a global representation ˆst, the hub incorporates inter-entity distances as bias terms into the attention scores, i.e., 
+
+aij t = λ · qit
+
+> ⊤
+
+Wattn ˆsjt
+
+√d
+
+!
+
+· sigmoid 
+
+
+
+−Dij t
+
+
+
+,
+
+where (λ, Wattn ) are network parameters and Dij t the nor-malized Euclidean distance between agent i and entity j at time t. The final message mit answering query qit is thus 
+
+mit = Pn+mj=1 βij t · ˆsjt , where βij t is the softmax weight de-rived from aij t .
+
+4.3 Communication-enhanced Agent 
+
+Given the above-described information hub, it remains to be clarified how agent i generates the query qit and exploits the answer mit.As depicted in Fig. 1, agent i first converts its entity-based observation into a fixed-size representation oit =
+
+oi1 
+
+> t
+
+, oi2 
+
+> t
+
+, · · · , oi(n+m)
+
+> t
+
+
+
+with padding zeros for missing in-formation. To align the incoming message from the hub and historical observations, these entity features are then pro-cessed by an entity-level Transformer module (Gallici, Mar-tin, and Masmitja 2023). Specifically, the historical hidden state hit−1 from time t − 1 is concatenated with the current entity features oit. The resulting vector is then fed into the Transformer blocks. Through multi-head self-attention, the Transformer produces a new hidden state hit that encodes the attention relationships among entities. Note that an agent’s attention also exhibits continuity in time . For example, if an entity was previously observed but found to be irrelevant to decision-making, the agent will tend to assign it lower attention until the situation significantly changes. Therefore, we model the query qit as a function of the history hit, i.e., 
+
+qit = Φ  hit; θi
+
+> query
+
+ ,20802 representing the agent-specific focus on global information, where θi 
+
+> query
+
+are learnable parameters, and the function Φ
+
+concretely implements the Q UERY operation in Equation 2. Agent i sends the query vector qit along with the observa-tion oit to the information hub. The hub answers the query 
+
+qit with a message mit. The final Q-value for agent i to take action ait at time t is computed by combining the message 
+
+mit with the hidden state hit, i.e., 
+
+Qit
+
+ τ it , mit, · = Ψ  hit, mit; θi
+
+> value
+
+ ,
+
+where θi 
+
+> value
+
+are learnable network parameters. 
+
+4.4 Centralized Training 
+
+The training process of our proposed framework is central-ized, supervised by the true global state st over time. 
+
+State Reconstruction Loss. For the information hub to obtain an accurate estimate ˆst of the global state st, we in-troduce a state reconstruction loss Lstate (ˆst, st), which is essentially a distance measure between ˆst and st. Techni-cally, since the observation is agent-centric, directly using it to infer the global state often leads to inconsistencies. Therefore, we decompose both the true and reconstructed states following the same structure as the agent observations: 
+
+sit =  pit; vit
+
+, ˆsit =   ˆpit; ˆ vit
+
+, where pit (resp. ˆpit) denotes the relative position of entity i, and vit (resp. ˆvit) represents its feature vector. Then, we define two losses to measure the difference between sit’s and ˆsit’s: 
+
+Lpos = 1
+
+n + m
+
+> n+m
+
+X
+
+> i=1
+> T
+
+X
+
+> t=1
+
+ pit − ct
+
+ −   ˆpit − ˆct
+
+ 22 ,
+
+Lattr = 1
+
+n + m
+
+> n+m
+
+X
+
+> i=1
+> T
+
+X
+
+> t=1
+
+vit − ˆvit 
+
+> 22
+
+,
+
+where ct is the average of pit over i ∈ N and ˆct defined analogously. The overall loss for reconstructing the state is defined as the sum of the above losses: Lstate = Lpos + Lattr .
+
+Overall Loss. Together with state reconstruction loss, the overall learning objective of our proposed framework is 
+
+L(θ) = LTD (θ) + ηLstate ,
+
+where LTD (θ) is the standard temporal difference loss used in CTDE and η is a tunable hyperparameter that controls the weight of the state reconstruction loss. 
+
+# 5 Experiments 
+
+5.1 Experimental Settings 
+
+In this section, we conduct experiments on various bench-marks with different communication conditions to evaluate our method. Specifically, we aim to answer the following questions in this section: 1) How does our method perform when compared with multiple baselines in various scenarios (Section 5.2)? 2) Does our approach effectively reduce com-munication overhead while maintaining coordination perfor-mance (Section 5.3)? 3) How robust is it under varying lev-els of message loss in the communication channel (Section 5.4)? We compare MATCH against a variety of baselines, including a non-communication method and several CTDE-based communication methods. QMIX (Hu et al. 2021) serves as a widely adopted non-communication baseline, achieving strong performance on diverse multi-agent bench-marks. TMC (Zhang, Zhang, and Lin 2020) reduces commu-nication overhead by allowing agents to broadcast messages only when their content changes significantly. MAIC (Yuan et al. 2022) enhances coordination by letting agents model their teammates and broadcast incentive messages to guide Q-value updates. MASIA (Guan et al. 2024) improves com-munication by broadcasting local observations and applying self-supervised objectives to maintain compact and informa-tive representations. TGCNet (Zhang et al. 2025) constructs a dynamic directed communication graph via a multi-key gated mechanism, and leverages this structure to reduce re-liance on global state information. We evaluate MATCH against multiple state-of-the-art baselines on two tasks: Cooperative Navigation (CN) in Multi-agent Particle Environment (MPE) (Lowe et al. 2017) and SMAC (Samvelyan et al. 2019). The Cooperative Navi-gation task involves N agents and N landmarks, where each agent aims to reach a landmark while avoiding collisions with others. In SMAC, we select maps that require commu-nication, including 1o2r vs 4r and 1o10b vs 1r (Wang et al. 2019), as well as the hard map 5m vs 6m and the super hard map MMM2. We further increase the difficulty of coordi-nation by reducing the agents’ sight range from 9 to 2. For fair evaluation, all experiments are conducted with five ran-dom seeds, and the results are reported as means with 95% confidence intervals. 
+
+5.2 Communication Performance 
+
+We first compare MATCH against multiple baselines to evaluate its communication performance across a range of benchmarks. In the CN task, we adopt the percentage of landmarks occupied at the end of an episode (POL) as our evaluation metric (Gallici, Martin, and Masmitja 2023), where a landmark is considered occupied if an agent is within a distance of 0.3 units. As shown in Figure 2a and Figure 2d, MATCH significantly outperforms all baseline methods across the evaluated scenarios. This highlights the effectiveness of decomposing agent and landmark informa-tion into entity representations and capturing the structure. For scenarios requiring communication in SMAC (Fig-ure 2b and Figure 2e), methods lacking communication ca-pabilities, such as QMIX, fail. Other communication-based baselines, such as TGCNet, MAIC, and TMC, struggle to effectively integrate messages, which leads to degraded per-formance. In contrast, MATCH and MASIA achieve supe-rior performance thanks to their strong state reconstruction capabilities. On the hard and super hard maps (Figure 2c and Figure 2f), under reduced sight setting, the communication-free QMIX performs poorly. Other communication-based approaches fail to perform well as they transmit overly re-dundant information. In contrast, our method achieves supe-rior performance by leveraging a query-driven and distance-aware attention mechanism, which enables personalized and relevant information acquisition for each agent. 20803 MATCH TGCNet MASIA MAIC TMC QMIX 0.0 0.5 1.0 
+
+Environment Timesteps 1e7   
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> percentage of landmarks occupied (a) CN: 5 Agents, 5 Landmarks 0.0 0.5 1.0
+
+Environment Timesteps 1e7    
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Mean Test Win Rate (b) SMAC: 1o2r vs 4r 0.0 0.5 1.0
+
+Environment Timesteps 1e7    
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Mean Test Win Rate (c) SMAC: 5m vs 6m 0.0 0.5 1.0
+
+Environment Timesteps 1e7   
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> percentage of landmarks occupied
+> (d) CN: 6 Agents, 6 Landmarks 0.0 0.5 1.0
+
+Environment Timesteps 1e7    
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Mean Test Win Rate (e) SMAC: 1o10b vs 1r 0.0 0.5 1.0
+
+Environment Timesteps 1e7  
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Mean Test Win Rate (f) SMAC: MMM2
+
+Figure 2: Performance comparison with baselines on CN and SMAC benchmarks. 
+
+5.3 Communication Overhead 
+
+We now evaluate the communication overhead of MATCH by comparing it against all communication-based baselines, excluding the non-communicative QMIX, under the SMAC super hard map MMM2. Specifically, for each method, we run 100 test episodes among 5 random seeds. We quantify communication overhead using two metrics: 
+
+communication frequency and communication volume . Let 
+
+xt denote the number of directed communications that oc-cur at timestep t ∈ T , and let mt represent the trans-mitted message. The communication frequency is defined as: 1
+
+> |T |
+
+P 
+
+> t∈T
+
+xt, and the communication volume is defined as: 1
+
+> |T |
+
+P 
+
+> t∈T
+
+xt · ∥ mt∥, where |T | is the total number of timesteps, and ∥mt∥ denotes the dimensionality of the mes-sage at timestep t.Thanks to its centralized communication design and se-lective transmission of visible entities, MATCH achieves significantly lower communication overhead in both fre-quency and volume as shown in Figure 4. Compared with TGCNet and MASIA, MATCH reduces the communica-tion volume by factors of 12.9× and 9.8×, respectively. Al-though MAIC and TMC achieve substantial communication volume reduction by transmitting low-dimensional modified Q-values, they achieve relatively less promising win rates. Moreover, our method exhibits the lowest communication frequency compared to all baseline approaches. 
+
+5.4 Performance Under Transmission Loss 
+
+Next we evaluate the algorithm’s performance under com-munication loss. Specifically, for each method, we run 100 test episodes among 5 random seeds under three loss pat-terns corresponding to light, medium, and heavy levels, which are reasonable for wireless loss conditions (Zhang, Zhang, and Lin 2020; Sheth et al. 2007; Xylomenos and Polyzos 1999). Figure 3 depicts the win rates of MATCH, TGCNet, MASIA, MAIC, and TMC under three loss pat-terns across two SMAC maps, with all methods trained for 10M timesteps. The win rate of MASIA drops significantly, as it relies on receiving complete information from all agents to reconstruct state. TGCNet and MAIC exhibit higher ro-bustness than MASIA, due to their use of dynamic com-munication topology and teammate modeling, respectively. TMC exhibits more robust communication performance ow-ing to its mechanism of caching recently received mes-sages. Under all transmission loss settings, MATCH con-sistently outperforms all baseline methods by a significant margin, with its winning rate remaining nearly stable. This demonstrates that our approach can effectively reconstruct the global state even in the presence of communication loss. 20804 MATCH TGCNet MASIA MAIC TMC 5m_vs_6m 1o_2r_vs_4r 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Win Rate
+
+(a) Win Rate (no loss) 5m_vs_6m 1o_2r_vs_4r  
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Win Rate
+
+(b) Win Rate (light loss) 5m_vs_6m 1o_2r_vs_4r  
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Win Rate
+
+(c) Win Rate (medium loss) 5m_vs_6m 1o_2r_vs_4r  
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Win Rate
+
+(d) Win Rate (heavy loss) Figure 3: Win rate comparisons under different levels of message loss. MATCH TGCNet MASIA MAIC TMC 
+
+> 0
+> 25
+> 50
+> 75
+> 100
+> 125
+> 150
+> 175
+> 200
+> Communication Count
+
+(a) Communication Count MATCH TGCNet MASIA MAIC TMC  
+
+> 0
+> 2500
+> 5000
+> 7500
+> 10000
+> 12500
+> 15000
+> 17500
+> 20000
+> Communication Volume
+
+(b) Communication Volume Figure 4: Comparison of communication frequency and vol-ume across methods on the SMAC super-hard scenario. 
+
+5.5 Ablation Studies 
+
+To understand the superior performance of MATCH, we conduct ablation studies to evaluate the contribution of its three main components, addressing the following questions: (1) Is communication through the hub indeed necessary for effective coordination? (2) Can the spatiotemporal recon-struction module accurately approximate the global state? (3) Does the Query mechanism significantly contribute to improved agent-specific message extraction? To investigate the first question, we construct a variant called MATCH w/o Comm, which disables communication by removing the message passing between agents and the hub, thereby isolating the effect of centralized communica-tion. To address the second question, we develop MATCH w/o State Recon, which replaces the spatiotemporal recon-struction module with access to the true global state. For the third question, we introduce MATCH w/o Query, which re-moves the query mechanism and instead broadcasts the same shared message to all agents. We conduct ablation experiments on the communication-based SMAC scenarios. As shown in Figure 5, MATCH w/o Comm suffers a noticeable drop in performance, verifying the importance of communication. MATCH performs sim-ilarly to MATCH w/o State Recon, indicating that the spa-tiotemporal reconstruction module can effectively approxi-mate the true global state. Finally, MATCH w/o Query un-MATCH w/o Comm w/o State Recon w/o Query 0.00 0.25 0.50 0.75 1.00 
+
+> Environment Timesteps 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Mean Test Win Rate
+
+(a) 1o2r vs 4r 0.00 0.25 0.50 0.75 1.00  
+
+> Environment Timesteps 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Mean Test Win Rate
+
+(b) 1o10b vs 1r Figure 5: Ablation study results of MATCH w/o Comm, MATCH w/o State Recon, and MATCH w/o Query. derperforms due to all agents receiving identical messages, highlighting the importance of tailoring information to each agent’s needs. 
+
+# 6 Conclusion and Future Work 
+
+In this work, we propose MATCH, a method that inte-grates a centralized information hub into the CTDE frame-work to facilitate more effective agent cooperation. Exist-ing methods often overlook real-world communication envi-ronments, which are typically bandwidth-limited and imper-fectly reliable. Our method collects messages centrally and reconstructs a global state through spatiotemporal modeling. After that, we further introduce a query mechanism allow-ing agents to selectively access information most relevant to their decision-making. Empirical results demonstrate that our method delivers strong performance, significantly re-duces communication overhead, and remains highly robust under various levels of message loss. In the future, we aim to extend MATCH to large-scale multi-agent environments with hundreds of agents. This raises new challenges for com-munication scalability and capacity. Techniques such as hi-erarchical coordination and further exploration of scalable communication architectures are promising directions. 20805 Acknowledgments 
+
+The authors would like to acknowledge the support from Na-tional Key R&D Program of China (No. 2024YFE0111800), the Science and Technology Development Fund (SKL-IOTSC(UM)-2024-2026) of Macau, and the State Key Laboratory of Internet of Things for Smart City (Uni-versity of Macau) (Ref. No.: SKL-IoTSC(UM)-2024-2026/ORP/GA05/2023). 
+
+# References 
+
+Bie, Y.; Ji, Y.; and Ma, D. 2024. Multi-agent deep reinforce-ment learning collaborative traffic signal control method considering intersection heterogeneity. Transportation Re-search Part C: Emerging Technologies , 164: 104663. Chen, Y.; Mao, H.; Mao, J.; Wu, S.; Zhang, T.; Zhang, B.; Yang, W.; and Chang, H. 2022. PTDE: Personalized training with distilled execution for multi-agent reinforcement learn-ing. arXiv preprint arXiv:2210.08872 .Das, A.; Gervet, T.; Romoff, J.; Batra, D.; Parikh, D.; Rab-bat, M.; and Pineau, J. 2019. Tarmac: Targeted multi-agent communication. In International Conference on machine learning , 1538–1546. PMLR. Foerster, J.; Assael, I. A.; De Freitas, N.; and Whiteson, S. 2016. Learning to communicate with deep multi-agent re-inforcement learning. Advances in neural information pro-cessing systems , 29. Foerster, J.; Farquhar, G.; Afouras, T.; Nardelli, N.; and Whiteson, S. 2018. Counterfactual multi-agent policy gra-dients. In Proceedings of the AAAI conference on artificial intelligence , volume 32. Gallici, M.; Martin, M.; and Masmitja, I. 2023. Trans-fQMix: Transformers for leveraging the graph structure of multi-agent reinforcement learning problems. arXiv preprint arXiv:2301.05334 .Guan, C.; Chen, F.; Yuan, L.; Zhang, Z.; and Yu, Y. 2024. Efficient Communication via Self-Supervised Information Aggregation for Online and Offline Multiagent Reinforce-ment Learning. IEEE Transactions on Neural Networks and Learning Systems .Guo, X.; Shi, D.; and Fan, W. 2023. Scalable communica-tion for multi-agent reinforcement learning via transformer-based email mechanism. arXiv preprint arXiv:2301.01919 .Hu, J.; Jiang, S.; Harding, S. A.; Wu, H.; and Liao, S.-w. 2021. Rethinking the implementation tricks and mono-tonicity constraint in cooperative multi-agent reinforcement learning. arXiv preprint arXiv:2102.03479 .Jiang, J.; Dun, C.; Huang, T.; and Lu, Z. 2018. Graph convolutional reinforcement learning. arXiv preprint arXiv:1810.09202 .Jiang, J.; and Lu, Z. 2018. Learning attentional communica-tion for multi-agent cooperation. Advances in neural infor-mation processing systems , 31. Jianye, H.; Hao, X.; Mao, H.; Wang, W.; Yang, Y.; Li, D.; Zheng, Y.; and Wang, Z. 2022. Boosting multiagent re-inforcement learning via permutation invariant and permu-tation equivariant networks. In The eleventh international conference on learning representations .Kraemer, L.; and Banerjee, B. 2016. Multi-agent reinforce-ment learning as a rehearsal for decentralized planning. Neu-rocomputing , 190: 82–94. Liang, T.-C. 2021. Parallel droplet control in MEDA biochips using multi-agent reinforcement learning. In In-ternational Conference on Machine Learning .Liu, B.; Liu, Q.; Stone, P.; Garg, A.; Zhu, Y.; and Anand-kumar, A. 2021. Coach-player multi-agent reinforcement learning for dynamic team composition. In International Conference on Machine Learning , 6860–6870. PMLR. Liu, Y.; Wang, W.; Hu, Y.; Hao, J.; Chen, X.; and Gao, Y. 2020. Multi-agent game abstraction via graph attention neu-ral network. In Proceedings of the AAAI conference on arti-ficial intelligence , volume 34, 7211–7218. Lowe, R.; Wu, Y. I.; Tamar, A.; Harb, J.; Pieter Abbeel, O.; and Mordatch, I. 2017. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neural information processing systems , 30. Mao, H.; Zhang, Z.; Xiao, Z.; Gong, Z.; and Ni, Y. 2020. Learning agent communication under limited bandwidth by message pruning. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 34, 5142–5149. Meng, X.; and Tan, Y. 2023. Learning group-level informa-tion integration in multi-agent communication. In Proceed-ings of the 2023 International Conference on Autonomous Agents and Multiagent Systems , 2601–2603. Meng, X.; and Tan, Y. 2024. Pmac: Personalized multi-agent communication. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 38, 17505–17513. Niu, Y.; Paleja, R. R.; and Gombolay, M. C. 2021. Multi-Agent Graph-Attention Communication and Teaming. In 
+
+AAMAS , volume 21, 20th. Oliehoek, F. A.; Amato, C.; et al. 2016. A concise introduc-tion to decentralized POMDPs , volume 1. Springer. Rashid, T.; Samvelyan, M.; De Witt, C. S.; Farquhar, G.; Foerster, J.; and Whiteson, S. 2020. Monotonic value func-tion factorisation for deep multi-agent reinforcement learn-ing. Journal of Machine Learning Research , 21(178): 1–51. Samvelyan, M.; Rashid, T.; De Witt, C. S.; Farquhar, G.; Nardelli, N.; Rudner, T. G.; Hung, C.-M.; Torr, P. H.; Fo-erster, J.; and Whiteson, S. 2019. The starcraft multi-agent challenge. arXiv preprint arXiv:1902.04043 .Sheth, A.; Nedevschi, S.; Patra, R.; Surana, S.; Brewer, E.; and Subramanian, L. 2007. Packet loss characterization in WiFi-based long distance networks. In IEEE INFO-COM 2007-26th IEEE International Conference on Com-puter Communications , 312–320. IEEE. Singh, A.; Jain, T.; and Sukhbaatar, S. 2018. Learning when to communicate at scale in multiagent cooperative and com-petitive tasks. arXiv preprint arXiv:1812.09755 .Sukhbaatar, S.; Fergus, R.; et al. 2016. Learning multiagent communication with backpropagation. Advances in neural information processing systems , 29. Sunehag, P.; Lever, G.; Gruslys, A.; Czarnecki, W. M.; Zam-baldi, V.; Jaderberg, M.; Lanctot, M.; Sonnerat, N.; Leibo, 20806 J. Z.; Tuyls, K.; et al. 2017. Value-decomposition net-works for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 .Wang, J.; Ren, Z.; Liu, T.; Yu, Y.; and Zhang, C. 2020. Qplex: Duplex dueling multi-agent q-learning. arXiv preprint arXiv:2008.01062 .Wang, J.; Xu, W.; Gu, Y.; Song, W.; and Green, T. C. 2021. Multi-agent reinforcement learning for active voltage con-trol on power distribution networks. Advances in Neural Information Processing Systems , 34: 3271–3284. Wang, T.; Wang, J.; Zheng, C.; and Zhang, C. 2019. Learn-ing nearly decomposable value functions via communica-tion minimization. arXiv preprint arXiv:1910.05366 .Wang, Y.; and Sartoretti, G. 2022. Fcmnet: Full communi-cation memory net for team-level cooperation in multi-agent systems. arXiv preprint arXiv:2201.11994 .Xue, K.; Xu, J.; Yuan, L.; Li, M.; Qian, C.; Zhang, Z.; and Yu, Y. 2022. Multi-agent dynamic algorithm configuration. 
+
+Advances in Neural Information Processing Systems , 35: 20147–20161. Xylomenos, G.; and Polyzos, G. C. 1999. TCP and UDP performance over a wireless LAN. In IEEE INFOCOM’99. Conference on Computer Communications. Proceedings. Eighteenth Annual Joint Conference of the IEEE Computer and Communications Societies. The Future is Now (Cat. No. 99CH36320) , volume 2, 439–446. IEEE. Yu, C.; Velu, A.; Vinitsky, E.; Gao, J.; Wang, Y.; Bayen, A.; and Wu, Y. 2022. The surprising effectiveness of ppo in cooperative multi-agent games. Advances in neural infor-mation processing systems , 35: 24611–24624. Yuan, L.; Wang, J.; Zhang, F.; Wang, C.; Zhang, Z.; Yu, Y.; and Zhang, C. 2022. Multi-agent incentive communication via decentralized teammate modeling. In Proceedings of the AAAI conference on artificial intelligence , volume 36, 9466– 9474. Zhang, S. Q.; Zhang, Q.; and Lin, J. 2020. Succinct and robust multi-agent communication with temporal message control. Advances in neural information processing systems ,33: 17271–17282. Zhang, Z.; He, B.; Cheng, B.; and Li, G. 2025. Bridg-ing training and execution via dynamic directed graph-based communication in cooperative multi-agent systems. In Pro-ceedings of the AAAI Conference on Artificial Intelligence ,volume 39, 23395–23403. 20807

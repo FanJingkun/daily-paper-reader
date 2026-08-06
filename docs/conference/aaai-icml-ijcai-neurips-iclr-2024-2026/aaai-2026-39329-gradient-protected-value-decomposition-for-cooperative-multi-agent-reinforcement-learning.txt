@@ -1,0 +1,398 @@
+Title: Gradient-Protected Value Decomposition for Cooperative Multi-Agent Reinforcement Learning
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/39329/43290
+
+Number of Pages: 9
+
+Markdown Content:
+# Gradient-Protected Value Decomposition for Cooperative Multi-Agent Reinforcement Learning Jie Hou, Haowen Dou, Lujuan Dang *, Liangjun Chen, Chenyang Ge 
+
+State Key Laboratory of Human-Machine Hybrid Augmented Intelligence National Engineering Research Center for Visual Information and Applications Institute of Artificial Intelligence and Robotics, Xi’an Jiaotong University, Xi’an, Shaanxi, China, 710049 
+
+{houjie, douhaowen }@stu.xjtu.edu.cn, {danglj, liangjunchen }@xjtu.edu.cn, cyge@mail.xjtu.edu.cn 
+
+Abstract 
+
+In recent years, deep multi-agent reinforcement learning (MARL) has demonstrated remarkable potential in solving complex cooperative tasks by enabling decentralized yet ef-ficient coordination among agents. However, during decen-tralized training, agent policy updates induced by different joint action samples may conflict, leading to gradient inter-ference that hinders convergence and the emergence of coor-dinated behavior. In this paper, we analyze and empirically validate the phenomenon of gradient interference. To address this, we then propose Gradient-Protected Value Decomposi-tion (GPVD), a novel MARL framework that explicitly pro-tects the gradient signals of optimal collaborative actions by suppressing the impact of interfering actions. GPVD employs a dynamic gradient protection mechanism that identifies opti-mal collaborative joint actions and reweights the loss to atten-uate gradients from non-collaborative interfering actions. To effectively identify high-value collaborative actions, we apply SimHash-based state grouping to discover consistent collab-oration patterns across similar states. Furthermore, a count-based intrinsic reward is incorporated to encourage explo-ration and improve the coverage of potentially optimal joint actions. Experiments on challenging multi-agent benchmarks demonstrate that GPVD achieves faster convergence, stronger coordination, and greater training stability compared to state-of-the-art value decomposition methods. 
+
+# Introduction 
+
+Multi-agent reinforcement learning (MARL) has great promise to solve many real-world multi-agent problems, such as autonomous cars (Schmidt et al. 2022; Han et al. 2022), energy networks (Wang et al. 2021) and robotics (Matignon et al. 2012). The fully cooperative multi-agent task is the most common scenario, where all agents must co-operate to achieve the same goal (Lowe et al. 2017). MARL enables effective cooperation by training multiple agents to-gether to maximize overall team performance. However, de-veloping efficient cooperative policies remains a substantial challenge due to partial observability, non-stationary envi-ronments and the need for scalability (Oliehoek, Amato et al. 2016; Hernandez-Leal, Kartal, and Taylor 2019; Yang et al. * Corresponding author. Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 2020). A commonly adopted paradigm to address these is-sues is the Centralized Training with Decentralized Execu-tion (CTDE) framework (Foerster et al. 2016; Sunehag et al. 2017; Rashid et al. 2020b). Under CTDE, agents are trained with access to global state in a centralized manner, but exe-cute policies based only on local observations, thereby pro-moting scalability, robustness, and generalization during de-centralized execution. Most MARL algorithms adopt this framework, including both policy-based approaches (Lowe et al. 2017; Yu et al. 2022; Foerster et al. 2018) and value de-composition methods (Sunehag et al. 2017; Son et al. 2019; Shen et al. 2022; Xu et al. 2023). Among them, value de-composition methods have gained significant popularity for their favorable scalability and sample efficiency in off-policy settings (Rashid et al. 2020b; Wang et al. 2020; Li et al. 2024b), and have achieved state-of-the-art (SOTA) perfor-mance on the StarCraft II Multi-Agent Challenge (SMAC) benchmark (Samvelyan et al. 2019). The core idea of value decomposition methods is to rep-resent the joint state-action value using neural networks as a function of individual utility functions. Most approaches adopt a mixing function that satisfies the Individual-Global-Max (IGM) principle (Son et al. 2019), enabling decentral-ized agents to independently select actions based on indi-vidual utility functions that are consistent with maximiz-ing the joint value. Here, the individual utility serves as a proxy for each agent’s Q-function, and agents follow greedy policies by choosing actions that maximize their own util-ity. To enforce this property, methods such as VDN (Sune-hag et al. 2017) and QMIX (Rashid et al. 2020b) impose strict monotonicity constraints, ensuring that the joint value is a non-decreasing function of each agent’s utility during training. Even expressive methods like QPLEX (Wang et al. 2020) apply non-negativity constraints to parts of the mix-ing network, inducing a non-negative gradient flow from the joint value to individual utilities throughout the training pro-cess. The alignment between the optimization directions of the joint value and individual utilities facilitates credit as-signment and suits cooperative MARL settings, where im-provements in individual utilities are assumed to mono-tonically increase the global team value (Hu et al. 2021). However, this structural constraint also introduces a signif-icant drawback. In this work, we show that the constraint of non-negative gradient flow during training can induce The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+21779 gradient interference , whereby training signals from non-collaborative joint actions conflict with those from optimal collaborative joint actions, thereby hindering effective pol-icy optimization. Under value decomposition frameworks, each agent’s utility function directly determines its greedy policy. The optimization of individual utilities for optimal collaborative joint actions can be adversely affected by re-lated joint actions, where only a subset of agents act opti-mally. For example, when agents coordinate to focus fire, a teammate recklessly rushing into the enemy may intro-duce conflicting gradients that disrupt the learning of such cooperative tactics (Mahajan et al. 2019; Kim and Sung 2023; Rashid et al. 2020a). This interference allows non-collaborative behaviors to dominate the update process, sup-pressing informative signals from truly optimal actions. In this paper, we theoretically and empirically analyze the phenomenon of gradient interference in value decomposi-tion methods and propose Gradient-Protected Value Decom-position (GPVD) framework to address this issue. GPVD first clusters similar states using SimHash-based state group-ing, enabling effectively identification of high-value collab-orative actions. It then introduces a dynamic gradient protec-tion mechanism to overcome gradient interference by sup-pressing the impact of interfering actions. Specifically, this mechanism can identifies optimal collaborative joint actions and selectively downweights conflicting gradients from non-collaborative behaviors through loss reweighting. To further enhance exploration, GPVD incorporates a count-based in-trinsic reward that encourages agents to visit under-explored states and discover potential collaborative actions. GPVD promotes efficient learning and exploration of optimal col-laborative strategies, leading to stronger performance across cooperative MARL benchmarks. 
+
+# Related Works Value Decomposition Approaches Value function de-composition is a key paradigm in cooperative MARL, where a centralized action-value function is factorized into individ-ual utilities. Methods like VDN (Sunehag et al. 2017) and QMIX (Rashid et al. 2020b) follow the Individual-Global-Max (IGM) principle (Son et al. 2019), enabling decentral-ized execution by aligning globally optimal joint actions with individually greedy ones. VDN uses additive factoriza-tion, while QMIX enforces monotonicity via a non-negative mixing network. Although IGM principle enables decen-tralized execution, the monotonicity constraint severely lim-its the expressiveness of Qtot , making it difficult to model complex, non-monotonic agent interactions. To address this, methods such as QTRAN (Son et al. 2019), QPLEX (Wang et al. 2020), and ResQ (Shen et al. 2022) aim to relax this constraint, enhancing expressiveness by incorporating joint action information or residual learning. However, these methods often suffer from optimization challenges due to in-equality constraints and reliance on precise identification of optimal joint actions. 
+
+Weighted Value Decomposition Another line of work improves value decomposition by incorporating weighted training objectives to emphasize high-value joint actions. QMIX (Rashid et al. 2020b) learns a monotonic joint action-value function by projecting Qtot into a restricted function class Qmix through supervised regression: 
+
+arg min 
+
+> q∈Q mix
+
+∑
+
+> a∈A
+
+(T ∗Qtot (s, a) − q(s, a)) 2 ,
+
+where T ∗ is Bellman optimality operator. To prioritize op-timal joint actions during training, weighted QMIX (Rashid et al. 2020a) introduces a weighting function w(s, a) into the projection loss: 
+
+arg min 
+
+> q∈Q mix
+
+∑
+
+> a∈A
+
+w(s, a) ( Q(s, a) − q(s, a)) 2 ,
+
+where Q(s, a ) denotes the target joint action-value, 
+
+w(s, a) = 1 if u is optimal joint action , else α, α ∈ (0 , 1] .Similarly, QMIX-OVI (Li et al. 2024a) introduces multi-ple optimistic instructors to more accurately identify op-timal joint actions, thereby guiding the learning process. POWQMIX (Huang et al. 2024), on the other hand, learns a complete IGM function, selects the joint action with the highest predicted value, and assigns lower weights to all re-maining actions. Despite their effectiveness, these methods heavily rely on accurate identification of the optimal joint action at each in-dividual state, while failing to exploit structural similarities across states (Jianye et al. 2022; Na and Moon 2024). More-over, assigning near-zero weights to all non-optimal joint ac-tions based on such approximations significantly limits the contribution of many training samples, reducing sample effi-ciency. In contrast, we leverage SimHash-based state group-ing to capture consistent collaboration patterns and selec-tively downweight interfering samples, thereby both enhanc-ing the learning of optimal collaborative actions and preserv-ing sample efficiency. 
+
+# Preliminaries Decentralized POMDP A fully cooperative multi-agent task where agents make decisions in a decentralized set-ting is usually modeled as a Decentralized Partially Observ-able Markov Decision Process (Dec-POMDP) (Oliehoek, Amato et al. 2016), described by the tuple M =
+
+〈N , S, A, R, P, Z, O, γ 〉 , where N = {1, 2, . . . , n } de-notes the agent set and S is the state space. A ={A1 × A2 . . . × An} represents the joint action space of all agents. At each time step t, each agent i receives its lo-cal observation oit ∈ Zi ∈ Z according to its observa-tion function Oi (oit | st
+
+) ∈ O and selects its local action 
+
+ait ∈ Ai. After all agents select actions, the environment transits to the next state st+1 according to the state transi-tion function P (st+1 | st, at) and provides the global re-ward rt according to the reward function R (st, at), where 
+
+at = (a1 
+
+> t
+
+, a 2 
+
+> t
+
+, . . . , a nt
+
+) denotes the joint action of all agents. 
+
+γ is a discount factor. To overcome the partially observ-ability challenge, each agent i executes a decentralized pol-icy πi (ait | τ it
+
+), where τ it = (oi
+
+> 0
+
+, a i
+
+> 0
+
+, o i
+
+> 1
+
+, a i
+
+> 1
+
+, . . . , o it
+
+) denotes its local action-observation history. Then, the joint policy 
+
+π is given as the product form π = ∏ni=1 πi. The goal of all agents is to learn the optimal joint policy π∗ =21780 $JHQW $JHQWQ              
+
+> ݋ଵ݋௡
+> 0L[LQJ1HWZRUN   ܳଵ߬ሺ ଵܽǡ ଵܳሻ ௡߬ሺ ௡ܽǡ ௡ሻ
+
+ܳݏ ௧௢௧ ሺ࣎ǡ ࢇሻ                                          
+
+> %XIIHU *UDGLHQW3URWHFWLRQ0HFKDQLVP 9DOXH'HFRPSRVLWLRQ
+> ࣘࢇ ࢚࢙ሺ ሻכࢉ ࡭࢒ࢇ࢏࢚࢘ࢇ࢖ ࣘࢇሺ ࢚࢙ሺ ሻכࢉ ሻ
+> 6LP+DVK%DVHG6WDWH*URXSLQJ &RXQW%DVHG,QWULQVLF5HZDUG 
+> ࣘࢇ ࢚࢙ሺ ሻכࢉ ߜ ൌ ܳ ௧௢௧ ሺ࣎ǡ ࢇሻ െ ݕ ࣘࢇ ࢚࢙ሺ ሻିכࢉ ࣘࢇ ࢚࢙ሺ ሻିכࢉ
+> 
+> ࢏࢚࢔ࢋࢍ࡭ 
+> ࢔࢕࢏࢚ࢉ࡭   *URXS *URXS *URXSQ      ࣞథሺ௦ ೟ܰሻ ݏሺ߶ሺ ௧ሻሻ ݏሺ߶ ௧ሻ
+> 6DPSOHV ࣦ୘ୈ ൌͳȁࣞ ȁ ෍ ݓሺ࣎ǡ ࢇሻ ή ሺܳ ௧௢௧ ሺ࣎ǡ ࢇሻ െ ݕሻ ଶ
+> *UDGLHQW,QWHUIHUHQFH
+> ୣݎൌ  ݕ ୶୲ ݎ ൅ ୧୬୲ ൅ ߛ ̵ܳࢇ ୲୭୲ ሺ̵࣎ǡ ࢇ̵ሻ ሺ࣎ǡ ࢇǡ̵࣎ ǡ ݏǡ ݎୣ ୶୲ ሻ
+
+Figure 1: The overall architecture of GPVD. GPVD includes three core components: (1) SimHash-based state grouping that clusters similar states to promote identification of collaborative behaviors; (2) Gradient protection mechanism that identifies and protects optimal collaborative joint actions; and (3) Count-based intrinsic reward to further encourage exploration. 
+
+{π1,∗, π 2,∗, . . . , π n, ∗} that maximizes the cumulative dis-counted rewards Eπ,P [∑∞ 
+
+> t=0
+
+γtrt].
+
+Non-Negative Gradient Flow In value function decom-position, the Individual-Global-Max (IGM) principle (Son et al. 2019) is introduced to ensure consistency between the global joint value function and individual agent utilities. It is formally defined as follows: arg max a Qtot (τ , a) =∏ni=1 arg max ai Qi(τ i, a i), where τ = ( τ1, · · · , τ n) is the joint trajectory. This ensures that independently greedy ac-tions collectively yield the globally optimal joint action. To guarantee such consistency, most value decomposition algo-rithms construct the global value function to be monotonic with respect to the individual utility functions, typically by enforcing non-negative mixing weights (Li et al. 2024b; Xu et al. 2023). This structural constraint ensures that the gra-dient flow with respect to each utility remains non-negative during training: 
+
+∂Q tot 
+
+∂Q i
+
+≥ 0, ∀i ∈ N . (1) In more expressive models like QPLEX, the global value function is defined as Qtot (τ , a) =∑ni=1 
+
+(Qi(τ , a i) + ( λi − 1) Adv i(τ , a i)), where Adv i
+
+is the advantage function and λi ≥ 0 is a learnable weight possibly dependent on the global state and joint action. To stabilize training, gradient from the advantage term Adv i
+
+is detached during backpropagation (Wang et al. 2020). As a result, although Qtot is not structurally monotonic, the gradient flow with respect to each Qi remains non-negative during optimization. Therefore, non-negative gradient flow 
+
+is a more general property than the monotonicity constraint in value decomposition. It ensures that, during training, the gradients of all individual utilities Qi corresponding to a joint action align with the optimization direction of Qtot .Consequently, the update direction for Qi(ai) is influenced by all joint actions that include the individual action ai.
+
+# Methodology 
+
+We begin by analyzing the gradient signals of individual utilities in value decomposition and formally define Gradi-ent Interference , demonstrating its impact on policy learn-ing via a matrix game. We then introduce our proposed al-gorithm, Gradient-Protected Value Decomposition (GPVD), which effectively overcome this issue. Figure 1 shows the architecture of our learning framework. 
+
+Gradient Interference Existing value decomposition methods often suffer from gradient interference, where con-flicting updates from different joint actions hinder the op-timization of individual utilities and disrupt policy learn-ing. To better understand and address this issue, we draw inspiration from counterfactual reasoning and define col-laborative and non-collaborative joint actions based on local deviation analysis over the joint value function. Specifically, we are interested in joint actions that out-perform all alternatives that differ in some agents’ ac-tions while sharing at least one agent’s action. So, we de-fine a neighborhood set of joint actions that are partially aligned with a collaborative joint action ac: Apartial (ac) = {a ∈ A ∣∣ a  = ac and ∃i ∈ N , a i = aic
+
+} .
+
+Definition 1 (Collaborative and Non-Collaborative Joint Actions) . A joint action ac is called a collaborative joint action at state s if it satisfies: 
+
+Qjt (s, ac) ≥ Qjt (s, a), ∀a ∈ Apartial (ac), (2) 
+
+and the related non-collaborative joint action ac− ∈
+
+Apartial (ac) that satisfies: Qjt (s, ac−) < Q jt (s, ac). Here, 
+
+Qjt (s, a) denotes the true joint action-value function. 
+
+Among all collaborative joint actions, we consider the op-timal collaborative joint action a∗ 
+
+> c
+
+as the one that achieves the highest joint value: a∗ 
+
+> c
+
+= arg max ac Qjt (s, ac). Thus, effective policy learning requires protecting the gradient sig-nals of the optimal collaborative action a∗ 
+
+> c
+
+while suppressing interference from conflicting non-collaborative actions a∗
+
+> c−
+
+.In value decomposition framework, Qjt (s, a) is approxi-mated by a decomposable total value function Qtot (τ , a).For each transition sample, we can analyze the gradient of the loss with respect to individual utilities. For a given state 
+
+s, suppose we collect some transition samples indexed by 
+
+k. For each sample k, the temporal-difference (TD) error is defined as δk = Qtot (τ k, ak) − yk, where yk is the corre-sponding TD target. Then the TD loss is then computed as 
+
+Lk 
+
+> TD
+
+= 12 δ2
+
+> k
+
+. Due to the non-negative gradient flow, the gra-dient of the TD loss with respect to each individual utility 
+
+Qi for sample k is given by: 
+
+∇Qi Lk 
+
+> TD
+
+= δk · ∂Q tot 
+
+∂Q i
+
+∝ δk, ∀i ∈ N . (3) 21781 (a) Payoff matrix (b) (c) Figure 2: Gradient interference in the payoff matrix scenario. (a) The payoff matrix. (b) Gradient interference on Qa(a1)
+
+induced by the non-collaborative samples (a1, b 2) and (a1, b 3). (c) show the training dynamics with gradient protection applied. Then, we define the Gradient Interference as follows: 
+
+Definition 2 (Gradient Interference) . Let δc and δc− denote the TD errors of a collaborative joint action ac and a non-collaborative joint action ac−, respectively. Gradient inter-ference on Qi occurs if 
+
+∇Qi Lc 
+
+> TD
+
+· ∇ Qi Lc− 
+
+> TD
+
+∝ δc · δc− < 0, ∀i ∈ { i | aic = aic−},
+
+(4) 
+
+indicating that conflicting TD errors induce opposing gradi-ent directions on shared utility components, thereby disrupt-ing optimal policy learning. 
+
+Gradient interference’s negative impact on policy learn-ing can be illustrated by a simple matrix game, as shown in the Figure 2. In this scenario, agent A and agent B exe-cute a joint action to receive a reward specified in the pay-off table. Qa and Qb denote the utility functions of agent A and B, and Q∗ represent the optimal value. The joint actions (a1, b 1), (a2, b 2), (a3, b 3) are collaborative joint ac-tions, with (a1, b 1) being the optimal collaborative joint ac-tion. Figure 2(b) illustrates the evolution of utility function outputs and the corresponding gradient flows during train-ing. Qa(a1) closely follow the aggregated gradient direc-tions from all samples: the utilities increase when the gradi-ent is negative and decrease when it is positive. This phe-nomenon is further highlighted in Figures 2(c). However, the beneficial gradient signal from the optimal joint action 
+
+(a1, b 1) is overwhelmed by conflicting updates induced by non-collaborative joint actions. As a result, Qa(a1) deviate from Q∗
+
+> a
+
+, causing the policy to converge to a suboptimal so-lution. A similar phenomenon is observed for Qb(b1).
+
+SimHash-Based State Grouping To protect the gradient signals of optimal collaborative joint actions during training, it is essential to accurately identify such actions at each state. To effectively identify optimal collaborative joint actions in multi-agent environments with high-dimensional and con-tinuous state spaces (Yang et al. 2020; Zheng et al. 2021; Yu et al. 2022), we employ SimHash as a lightweight yet efficient state encoder to discretize the state space by map-ping semantically similar states into the same hash bucket (Charikar 2002; Tang et al. 2017). This discretization en-ables efficient local action analysis and facilitates sample-efficient identification of high-return collaborative actions. Let s ∈ S denote a high-dimensional continuous state. SimHash projects s into a k-bit binary code by applying a randomly initialized projection matrix A ∈ Rk×D :
+
+φ(s) = sign (Ag(s)) = [ I(a1g(s) ≥ 0) , . . . , I(akg(s) ≥ 0)] ,
+
+(5) where g : S → RD is an optional preprocessing function and ai is the i-th row of A, sampled from a standard Gaus-sian distribution, I(·) is the indicator function. The value for 
+
+k controls the granularity: higher values lead to fewer colli-sions and are thus more likely to distinguish states. For any given query state st, we define the corresponding sample group (or sample bucket) as: 
+
+Dφ(st) = {(τ , a, τ ′, s, r ext ) ∈ D ∣∣ φ(s) = φ(st)} , (6) where D denotes the dataset of transition tuples 
+
+(τ , a, τ ′, s, r ext ) collected during training, and rext repre-sents the extrinsic rewards obtained from the environment. The grouped sample set Dφ(st) serves as the statistical basis for identifying consistent collaborative joint actions that are not specific to a single state instance, but rather generalize over a local neighborhood in the state space. This design maps states into a unified semantic space, allowing for the identification of consistent collaborative structures across similar states, which is essential for the gradient protection mechanism introduced next. 
+
+Gradient Protection Mechanism To mitigate the impact of gradient interference, we introduce a mechanism that pro-tects collaborative joint actions by reweighting the loss func-tion. Specifically, the contributions of actions exhibiting gra-dient conflict are down-weighted to reduce their adverse ef-fect on policy optimization, while the gradients of optimal collaborative actions are preserved to guide effective coor-dination learning. However, during policy optimization, the true optimal collaborative actions are not directly observ-able. In practice, we identify actions requiring gradient pro-tection by selecting those with the highest TD targets within each state bucket. And define the optimal collaborative joint action in group Dφ(st) as: 
+
+ac∗ 
+
+> φ(st)
+
+:= arg max 
+
+> a∈Aφ(st)
+
+{
+
+y(τ , a) | y(τ , a) > max  
+
+> a′
+
+Qtot (τ , a′)
+
+}
+
+,21782 where Aφ(st) = {a | (τ , a, τ ′, s, r ext ) ∈ D φ(st)
+
+} is the set of joint actions observed within the group, and y(τ , a) = 
+
+r(τ , a) + γ max a′ Qtot (τ ′, a′) denotes the corresponding TD target. Then, ac∗ 
+
+> φ(st)
+
+serves as a high-return, underfit-ted action for collaborative policy optimization. This en-sures that the selected action not only demonstrates a high estimated return, but also exceeds the current maximum Q-value under the learned policy, thereby identifying poten-tially overlooked optimal collaborative joint action. State grouping is computed per round to update counts and iden-tify potential optimal actions, which has minimal impact on the method’s scalability. To protect the gradient signals of the optimal collabora-tive joint action ac∗
+
+> φ(st)
+
+, it is crucial to suppress the influ-ence of its associated non-collaborative actions. To maxi-mize sample efficiency, it is not necessary to suppress all non-collaborative actions. As previously analyzed (Eq. 4), only those non-collaborative joint actions whose TD error signs conflict with that of the optimal collaborative joint action should be attenuated. Specifically, with respect to 
+
+ac∗
+
+> φ(st)
+
+, we denote the set of non-collaborative joint actions that cause gradient interference as: 
+
+ac∗−  
+
+> φ(st)
+
+=
+
+{
+
+a ∈ Apartial (ac∗
+
+> φ(st)
+
+) and δ(a) · δ(ac∗
+
+> φ(st)
+
+) < 0
+
+}
+
+.
+
+where δ(·) denotes the TD error and a ∈ Aφ(st). Then, we introduce a sample-wise weighting function w(τ , a) that adaptively adjusts the contribution of each transition to the overall loss: 
+
+w(τ , a) = 
+
+{
+
+α, if a ∈ ac∗− 
+
+> φ(st)
+
+,
+
+1, otherwise , (7) where α ∈ (0 , 1) is a fixed small factor that down-weights conflicting samples. To further accelerate conver-gence in cases where optimal collaborative actions are under-sampled, we may also assign a larger weight to the transitions associated with ac∗
+
+> φ(st)
+
+, thereby amplifying their gradient signal. Based on this weighting scheme, the final TD loss objective becomes: 
+
+LTD = 1
+
+|D| 
+
+∑  
+
+> (τ,a,τ′,s,r ext )∈D
+
+w(τ , a) · (Qtot (τ , a) − y)2 ,
+
+(8) This loss formulation ensures that updates from non-collaborative joint actions with conflicting TD directions are suppressed during training. 
+
+Count-Based Intrinsic Reward To further improve ex-ploration and prevent premature convergence, we integrate a count-based intrinsic reward into the gradient protection framework (Jeon et al. 2022; Jo et al. 2024). This intrin-sic reward encourages agents to visit less-explored state re-gions more frequently, thereby promoting diverse experi-ence collection and reducing the risk of converging prema-turely to suboptimal joint policies (Bellemare et al. 2016; Tang et al. 2017). Formally, for each state cluster defined by the SimHash encoding, we maintain a visitation count  
+
+> (a) Payoff learned by QMIX (b) Payoff learned by GPVD
+
+Figure 3: The value functions (individual utilities and total value) learned by QMIX and GPVD in Payoff Matrix. 
+
+N (φ(st)) . The intrinsic reward is computed as: 
+
+rint (st) = β
+
+√N (φ(st)) + κ, (9) where β > 0 controls the strength of the intrinsic reward, and κ is a fixed offset term. By integrating the intrinsic re-ward with the extrinsic task reward, agents obtain a balanced learning signal that promotes both effective collaboration and efficient exploration. Consequently, the new TD target is defined as y = rext + rint + γ max a′ Qtot (τ ′, a′),where 
+
+γ is the discount factor. 
+
+# Experiment Results 
+
+In this section, we evaluate the performance of our proposed method across three cooperative multi-agent environments: the Matrix Game, Predator-Prey, and the StarCraft II Multi-Agent Challenge (SMAC) (Samvelyan et al. 2019). To en-sure fair and consistent comparisons, all competing algo-rithms are trained using the same optimizer configurations and identical hyperparameter settings. All results are ob-tained from 5 runs under different random seeds and are plotted using means and standard deviation. Our implemen-tation is built upon the PyMARL2 framework (Hu et al. 2021), with QMIX serving as the baseline. We integrate our method into QMIX and evaluate its performance. 
+
+Matrix Game To evaluate the effectiveness of GPVD in mitigating gradient interference, we first conduct experi-ments on the Matrix Game. Figure 2(c) illustrates the evo-lution of the utility function output and the corresponding gradient flow for the optimal joint action (a1, b 1) during GPVD training. As shown in the figure, the gradient signal of (a1, b 1) is successfully protected and not overwhelmed by non-collaborative actions, thanks to our proposed gradi-ent protection mechanism. As a result, the utility value of the optimal collaborative action rapidly increases and con-verges within a few training steps, leading to the emergence of the optimal policy. This demonstrates that GPVD effec-tively identifies and exploits optimal joint behaviors. The value functions (individual utilities and total value) learned by QMIX and GPVD are provided in Figure 3. 
+
+Predator-Prey Predator-Prey is a partially observable en-vironment where eight predators cooperate to capture eight preys on a 10 ×10 grid. A successful capture by two or more adjacent predators yields a shared reward of r = 10 , while solo attempts incur a penalty p ≤ 0. We evaluate two set-tings: moderate coordination ( p = 0 ) and high coordination 21783 Figure 4: Test win rate on the SMAC tasks. Figure 5: Test return on the Predator-Prey tasks.                      
+
+> Scenario GPVD w/o SimHash w/o GP w/o rint
+> 5m vs 6m 0.67 0.52 0.63 0.61 8m vs 9m 0.92 0.83 0.83 0.92 3s vs 5z 0.61 0.27 0.43 0.31 MMM2 0.74 0.74 0.72 0.48
+
+Table 1: Ablations results comparing GPVD and its ablated versions on four SMAC maps. (p = −2). In the latter, we emphasize optimal collabora-tive actions by increasing their gradient weights to promote faster convergence. Figure 5 shows the performance com-parison among our method and the baselines. When p equals zero, most methods achieve satisfactory performance. Under the more challenging setting where p = −2, conventional methods such as QMIX, QPLEX, and QTRAN fail to learn effective coordination strategies for successful prey capture. In contrast, both GPVD and WQMIX demonstrate strong performance. Compared to WQMIX, our method converges faster by protecting gradients of optimal collaborative ac-tions, enhancing learning under high coordination. 
+
+StarCraft II Multi-Agent Challenge (SMAC) Next, we further evaluate our proposed method on the challenging StarCraft II Multi-Agent Challenge (SMAC) (Samvelyan et al. 2019), a widely-used benchmark for cooperative MARL. In SMAC, agents are divided into two teams and must coordinate with allies while competing against ene-                          
+
+> Hyperparameter Value 5m vs 6m 8m vs 9m
+> α
+> 0.1 0.70 0.92 0.2 0.67 0.92 0.5 0.63 0.89 1.0 0.63 0.83
+> β
+> 0.01 0.67 0.92 0.05 0.65 0.86 0.1 0.70 0.78
+> k
+> 16 0.71 0.81 32 0.67 0.92 64 0.58 0.90 QMIX -0.58 0.76
+
+Table 2: Hyperparameter analysis of GPVD on the 
+
+5m vs 6m and 8m vs 9m .mies controlled by the built-in game AI. To assess the ef-fectiveness and generality of our approach, we conduct ex-periments on ten representative SMAC scenarios. Figure 4 presents the performance curves across all evaluated sce-narios. Our method consistently achieves faster convergence and higher win rates across a wide range of tasks. In sim-ple scenarios such as 2s vs 1sc and 2s3z , GPVD per-forms comparably to existing state-of-the-art methods. In more complex tasks, it demonstrates notably faster con-vergence and superior win rates. Although QPLEX and QTRAN possess greater representational capacity compared to QMIX, their performance does not consistently surpass that of QMIX across all scenarios. Interestingly, while CW-QMIX and OW-QMIX perform competitively in simpler tasks, their performance drops significantly on the SMAC benchmark compared to the original QMIX. This degrada-tion is likely due to their uniform down-weighting of all non-optimal actions, which inadvertently suppresses use-ful learning signals and leads to poor sample efficiency. In contrast, our method selectively suppresses only those sam-ples that induce gradient interference with optimal collab-orative actions, guided by state grouping. Simultaneously, 21784 Figure 6: Visualization of optimal collaborative and interfering non-collaborative actions identified by GPVD in the 5m vs 6m .  
+
+> (a) Dispersing enemy in 3s vs 5z
+> (b) Kiting in 3s vs 5z
+> (c) Backline healing with frontline tanking, prioritizing high-damage and healer units first, and handling tank units last in
+> MMM2
+
+Figure 7: Cooperative strategies learned through GPVD. it incorporates a count-based intrinsic reward to encourage exploration. This dual mechanism not only preserves criti-cal learning signals essential for effective coordination, but also promotes exploration of under-visited states, thereby improving sample efficiency and enhancing the robustness of policy learning. 
+
+Ablation and Hyperparameter Analysis Table 1presents the ablation study results. The complete GPVD model consistently outperforms its ablated variants, validat-ing the contribution of each component. presents We further analyze the sensitivity of key hyperparameters (Table 2) and observe that GPVD exhibits good robustness across a broad range of settings. Nonetheless, achieving optimal performance still requires appropriate tuning tailored to the specific task. 
+
+Visualization To validate the effectiveness of the gradient protection mechanism, we visualize optimal collaborative joint actions and their interfering counterparts during train-ing on 5m vs 6m , a task that requires coordination under numerical disadvantage. Figure 6 shows two representative grouped states. To trace runtime scenarios, we visualize the episodes, where the enemy IDs are randomly assigned. In 
+
+state 1 , none of the enemies (blue) are within attack range of the allied agents (red); the optimal strategy is for all agents to move east, while GPVD correctly suppresses conflicting actions such as stopping or moving south. In state 2 , all agents except agent 2 are positioned to attack; the optimal action is for agent 2 to move east to enter range while oth-ers focus fire. Again, GPVD effectively distinguishes two interfering joint actions that involve suboptimal behaviors, such as stopping or incorrectly repositioning. These visu-alizations provide intuitive evidence that gradient protection effectively identifies and suppresses conflicting updates, pre-serving gradients from optimal collaborative behaviors. In harder scenarios like 3s vs 5z and MMM2 , GPVD enables rapid emergence of cooperative behaviors such as dispersing enemy, kiting, focus fire, and role-aware actions within 2 million steps (Figure 7). This demonstrates GPVD’s ability to efficiently learn complex collaboration strategies. 
+
+# Conclusion 
+
+In value decomposition-based multi-agent reinforcement learning, decentralized agents often suffer from gradient in-terference, which disrupts the learning of optimal strategies, reduces sample efficiency, and increases the risk of converg-ing to suboptimal behaviors. To address this, we propose Gradient-Protected Value Decomposition (GPVD), a novel framework that explicitly safeguards the gradient signals of optimal collaborative actions while suppressing harmful in-terference from conflicting joint actions. Extensive experi-ments demonstrate the effectiveness and robustness of our method in complex cooperative settings. 21785 Acknowledgments 
+
+This work is supported by the National Key R&D Program of China (2023YFB4704900) and National Natural Science Foundation of China (U21A20485). 
+
+# References 
+
+Bellemare, M.; Srinivasan, S.; Ostrovski, G.; Schaul, T.; Saxton, D.; and Munos, R. 2016. Unifying count-based ex-ploration and intrinsic motivation. Advances in neural infor-mation processing systems , 29. Charikar, M. S. 2002. Similarity estimation techniques from rounding algorithms. In Proceedings of the thiry-fourth an-nual ACM symposium on Theory of computing , 380–388. Foerster, J.; Assael, I. A.; De Freitas, N.; and Whiteson, S. 2016. Learning to communicate with deep multi-agent re-inforcement learning. Advances in neural information pro-cessing systems , 29. Foerster, J.; Farquhar, G.; Afouras, T.; Nardelli, N.; and Whiteson, S. 2018. Counterfactual multi-agent policy gra-dients. In Proceedings of the AAAI conference on artificial intelligence , volume 32. Han, S.; Wang, H.; Su, S.; Shi, Y.; and Miao, F. 2022. Sta-ble and efficient Shapley value-based reward reallocation for multi-agent reinforcement learning of autonomous vehicles. In 2022 International Conference on Robotics and Automa-tion (ICRA) , 8765–8771. IEEE. Hernandez-Leal, P.; Kartal, B.; and Taylor, M. E. 2019. A survey and critique of multiagent deep reinforcement learn-ing. Autonomous Agents and Multi-Agent Systems , 33(6): 750–797. Hu, J.; Jiang, S.; Harding, S. A.; Wu, H.; and Liao, S.-w. 2021. Rethinking the implementation tricks and mono-tonicity constraint in cooperative multi-agent reinforcement learning. arXiv preprint arXiv:2102.03479 .Huang, C.; Zhu, S.; Zhao, J.; Zhou, H.; Ye, C.; Feng, T.; and Jiang, C. 2024. POWQMIX: Weighted Value Factoriza-tion with Potentially Optimal Joint Actions Recognition for Cooperative Multi-Agent Reinforcement Learning. arXiv preprint arXiv:2405.08036 .Jeon, J.; Kim, W.; Jung, W.; and Sung, Y. 2022. Maser: Multi-agent reinforcement learning with subgoals generated from experience replay buffer. In International conference on machine learning , 10041–10052. PMLR. Jianye, H.; Hao, X.; Mao, H.; Wang, W.; Yang, Y.; Li, D.; Zheng, Y.; and Wang, Z. 2022. Boosting multiagent re-inforcement learning via permutation invariant and permu-tation equivariant networks. In The eleventh international conference on learning representations .Jo, Y.; Lee, S.; Yeom, J.; and Han, S. 2024. FoX: Formation-aware exploration in multi-agent reinforcement learning. In 
+
+Proceedings of the AAAI Conference on Artificial Intelli-gence , volume 38, 12985–12994. Kim, W.; and Sung, Y. 2023. An adaptive entropy-regularization framework for multi-agent reinforcement learning. In International Conference on Machine Learn-ing , 16829–16852. PMLR. Li, C.; Zhang, Y.; Wang, J.; Hu, Y.; Dong, S.; Li, W.; Lv, T.; Fan, C.; and Gao, Y. 2024a. Optimistic value instructors for cooperative multi-agent reinforcement learning. In Pro-ceedings of the AAAI Conference on Artificial Intelligence ,volume 38, 17453–17460. Li, H.; Zhou, H.; Zou, Y.; Yu, D.; and Lan, T. 2024b. Concaveq: Non-monotonic value function factorization via concave representations in deep multi-agent reinforcement learning. In Proceedings of the AAAI Conference on Artifi-cial Intelligence , volume 38, 17461–17468. Lowe, R.; Wu, Y. I.; Tamar, A.; Harb, J.; Pieter Abbeel, O.; and Mordatch, I. 2017. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neural information processing systems , 30. Mahajan, A.; Rashid, T.; Samvelyan, M.; and Whiteson, S. 2019. Maven: Multi-agent variational exploration. Advances in neural information processing systems , 32. Matignon, L.; Jeanpierre, L.; Mouaddib, A. I.; et al. 2012. Coordinated Multi-Robot Exploration under Communica-tion Constraints Using Decentralized Markov Decision Pro-cesses. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 26, 2017–2023. Na, H.; and Moon, I.-c. 2024. LAGMA: Latent goal-guided multi-agent reinforcement learning. arXiv preprint arXiv:2405.19998 .Oliehoek, F. A.; Amato, C.; et al. 2016. A concise introduc-tion to decentralized POMDPs , volume 1. Springer. Rashid, T.; Farquhar, G.; Peng, B.; and Whiteson, S. 2020a. Weighted qmix: Expanding monotonic value func-tion factorisation for deep multi-agent reinforcement learn-ing. Advances in neural information processing systems , 33: 10199–10210. Rashid, T.; Samvelyan, M.; De Witt, C. S.; Farquhar, G.; Fo-erster, J.; and Whiteson, S. 2020b. Monotonic value func-tion factorisation for deep multi-agent reinforcement learn-ing. Journal of Machine Learning Research , 21(178): 1–51. Samvelyan, M.; Rashid, T.; De Witt, C. S.; Farquhar, G.; Nardelli, N.; Rudner, T. G.; Hung, C.-M.; Torr, P. H.; Fo-erster, J.; and Whiteson, S. 2019. The starcraft multi-agent challenge. arXiv preprint arXiv:1902.04043 .Schmidt, L. M.; Brosig, J.; Plinge, A.; Eskofier, B. M.; and Mutschler, C. 2022. An introduction to multi-agent re-inforcement learning and review of its application to au-tonomous mobility. In 2022 IEEE 25th International Con-ference on Intelligent Transportation Systems (ITSC) , 1342– 1349. IEEE. Shen, S.; Qiu, M.; Liu, J.; Liu, W.; Fu, Y.; Liu, X.; and Wang, C. 2022. Resq: A residual q function-based approach for multi-agent reinforcement learning value factorization. 
+
+Advances in Neural Information Processing Systems , 35: 5471–5483. Son, K.; Kim, D.; Kang, W. J.; Hostallero, D. E.; and Yi, Y. 2019. Qtran: Learning to factorize with transformation for cooperative multi-agent reinforcement learning. In Interna-tional conference on machine learning , 5887–5896. PMLR. 21786 Sunehag, P.; Lever, G.; Gruslys, A.; Czarnecki, W. M.; Zam-baldi, V.; Jaderberg, M.; Lanctot, M.; Sonnerat, N.; Leibo, J. Z.; Tuyls, K.; et al. 2017. Value-decomposition net-works for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 .Tang, H.; Houthooft, R.; Foote, D.; Stooke, A.; Xi Chen, O.; Duan, Y.; Schulman, J.; DeTurck, F.; and Abbeel, P. 2017. Exploration: A study of count-based exploration for deep re-inforcement learning. Advances in neural information pro-cessing systems , 30. Wang, J.; Ren, Z.; Liu, T.; Yu, Y.; and Zhang, C. 2020. QPLEX: Duplex Dueling Multi-Agent Q-Learning. arXiv e-prints , arXiv–2008. Wang, J.; Xu, W.; Gu, Y.; Song, W.; and Green, T. C. 2021. Multi-agent reinforcement learning for active voltage con-trol on power distribution networks. Advances in Neural Information Processing Systems , 34: 3271–3284. Xu, Z.; Zhang, B.; Zhou, G.; Zhang, Z.; Fan, G.; et al. 2023. Dual self-awareness value decomposition frame-work without individual global max for cooperative MARL. 
+
+Advances in Neural Information Processing Systems , 36: 73898–73918. Yang, Y.; Hao, J.; Liao, B.; Shao, K.; Chen, G.; Liu, W.; and Tang, H. 2020. Qatten: A general framework for co-operative multiagent reinforcement learning. arXiv preprint arXiv:2002.03939 .Yu, C.; Velu, A.; Vinitsky, E.; Gao, J.; Wang, Y.; Bayen, A.; and Wu, Y. 2022. The surprising effectiveness of ppo in cooperative multi-agent games. Advances in neural infor-mation processing systems , 35: 24611–24624. Zheng, L.; Chen, J.; Wang, J.; He, J.; Hu, Y.; Chen, Y.; Fan, C.; Gao, Y.; and Zhang, C. 2021. Episodic multi-agent reinforcement learning with curiosity-driven explo-ration. Advances in Neural Information Processing Systems ,34: 3757–3769. 21787

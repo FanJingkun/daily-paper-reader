@@ -1,0 +1,755 @@
+Title: Achieving Equilibrium Under Utility Heterogeneity: An Agent-Attention Framework for Multi-Agent Multi-Objective Reinforcement Learning
+
+URL Source: https://ojs.aaai.org/index.php/AAAI/article/download/40196/44157
+
+Number of Pages: 8
+
+Markdown Content:
+# Achieving Equilibrium Under Utility Heterogeneity: An Agent-Attention Framework for Multi-Agent Multi-Objective Reinforcement Learning 
+
+## Zhuhui Li 1, Chunbo Luo 1, Liming Huang 2, Luyu Qi 3, and Geyong Min 1
+
+> 1
+
+Department of Computer Science, University of Exeter, EX4 4QF, UK 
+
+> 2
+
+School of Mechanical and Electrical Engineering, Central South University, Hunan, China 
+
+> 3
+
+Faculty of Science and Engineering, University of Bristol, BS8 1UB Bristol, U.K 
+
+{zl462, c.luo }@exeter.ac.uk, huanglm.me@gmail.com, luyu.qi@bristol.ac.uk, g.min@exeter.ac.uk 
+
+Abstract 
+
+Multi-agent multi-objective systems (MAMOS) have emerged as powerful frameworks for modelling complex decision-making problems across various real-world do-mains, such as robotic exploration, autonomous traffic management, and sensor network optimisation. MAMOS enhances scalability and robustness through decentralised control and more accurately captures inherent trade-offs between conflicting objectives. In MAMOS, each agent uses utility functions that map return vectors to scalar values. Existing MAMOS optimisation methods face significant challenges in handling heterogeneous objective and utility function settings, where training non-stationarity is inten-sified due to private utility functions and the associated policies. In this paper, we first theoretically prove that direct access to, or structured modeling of, global utility functions is necessary to achieve the Bayesian Nash Equilibrium under decentralised execution constraints. To access the global utility functions while preserving the decentralised execution, we propose an Agent-Attention Multi-Agent Multi-Objective Reinforcement Learning (AA-MAMORL) framework. Our approach implicitly learns a joint belief over other agents’ utility functions and their associated policies during centralised training, effectively mapping global states and utilities to each agent’s policy. During execution, each agent independently selects actions based on local observations and its private utility function to approximate a BNE, without relying on inter-agent communication. We evaluate our framework through extensive experiments in a custom-designed MAMO Particle environment and the standard MOMALand benchmark. The results demonstrate that accessibility to global preferences and our proposed AA-MAMORL significantly improves performance and consistently outperforms state-of-the-art methods. 
+
+## Introduction 
+
+Multi-Agent Multi-Objective Systems (MAMOSs) have been spotlighted in real-world applications, such as balanc-ing exploration and exploitation in networked robotic sys-tems (Paine and Benjamin 2024), managing the trade-off between efficiency and energy consumption in autonomous traffic control (Shi et al. 2021), and optimising the trade-off between resolution and coverage in mobile sensor mon-itoring tasks (Hayat et al. 2020). In contrast to single-agent 
+
+Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+systems where the decision burden and failure risk are cen-tralised, the MAMOS distributes both computation and con-trol across agents. This decentralisation enhances system scalability and enables resilience and robustness to par-tial agent failures (He et al. 2021). Meanwhile, the multi-objective formulation in MAMOSs also better reflects the inherent trade-offs in real-world applications. To be specific, most real-world systems require trade-offing between mul-tiple, often conflicting, performance metrics. Representative MO settings include energy efficiency (Niu et al. 2023), en-ergy performance index (Chang, Iqbal, and Chen 2023), and water use efficiency (Mallareddy et al. 2023), often in con-junction with advanced integrated technologies such as Si-multaneous Wireless Information and Power Transfer (Wei et al. 2021), Integrated Sensing and Communication (Qi et al. 2022), and piezoelectric roads (Jiang et al. 2023). Although steady progress has been made in the develop-ment of MAMOSs, several critical challenges remain, in-cluding the joint interdependencies among objectives and agents, the dynamic nature of real-world systems, and the non-differentiability of many environments (Wong et al. 2023). The heterogeneity and diversity of reward (cor-responding to objective) and utility function settings in MAMOS further pose significant challenges to the MAMO optimisation. As discussed in (R˘ adulescu et al. 2020), the utility function is defined as a mapping from the vectorised rewards to a scalar utility. The utility function in this pa-per is referred to as the preference, where the weighted sum based on rewards and preferences forms the most basic util-ity function for all agents. The decision-making problems in MAMOS can be categorised into five settings, based on the combinations of reward and utility function types. On the reward side, agents receive either a team reward, where all agents share the same reward vector reflecting collective per-formance, or an individual reward, where each agent obtains a personalised reward vector. On the utility side, agents opti-mise a shared team utility, pursue a social choice utility that aggregates all agents’ rewards into a global social welfare function, or optimise their own individual utility, where each agent maintains a private function. Examples of these com-binations in real-world companies are illustrated in Fig. 1. In the simplest setting: team utility with team reward, the problem can be simplified into a single-agent formulation, The Fortieth AAAI Conference on Artificial Intelligence (AAAI-26) 
+
+29538 A large company with a diverse staff 
+
+Team Utility 
+
+Team Reward 
+
+Social Choice    
+
+> Astartup with financial difficulties
+> Employee -owned company
+> A close -knit startup
+> Objective :
+> Increaing salary ;Reducing workload
+> Objective :
+> Rapid promotion ;Work -life balance
+> Objective :
+> Increaing salary; Develop skills
+> Workload Salary
+> Workload Salary
+> Skill Salary
+> I am struggling financially
+> I am growing older
+> I value personal growth
+
+Individual Reward 
+
+Individual Utility  
+
+> Large company , diverse staff
+> Our objective :
+> Maximize profits ；
+> Reduce energy consumption
+> Maximize the profit ,while every member is satisfied with personal well -being Energy Profit
+> Preference
+
+Figure 1: Illustrative examples of the five types of reward and utility function setting, using different companies as analogies. where one entity optimises its joint policy by acting over the entire joint action space (R˘ adulescu et al. 2020). In the more challenging team utility with individual reward set-ting, Hu et al. (Hu et al. 2023) have proposed MO-MIX to solve Partially Observable MO Markov Decision Process (POMOMDP)s within the Centralised Training with Decen-tralised Execution (CTDE) framework. Their approach in-corporates a Multi-Objective Conditioned Agent Network for evaluating action-values under the team utility, a paral-lel mixing network for estimating joint action-values, and a preference-based exploration strategy to promote diverse and well-distributed Pareto-optimal policies. However, the optimisation in the most general setting: in-dividual utility functions, remains unsolved. But this set-ting is critical as it is able to reflect most real-world sce-narios where agents act based on personal intentions, con-straints, or their distinct roles in the environment. Designing a general optimisation framework for this setting is chal-lenging, with the reason that each agent must optimise its policy according to its own utility function, while the re-ward of that policy depends on the joint policy with other agents under their individual utility functions. Since these utility functions are heterogeneous and potentially conflict-ing, each agent’s policy cannot be updated and performed in isolation (Assos, Dagan, and Daskalakis 2024). This naturally leads to the optimisation in MAMOSs as a Bayesian game, where each agent possesses private in-formation, such as utility functions, objectives, or local ob-servations, and must form beliefs about the policies of oth-ers to make its own optimal decision. The canonical solu-tion concept in such settings is the Bayesian Nash Equilib-rium (BNE) (Saglam 2025), a joint policy in which no agent can unilaterally improve its expected utility, given its beliefs about the types and policies of others. Achieving BNEs in MAMOS settings is non-trivial due to the intensified non-stationarity introduced by other agents’ private utility func-tions, multiple rewards settings, and the associated policies (Assos, Dagan, and Daskalakis 2024). While CTDE has become a dominant paradigm in MARL to optimise the individual policy (actor) by forming beliefs about the policies of others in the centralised critic network (Li, Wang, and Xu 2025), it does not guarantee conver-gence to BNE when agents’ utility functions are partially or entirely unknown to each other in MAMOSs, since the CTDE framework will still fail to capture or model utility-based policies with the unknown utility function. As a re-sult, the learning process is still highly non-stationary from each agent’s perspective, and the BNE remains inapplicable. Thus, BNE in MAMOs requires that every agent possesses a model of others’ utility functions and the corresponding policies those utilities induce. This fundamental requirement constitutes the main problem to be addressed in this paper: 
+
+How to map the global state, utility functions, and the associated joint policies to each agent’s individual policy, so that each agent can learn its own decentralised opti-mal policy that maximise the global utility, even under heterogeneous objective and utility function settings. 
+
+We find that belief modeling on the joint policy becomes tractable, and BNE becomes theoretically attainable when each agent’s utility function is a deterministic function of the state or observation (e.g., wi = g(oi)). This case also bet-ter aligns with many real-world applications. For instance, when purchasing train tickets, a traveler facing tight time constraints may prioritize on-time arrival over cost, whereas one planning in advance during a pre-sale period is more likely to prefer the lowest possible price. Building on this finding, we first prove that when each agent’s utility function is either directly observable or can be modeled from local observations, convergence to a BNE becomes theoretically attainable. Then, we propose an agent-attention MAMORL framework. This framework implicitly learns a joint belief over other agents’ utility functions and their correspond-ing policies through centralized agent-attention-based critic training. Thus, each agent learns a mapping from the global state and utility functions to its own policy under such belief. The learnt distributed policy of each agent can be executed using only its local observations and private utility function. And no agent has an incentive to unilaterally deviate from its decision given the system-wide context. Thereby the BNE of MAMOSs can be approximated in a fully decentralized and communication-free setting. Our main contributions are summarized as follows: 1. We formalise the MAMOS optimisation as a gen-eral POMOMDP, capable of abstracting various applications with heterogeneous reward and utility function settings. 2. We bridge between the POMOMDP and Bayesian games, and rigorously prove that even under the CTDE paradigm, the utility function is essential for achieving BNE in decentralised decision-making. 3. We propose an agent-attention MAMORL framework for scenarios where utility functions are deterministic func-tions of agents’ local observations. This framework enables the optimal decentralised policy conditioned solely on its lo-cal observation and private utility function for each agent. 4. We conduct comprehensive experiments in the MAMO Particle environment and the MOMALand benchmark. The 29539 results demonstrate that the global utility functions and our proposed AA-MAMORL framework consistently improve multiple MO metrics. 
+
+## Preliminaries 
+
+Partially Observable MO Markov Decision Process 
+
+POMOMDP is defined by the tuple: Ω =(S, A, R, W , Po, Pwt , P t, P 0, γ ). Within this process, 
+
+S is the state space describing the possible states of all agents and the environment, A1, . . . , AN ∈ A and 
+
+w1, . . . , wN ∈ W are the action and preference spaces for all agents. At each time slot, agent i first uses its observation function P io ∈ Po : S → Oi to obtain its own observation oi based on the state s ∼ S. Each agent i
+
+uses its MO policy πi : Oi × wi → A i to select its action 
+
+ai ∼ A i since observations coupled with the utility function affect agents’ decisions jointly. The transition function 
+
+Pt : S × A 1 × . . . × A N → S transits the current state st to 
+
+st+1 . The preference transition function P twt ∈ Pwt transits the preference wi[t] to wi[t + 1] . Its setting is divided in two cases in the following sections. P0 is the distribution function of the initial state of the environment. Finally, each agent i obtains vectorised rewards as a function of the state and joint action ri ∈ R : S×A 1×. . . ×A N → R : Rm. The objective of MAMO optimisation is the optimal joint policy which maximises the weighted sum of all agents’ rewards and corresponding preferences: R = PNi=0 
+
+PTt=0 γtw⊤ 
+
+> i
+
+rti ,where γ ∈ [0 , 1] denotes the discount factor. 
+
+The Necessity of Global Preferences in POMOMDP Decision-Making 
+
+In this section, we theoretically demonstrate that the attain-ability of BNE in POMOMDP depends on the observability or structural modeling of global preference. 
+
+Case I: Preferences as Unstructured Random Variables 
+
+Assume wi ∼ Unif (∆ k)|∆k =w∈Rk |P   
+
+> jwj=1 ,w j≥0
+
+. Each agent’s preference is independently and uniformly dis-tributed. 
+
+Theorem 1 (BNE Inapplicability with Unobservable, Uni-form Preferences) . Suppose that for any i̸ = j, agent i
+
+knows only that other agent’s preference wj ∼ Unif(∆ k).Then the classical BNE concept is inapplicable 
+
+Theorem 2 (BNE Attainability with Observable Uniform Preferences) . Let each agent j’s preference weight wj ∼
+
+Unif(∆ k) be drawn independently, and assume that for ev-ery pair i̸ = j, agent i observes wj prior to choosing its action. Then BNE in behavioral strategies exists. 
+
+Case II: Preferences as State-dependent Functions Theorem 3 (BNE Existence when wi = g(oi)). Sup-pose each agent i ’s preference weight wi is a determin-istic function of its private observation wi = g(oi) where 
+
+g : Oi → ∆k is continuous. Then, under the usual com-pactness and continuity assumptions on observations and actions, a mixed-strategy BNE exists. Proof. The proofs of above theorems are provided in (Li et al. 2025). 
+
+## General Multi-Agent Multi-objective Reinforcement Learning 
+
+In a game with N agents, each agent has M objectives, and the corresponding preference vector W = {w1, . . . , wN }
+
+indicates the importance of each objective for the corre-sponding agent, where wi = {w1 
+
+> i
+
+, . . . , w Mi | PMj=1 wji =1}. Based on the above theorem, we further develop dis-tinct MAMORL frameworks designed for whether pref-erences are modeled as unstructured random variables or observation-dependent functions. These frameworks are de-signed to generalise across diverse real-world settings of states, actions, preferences, and rewards, thereby enabling robust optimisation in MAMOS scenarios. 
+
+Global-preference-based MAMORL for Case I 
+
+The policy set π = {π1, . . . , π N } is assigned to all agents and is parametrised by θπ = {θπ1 , . . . , θ πN }. According to Theorem 2, the global preference W is necessary for all agents to reach BNE. Thus, the input is the observation oi
+
+achieved from the state s and the global preference W . The probability of each action πi(ai|oi, W ) is the output. 
+
+vπi 
+
+> i
+
+: Rm is the vectorised MO state-value of the policy 
+
+πi, which approximates the expected rewards under the state 
+
+s[t] and the given global preference W , denoted as: 
+
+vπi 
+
+> i
+
+(s[t], W ) = EA[t]∼π(·| s[t],W ),s [t+1] ∼P (·| s[t],A[t]) 
+
+" ∞X
+
+> t=0
+
+γtri (s[t], A[t]) 
+
+#
+
+,
+
+A[t] = {a1[t], .., a N [t]},
+
+W ={w1, .., wN ∥wi ∼ Unif(∆ k)}.
+
+(1) This MO state-value vector can be linearly combined with the preference wi: vπi 
+
+> i
+
+= w⊤ 
+
+> i
+
+vπi 
+
+> i
+
+. The objective of each agent is to find the policy πi which maximises the excepted 
+
+vπi 
+
+> i
+
+under the initial state distribution P0 and given prefer-ence w: Es[0] ∼p[0] vπi 
+
+> i
+
+(s[0] , W ).The vectorised MO action-value function for the policy πi
+
+based on the state-action-preference tuple (s, A, W )|A =
+
+{ai, .., a N } is utilised to approximate the expected rewards under the policy πi, which is defined as Eq. 2. 
+
+qπi 
+
+> i
+
+(s, A, W ) = Eπi [
+
+> ∞
+
+X
+
+> t=0
+
+γtri(s[t], A[t])] ,
+
+= Es[t+1] ∼P (·| s[t],A[t]) [ri(s[t], A[t]) + γvπi 
+
+> i
+
+(s[t + 1] , W )] ,
+
+(2) where qπi 
+
+> i
+
+(s, A, W ) is an m-dimensional vector represent-ing the expected rewards of m objectives for the agent i. It extends the MO state-value vector by explicitly incorporat-ing the current action, which can be directly optimised in policy learning. A centralised trained MO action-value function 
+
+Qπi 
+
+> i
+
+(s, a 1, . . . , a N , W |θQi ) parameterised by θQi is deployed to represent qπi 
+
+> i
+
+(s, A, W ). The inputs are the actions of all agents a1, . . . , a N , the preference settings of all agents W , and the state information s. It outputs represent the approximate expected rewards vπi 
+
+> i
+
+.29540 The policy of each agent πi is updated by the gradient of the expected return J (θπi ) =
+
+Es[t],a [t]∼π
+
+w⊤ 
+
+> i
+
+ri (s[t], a [t])  aimed at maximising the weighted sum of the approximate expected rewards Qπi
+
+> i
+
+and the current preference wi, which is represented as: 
+
+∇θπi J(θπi ; W ) = Es∼ρπ ,a i∼πi [∇θπi log πi(ai | oi, W )
+
+w⊤ 
+
+> i
+
+Qπi 
+
+> i
+
+(s, a 1, . . . , a i, . . . , a N , W | θQi )] ,
+
+(3) where ρπ is the state distribution induced by the policy π.This framework can also be extended to deterministic poli-cies. The policy is reformulated as the continuous action ver-sion: μ = {μ1(o1, W | θμ1 ), . . . , μ N (oN , W | θμN )}. The corresponding MAMO Deep Deterministic Policy Gradient (MAMODDPG) is denoted as: 
+
+∇θμi J(θμi ; W ) = Es,a, W ∼D [∇ai w⊤ 
+
+> i
+
+Qμi 
+
+> i
+
+(s, a 1, . . . , a i, . . . , aN , W | θQi ) |ai=μi(oi,W |θμi ) ∇θμi μi(oi, W | θμi )] ,
+
+(4) where the experience replay buffer D contains tuples 
+
+(s, s ′, a 1, . . . , a N , W , r1, . . . , rN ). By sampling the expe-riences from D, all agents’ actor networks are updated by maximising the MAMODDPG, and all agents’ critic net-works are updated by minimising the MO temporal differ-ence (MOTD) error for a more accurate approximation: 
+
+L(θQi ) = Es,s ′,a,W ,r∼D 
+
+Qμi 
+
+> i
+
+(s, a 1, . . . , a i, . . . , a N , W | θQi ) − yi
+
+2 .
+
+(5) 
+
+yi =ri + γQ′μ′ 
+
+> i
+> i
+
+(s′, a ′
+
+> 1
+
+, . . . , a GP I i , . . . , a ′ 
+
+> N
+
+, W | θQ′ 
+
+> i
+
+)
+
+|a′       
+
+> j=μ′
+> j(o′
+> j,W),a GP I i=μGP I i(o′
+> i,W)
+
+, (6) where μ′ = {μ′
+
+> 1
+
+, . . . , μ ′ 
+
+> N
+
+} and Q′μ′ 
+
+> i
+> i
+
+are the target actor networks and critic networks for all agents maintained dur-ing the centralised training. μGP I i is the agent’s policy in-tegrated with Generalised Policy Improvement (Yang, Sun, and Narasimhan 2019), which assists in the rapid explo-ration of the entire preference space. In GPI, an alternative policy set for each agent Πi is maintained. All policies in 
+
+Πi are used to generate multiple actions, and the one with the maximum expected return Qπ∗
+
+> i
+> max
+
+(s, a ) is selected by the agent i. For the deterministic policy and MAMO context, it is reformulated as: 
+
+μGP I i (oi, W ) = μi(oi, arg max 
+
+> w′
+> i∼Ψi
+
+w⊤ 
+
+> i
+
+Qμi 
+
+> i
+
+(oi, a ′
+
+> 1
+
+, . . . , μi(oi, W ′), . . . , a ′ 
+
+> N
+
+, w1, . . . , w′
+
+> i
+
+, . . . , wN )) .
+
+(7) The policy set Πi is replaced by policies gen-erated with the random global preferences W ′ =
+
+{w1, . . . , w′
+
+> i
+
+, . . . , wN } , where other agents’ preferences are fixed while the preference of itself is randomly sampled from the preference distribution Ψi. The critic network Qμi
+
+generates the expected action-value vectors from different preferences. After the weighted sum with the given prefer-ence wi, the maximum summation is selected, and the asso-ciated action μi(oi, W ∗) is selected as the optimal action. For the optimisation for unstructured random preference, the global preference ensures each agent maintains a con-sistent belief over the global joint policy during decision-making. This mechanism facilitates consensus among agents toward maximising the global utility, mitigating the non-stationarity in the evolving joint MO policy, and enabling the BNE. The following experiments demonstrate the global preference leads to an improvement in overall utility. Such a design is appropriate in scenarios where global coordination is critical and communication is available, such as swarm robotics or UAV formations. 
+
+Agent-Attention MAMORL for Case II 
+
+The global preference above inevitably violates the principle of decentralised execution in the CTDE paradigm, introduc-ing non-negligible communication overhead into distributed systems. In scenarios where inter-agent communication is entirely infeasible, such as disaster-response missions in dis-astrous environments, this approach becomes incompatible with the constraints of fully decentralised systems. Conse-quently, we observe that assigning preferences as completely random variables departs from several real-world applica-tions, where agent preferences are often shaped by environ-mental states or agents’ observations. To address this gap, we then design an agent-attention MAMORL (AA-MAMORL) framework that better aligns with practical scenarios where preferences are observation-dependent in this section. This framework maintains the in-tegrity of CTDE, while allowing all agents to converge to-ward a BNE and jointly optimise the global utility in a scal-able and communication-efficient manner. Based on theo-rem 3, when preference wi is a deterministic function of the agent’s observation wi = gi(oi), the global decision is no longer needed for the decision. Thus, the policy for each agent is defined as πi(ai|oi). It is updated by the gradient of the expected return J(θπi ), represented as: 
+
+∇θπi J(θπi ) = Es∼ρπ ,a i∼πi,wi=gi(oi)[∇θπi log πi(ai | oi)
+
+w⊤ 
+
+> i
+
+Qπi 
+
+> i
+
+(s, a 1, . . . , a i, . . . , a N , W | θQi )[ i]] .
+
+(8) This framework is extended to deterministic policies. The policy is reformulated as the continuous action version: μ =
+
+{μ1(o1 | θμ1 ), . . . , μ N (oN | θμN )}, which is updated by the MAMODDPG: 
+
+∇θμi J(θμi ) = Es,a ∼D ,wi=gi(oi)[∇ai w⊤ 
+
+> i
+
+Qμi 
+
+> i
+
+(s, a 1, . . . , ai, . . . , a N , W | θQi ) |ai=μi(oi|θμi ) ∇θμi μi(oi | θμi )] .
+
+(9) According to Theorem 2, the structural modeling of global preference and policy is necessary. Thus, for the critic network, let hS = {hS 
+
+> 1
+
+, . . . , h SN } denote the set of feature embeddings from N agents, where each feature embedding 
+
+hSi combines the observation oi ∈ RDo , agent-specific ac-tions ai , and local preference wi: hSi = [ oi; ai; wi]. Each embedding is mapped into a common embedding space of 29541 Approximating Agent 1’s 
+
+3!" objective 
+
+Centralised Agent -Attention layer 
+
+𝑞 #
+
+Agent 1
+
+𝑜 #:
+
+𝑎 #:
+
+𝒘 #:
+
+Feature 
+
+Embedding 
+
+𝑥 #
+
+𝑣 #
+
+𝑘 #
+
+ℎ,#
+
+> $
+
+𝑞 %
+
+Agent 2
+
+𝑜 %:
+
+𝑎 %:
+
+𝒘 %: 𝑥 %
+
+𝑣 %
+
+𝑘 %
+
+ℎ,%
+
+> $
+
+𝑞 &
+
+Agent 3
+
+𝑜 &:
+
+𝑎 &:
+
+𝒘 &: 𝑥 &
+
+𝑣 &
+
+𝑘 &
+
+ℎ,&
+
+> $
+
+𝑞 # 𝑞 % 𝑞 & 𝑘 %
+
+> '
+
+𝛼 #% 
+
+𝛼 %% 
+
+𝛼 &% 
+
+𝛼 #% 𝛼 %% 𝛼 &% 
+
+> Concat
+> &
+> Trans
+> Multi -Head Agent
+> Attention
+
+Distributed 
+
+Embedding Layer 
+
+𝑧 %
+
+ℎ0& 
+
+> $
+
+𝑄 & 
+
+> #
+
+𝑄 & 
+
+> %
+
+𝑄 &
+
+> &
+
+𝑸 &
+
+> ())
+
+ℎ0% 
+
+> $
+
+𝑄 % 
+
+> #
+
+𝑄 %
+
+> %
+
+𝑸 %
+
+> ())
+
+ℎ0# 
+
+> $
+
+𝑄 # 
+
+> #
+
+𝑄 # 
+
+> %
+
+𝑄 #
+
+> &
+
+𝑸 #
+
+> ())
+
+Distributed 𝑸 
+
+Output Layer 
+
+> LayerNorm
+
+Figure 2: Agent Attention-based MAMORL Framework. Each agent uses its individual embedding layer to extract feature embeddings xi based on oi, ai, and wi. All agents’ embeddings are concatenated and fed into a centralised agent-attention layer. In this layer, each agent’s preference and policy are accessible to others, enabling agents to model the influence of others’ preferences and associated policies on their own policies and rewards. The output of this layer, ˆHS , is sliced to obtain the feature corresponding to agent i: ˜hSi through the LayerNorm layer, which is then passed to agent i’s Q output layer to produce a vectorised Q-value Qatt i that approximates its multiple rewards. dimension d through each agent’s linear encoder layer, form-ing xi ∈ Rd corresponding to i-th agent’s latent feature. To effectively capture inter-agent influence under a given state, the global preference that is inferable, and the associ-ated joint policy, we employ an agent-level attention mech-anism. Unlike traditional attention applied to language or vision (Han et al. 2024), where tokens or patches are ar-ranged with spatial or sequential priors, here each xi repre-sents an independent and potentially heterogeneous agent’s state, action, and preference. This attention module is shared across all agents. It serves as an explicit relational reasoning mechanism, enabling each agent to dynamically incorporate inter-agent influences based on learnt preference-specific and policy-specific patterns, thereby modeling agent-aware relational dependencies in a fully differentiable manner. To capture the relational dependencies between agent i
+
+and all agents, the model transforms the agent’s embedding via projection matrices into query, key, and value vectors: 
+
+qi = xiWQ, K = XW K , V = XW V , (10) where WQ, WK , WV ∈ Rd×dh are shared across agents within a given attention head, X is the collective embedding of all N agents. Each agent thus uses its own query vector 
+
+qi to compute attention weights over all N key vectors: 
+
+αi = softmax 
+
+ qiK⊤
+
+√dh
+
+
+
+∈ R1×N , (11) which reflects how much agent i’s utility and policy attend to other agents when updating its representation. i’s resulting embedding under a single attention head is computed as: 
+
+zi = αiV =
+
+> N
+
+X
+
+> j=1
+
+αij vj . (12) The interaction weights αij adaptively quantify how much agent j’s utility function and associated policy affect agent i’s rewards, which is critical in maintaining the joint policy stationary in MAMOSs. To enrich the model’s expressiveness, multiple attention heads are used in parallel. Each head independently projects the inputs using distinct parameters, producing head-specific embeddings z(1)  
+
+> i
+
+, . . . , z(h) 
+
+> i
+
+. These are concatenated and lin-early transformed to obtain the final output embedding: 
+
+ˆhS [i] = Concat 
+
+
+
+z(1)  
+
+> i
+
+, . . . , z(h)
+
+> i
+
+
+
+WO , WO ∈ Rhd h×d.
+
+(13) All agent’s final embedding of different heads will be concatenated: ˆHS = Concat 
+
+ˆhS 
+
+> 1
+
+, . . . , ˆhSN
+
+
+
+. Then a feed-forward network (FFN) with residual connections and layer normalisation further enhances representational capacity: 
+
+˜hS = LayerNorm (ˆhS + FFN (ˆhS )) . (14) Finally, the slice of each agent ˜hSi is processed by the indi-vidual output layer to estimate agent-specific Q-values, en-abling accurate approximation of vectorised action values under complex, multi-agent dynamics for agent i:29542 Qatt i = Output (˜hSi ). (15) And the attention-based MOTD error becomes: 
+
+Latt (θQi ) = Es,s ′,a,W ,r∼D 
+
+Qatt i (s, A, W ) − yatt i
+
+2 .
+
+(16) 
+
+yatt i = ri + γQ′att i (s′, A ′, W ′) |a′      
+
+> j=μ′
+> j(o′
+> j),a GP I i=μGP I i(o′
+> i)
+
+.
+
+(17) By minimising the attention-based MOTD error, the pa-rameters of each agent’s embedding and output layers, as well as the shared agent-attention module, are jointly up-dated. This enables each agent to better learn how variations in its own policy affect the vectorised rewards under the global utility functions and associated joint policies. Such relational modeling facilitates utility-aware policy improve-ment, guiding agents toward both global utility maximisa-tion and convergence to a BNE. The pseudocode of these two learning frameworks can be found in (Li et al. 2025). 
+
+## Experiment Results and Analysis 
+
+Experiment Settings 
+
+Datasets 
+
+• MOMA particle environments : A series of environ-ments extended from the grounded particle environment (Lowe et al. 2017) into an MO version. The first objec-tive aligns with the original one, the second one is the energy consumption related to movement and communi-cation. The benchmark includes the following scenarios: 
+
+Push , Adversary , Reference , Spread , and Tag .• MOMALand (Felten et al. 2024): A benchmark that builds on the PettingZoo API and supports MAMO learn-ing by returning vector-valued rewards. It includes di-verse scenarios such as Mountain Walker , Escort , Catch ,and Surround .Detailed descriptions of these environments can be found in (Li et al. 2025). 
+
+Baselines 
+
+• MOMIX (Hu et al. 2023): Utilises preference-conditioned local action-value estimation and a paral-lel mixing network to compute joint value functions. A preference-based exploration mechanism is introduced to encourage well-distributed Pareto-optimal solutions. • GPI-PD (Alegre et al. 2023): Combines GPI with a Dyna-style MORL approach to prioritise updates for im-proved sample efficiency. Modifications are made to sup-port the multi-agent setting. • Individual Preference (IP) : Each agent learns its policy based solely on its local observation and private prefer-ence vector. This can be viewed as a part of ablation tests. • MADDPG (Zhang et al. 2024) : A standard single-objective MADDPG baseline with scalarised rewards computed from multiple objectives using current prefer-ences. This can be viewed as a part of ablation tests. 
+
+Evaluation Metrics 
+
+• Global Utility (GU) (Alegre et al. 2023): Multiple ob-jectives are weighted summed by the preference wi to achieve the individual utility vπi 
+
+> i
+
+(wi) for each agent. All agent’s individual utility will be averages to get the GU. We average over 128 initial states for diverse preference settings to approximate the preference space. • Hypervolume (HV) (Zitzler, Brockhoff, and Thiele 2007): The volume of the area in the objective space en-closed by the reference points and the non-dominated so-lutions obtained by the algorithm. 
+
+Performance Comparison 
+
+In this experiment, each agent’s preference is modeled as a linear function of the observation. The mapping function is agent-specific but kept consistent across all rounds and base-lines to ensure fairness. Hyperparameter settings are pre-sented in (Li et al. 2025). Table 1 presents the performance across 10 training seeds, reported as the mean and standard deviation of GU and HV. Agent-Attention MAMORL (AA) consistently achieves the best and most stable performance across most en-vironments. Although global-preference-based MAMORL (GP) performs comparably to AA in certain environments (Walker , Push , and Reference ), its lack of consensus among agents undermines its robustness in settings with conflict-ing individual preferences ( Catch ). GPI-PD is designed for single-agent MO settings. As a result, it shows poor perfor-mance and occasionally fails to converge. This demonstrates the limitation of single-agent frameworks in modeling the multi-agent policy-preference space. MOMIX is designed for team preference settings and a discrete action space. It lacks generalisability for individual rewards and prefer-ences. Consequently, MO-MIX shows its shortcomings in generalisation to complex reward and preference settings. Learning curves in Fig. 3 show that in the most challeng-ing environment, Multi-Walker , only AA and GP success-fully acquire meaningful policies, whereas all other base-lines fail to progress. Similar trends are observed in the MOMA particle environments, where AA and GP demon-strate the most stable learning dynamics, while others strug-gle with convergence and exhibit high variance. 
+
+Ablation Study 
+
+The comparison among AA, GP, MADDPG, and IP serves as the ablation study aimed at evaluating the impact of vec-torised action, GP, and AA mechanisms on MAMO learning. The struggles of MADDPG highlight the importance of vectorised representations of rewards, action-values, and preferences in multi-objective settings. Scalarised rewards might be effective when preferences are fixed and aligned between training and execution, but they become imprac-tical in real-world scenarios where preferences evolve dy-namically. As shown in our dynamic preference setting, scalarised reward methods struggle to generalise and fail to extract meaningful policies. The poor performance of IP provides empirical support for Theorem 1. Without di-rect access or structured modeling to the global preference, 29543 Env Metric GPI- PD MOMIX IP MADDPG AA GP 
+
+Catch GU 315 .2 ± 3.9 82 .0 ± 2.1 161 .0 ± 2.4 397 .8 ± 2.7 528 .1 ± 26 .7 255 .9 ± 91 .4
+
+HV 251 .6 ± 43 .0 2.8 ± 4.0 93 .5 ± 3.9 124 .1 ± 15 .7 215 .8 ± 22 .9 78 .4 ± 22 .7
+
+Escort GU 269 .0 ± 66 .3 67 .6 ± 2.9 290 .0 ± 3.4 316 .0 ± 7.4 613 .8 ± 90 .8 569 .9 ± 0.6
+
+HV 385 .1 ± 43 .8 12 .9 ± 3.4 137 .6 ± 11 .7 46 .4 ± 7.7 184 .8 ± 75 .0 133 .8 ± 37 .2
+
+Walker GU −103 .3 ± 0.2 −99 .3 ± 0.4 −102 .4 ± 0.0 −100 .9 ± 0.1 −25 .8 ± 6.8 −31 .4 ± 21 .1
+
+HV 12 .6 ± 6.6 22 .0 ± 4.3 15 .9 ± 3.0 19 .9 ± 9.0 3345 .7 ± 475 .6 2115 .7 ± 511 .6
+
+Sur GU 405 .2 ± 1.1 254 .6 ± 19 .6 225 .7 ± 33 .8 405 .4 ± 0.3 615 .7 ± 58 .9 436 .1 ± 1.2
+
+HV 70 .9 ± 13 .9 143 .6 ± 24 .7 88 .1 ± 29 .6 261 .2 ± 13 .9 318 .4 ± 72 .0 96 .3 ± 85 .5
+
+Adv GU −155 .1 ± 11 .7 −61 .2 ± 11 .7 −160 .8 ± 34 .3 −150 .0 ± 16 .4 −26 .9 ± 2.4 −64 .5 ± 6.2
+
+HV 276 .9 ± 29 .2 622 .0 ± 80 .7 379 .7 ± 88 .4 201 .0 ± 36 .1 963 .0 ± 43 .4 707 .5 ± 77 .6
+
+Push GU −83 .4 ± 3.5 −44 .3 ± 33 .5 −216 .6 ± 54 .2 −202 .1 ± 19 .2 −21 .1 ± 1.9 −40 .6 ± 15 .7
+
+HV 726 .5 ± 101 .7 658 .3 ± 69 .7 848 .0 ± 57 .6 741 .1 ± 79 .0 2183 .1 ± 469 .9 1382 .6 ± 87 .3
+
+Ref GU −99 .5 ± 22 .8 −66 .9 ± 22 .8 −109 .1 ± 15 .1 −265 .7 ± 431 .6 −51 .1 ± 2.2 −67 .7 ± 9.7
+
+HV 564 .2 ± 135 .5 763 .0 ± 43 .9 542 .6 ± 58 .4 488 .4 ± 78 .2 749 .8 ± 91 .1 784 .2 ± 114 .8
+
+Spread GU −73 .8 ± 1.2 −168 .6 ± 41 .2 −130 .7 ± 25 .9 −198 .0 ± 42 .8 −53 .8 ± 0.6 −128 .3 ± 38 .7
+
+HV 143 .2 ± 195 .5 278 .3 ± 25 .1 175 .0 ± 12 .4 673 .1 ± 84 .6 846 .0 ± 27 .6 384 .2 ± 59 .3
+
+Tag GU −116 .4 ± 4.0 −31 .7 ± 7.0 −145 .2 ± 33 .7 −105 .1 ± 17 .2 −15 .0 ± 1.5 −57 .8 ± 15 .4
+
+HV 176 .7 ± 67 .5 358 .9 ± 24 .2 289 .4 ± 28 .6 243 .9 ± 537 .4 521 .8 ± 56 .2 295 .1 ± 28 .6
+
+Table 1: Performance comparison in 9 MAMO environments. Results are reported as mean ± standard deviation over 10 seeds. -160 -140 -120 -100 -80 -60 -40 -20 0Global Utility 0.0e+00 5.0e+04 1.0e+05 1.5e+05 2.0e+05 Episode   
+
+> AA MADDPG
+> GPI-PD IP
+> MOMIX GP
+
+(a) Mountain Walker -200 0200 400 600 Global Utility 0.0e+00 5.0e+04 1.0e+05 1.5e+05 2.0e+05 Episode    
+
+> AA MADDPG
+> GPI-PD IP
+> MOMIX GP
+
+(b) Surround -3000 -2000 -1000 01000 Global Utility 0.0e+00 5.0e+04 1.0e+05 1.5e+05 2.0e+05 Episode    
+
+> AA MADDPG
+> GPI-PD IP
+> MOMIX GP
+
+(c) Tag -5000 -4000 -3000 -2000 -1000 0Global Utility 0.0e+00 5.0e+04 1.0e+05 1.5e+05 2.0e+05 Episode    
+
+> AA MADDPG
+> GPI-PD IP
+> MOMIX GP
+
+(d) Push 
+
+Figure 3: Average and 95% confidence intervals of GU from AA, GP, and baselines on 4 MAMO environments. agents cannot form accurate beliefs over others’ policies, making BNE unattainable. Consequently, learning becomes unstable and ineffective. AA even outperforms GP in several environments. This result demonstrates that how heteroge-neous and dynamic utilities influence inter-agent coordina-tion. By explicitly modeling these relational factors, AA en-ables each agent to update its own policy, adapting to other policies more effectively, resulting in improved performance and convergence towards the BNE. 
+
+## Conclusion 
+
+In this paper, we mathematically prove that direct access to or structured modeling of global preferences during decision-making is a necessary condition for achieving BNE in MAMOS. For the case where preferences are randomly generated, we incorporate global preferences into distributed decision-making and design a corresponding MAMORL framework. For the more realistic setting where preferences are generated by agents based on their own observations, we develop an AA-MAMORL framework, where a cen-tralised attention-based critic network is employed to model inter-agent influences and preference-policy dependencies and is shared among all agents. To evaluate AA and global preference, we constructed experiments using 9 standard MAMO environments. The results demonstrate that the pro-posed AA-MAMORL consistently outperforms baselines across diverse environments by effectively modeling het-erogeneous preferences and coordinating decentralised poli-cies. Ablation results highlight the necessity of global pref-erence modeling and vectorised objectives for stable and convergent learning in multi-agent multi-objective settings. 29544 Acknowledgments 
+
+This work was supported in part by EU Horizon 2020 Grant No. 101008297, UKRI Grant No. EP/Y036786/1, and Hori-zon EU Grant No. 101129910. 
+
+## References 
+
+Alegre, L. N.; Bazzan, A. L.; Roijers, D. M.; Now´ e, A.; and da Silva, B. C. 2023. Sample-efficient multi-objective learn-ing via generalized policy improvement prioritization. arXiv preprint arXiv:2301.07784 .Assos, A.; Dagan, Y.; and Daskalakis, C. 2024. Maximiz-ing utility in multi-agent environments by anticipating the behavior of other learners. Advances in Neural Information Processing Systems , 37: 38769–38798. Chang, L.; Iqbal, S.; and Chen, H. 2023. Does financial in-clusion index and energy performance index co-move? En-ergy Policy , 174: 113422. Felten, F.; Ucak, U.; Azmani, H.; Peng, G.; R¨ opke, W.; Baier, H.; Mannion, P.; Roijers, D. M.; Terry, J. K.; Talbi, E.-G.; et al. 2024. Momaland: A set of benchmarks for multi-objective multi-agent reinforcement learning. arXiv preprint arXiv:2407.16312 .Han, D.; Wang, Z.; Xia, Z.; Han, Y.; Pu, Y.; Ge, C.; Song, J.; Song, S.; Zheng, B.; and Huang, G. 2024. Demystify mamba in vision: A linear attention perspective. Advances in neural information processing systems , 37: 127181–127203. Hayat, S.; Yanmaz, E.; Bettstetter, C.; and Brown, T. X. 2020. Multi-objective drone path planning for search and rescue with quality-of-service requirements. Autonomous Robots , 44(7): 1183–1198. He, W.; Xu, W.; Ge, X.; Han, Q.-L.; Du, W.; and Qian, F. 2021. Secure control of multiagent systems against mali-cious attacks: A brief survey. IEEE Transactions on Indus-trial Informatics , 18(6): 3595–3608. Hu, T.; Luo, B.; Yang, C.; and Huang, T. 2023. MO-MIX: Multi-objective multi-agent cooperative decision-making with deep reinforcement learning. IEEE Transactions on Pattern Analysis and Machine Intelligence , 45(10): 12098– 12112. Jiang, W.; Li, P.; Sha, A.; Li, Y.; Yuan, D.; Xiao, J.; and Xing, C. 2023. Research on pavement traffic load state per-ception based on the piezoelectric effect. IEEE Transactions on Intelligent Transportation Systems , 24(8): 8264–8278. Li, M.; Wang, Q.; and Xu, Y. 2025. Gtde: Grouped train-ing with decentralized execution for multi-agent actor-critic. In Proceedings of the AAAI Conference on Artificial Intelli-gence , volume 39, 18368–18376. Li, Z.; Luo, C.; Huang, L.; Qi, L.; and Min, G. 2025. Achiev-ing Equilibrium under Utility Heterogeneity: An Agent-Attention Framework for Multi-Agent Multi-Objective Re-inforcement Learning. arXiv:2511.08926. Lowe, R.; Wu, Y. I.; Tamar, A.; Harb, J.; Pieter Abbeel, O.; and Mordatch, I. 2017. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neural information processing systems , 30. Mallareddy, M.; Thirumalaikumar, R.; Balasubramanian, P.; Naseeruddin, R.; Nithya, N.; Mariadoss, A.; Eazhilkrishna, N.; Choudhary, A. K.; Deiveegan, M.; Subramanian, E.; et al. 2023. Maximizing water use efficiency in rice farm-ing: A comprehensive review of innovative irrigation man-agement technologies. Water , 15(10): 1802. Niu, H.; Lin, Z.; An, K.; Wang, J.; Zheng, G.; Al-Dhahir, N.; and Wong, K.-K. 2023. Active RIS assisted rate-splitting multiple access network: Spectral and energy efficiency tradeoff. IEEE Journal on Selected Areas in communica-tions , 41(5): 1452–1467. Paine, T. M.; and Benjamin, M. R. 2024. A model for multi-agent autonomy that uses opinion dynamics and multi-objective behavior optimization. In 2024 IEEE International Conference on Robotics and Automation (ICRA) , 8305– 8311. IEEE. Qi, Q.; Chen, X.; Khalili, A.; Zhong, C.; Zhang, Z.; and Ng, D. W. K. 2022. Integrating sensing, computing, and commu-nication in 6G wireless networks: Design and optimization. 
+
+IEEE Transactions on Communications , 70(9): 6212–6227. R˘ adulescu, R.; Mannion, P.; Roijers, D. M.; and Now´ e, A. 2020. Multi-objective multi-agent decision making: a utility-based analysis and survey. Autonomous Agents and Multi-Agent Systems , 34(1): 10. Saglam, I. 2025. Bayesian Nash Equilibrium. In Mastering Game Theory: A Comprehensive Introduction to Strategic Decision Making , 101–112. Springer. Shi, M.; He, H.; Li, J.; Han, M.; and Jia, C. 2021. Multi-objective tradeoff optimization of predictive adaptive cruis-ing control for autonomous electric buses: A cyber-physical-energy system approach. Applied Energy , 300: 117385. Wei, Z.; Yu, X.; Ng, D. W. K.; and Schober, R. 2021. Re-source allocation for simultaneous wireless information and power transfer systems: A tutorial overview. Proceedings of the IEEE , 110(1): 127–149. Wong, A.; B¨ ack, T.; Kononova, A. V.; and Plaat, A. 2023. Deep multiagent reinforcement learning: Challenges and di-rections. Artificial Intelligence Review , 56(6): 5023–5056. Yang, R.; Sun, X.; and Narasimhan, K. 2019. A gener-alized algorithm for multi-objective reinforcement learning and policy adaptation. Advances in neural information pro-cessing systems , 32. Zhang, C.; Sun, G.; Li, J.; Wu, Q.; Wang, J.; Niyato, D.; and Liu, Y. 2024. Multi-objective aerial collaborative se-cure communication optimization via generative diffusion model-enabled deep reinforcement learning. IEEE Trans-actions on Mobile Computing .Zitzler, E.; Brockhoff, D.; and Thiele, L. 2007. The hy-pervolume indicator revisited: On the design of Pareto-compliant indicators via weighted integration. In Evolution-ary Multi-Criterion Optimization: 4th International Con-ference, EMO 2007, Matsushima, Japan, March 5-8, 2007. Proceedings 4 , 862–876. Springer. 29545
