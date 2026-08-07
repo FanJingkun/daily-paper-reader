@@ -1,9 +1,9 @@
 {
   "date": "20260807",
   "date_label": "",
-  "generated_at": "2026-08-07 00:43:00 UTC",
+  "generated_at": "2026-08-07 20:14:31 UTC",
   "recommend_exists": true,
-  "run_count": 1,
+  "run_count": 2,
   "papers": [
     {
       "paper_id": "2607.27177v1",
@@ -19,7 +19,7 @@
       "score": 8.0,
       "evidence": "隐藏异构伙伴能力下的临时团队协作能力估计",
       "first_seen_at": "2026-08-07 00:43:00 UTC",
-      "updated_at": "2026-08-07 00:43:00 UTC"
+      "updated_at": "2026-08-07 20:14:31 UTC"
     },
     {
       "paper_id": "2607.29009v2",
@@ -35,7 +35,7 @@
       "score": 8.0,
       "evidence": "面向异构多机器人系统的视觉-语言协作与角色分配",
       "first_seen_at": "2026-08-07 00:43:00 UTC",
-      "updated_at": "2026-08-07 00:43:00 UTC"
+      "updated_at": "2026-08-07 20:14:31 UTC"
     }
   ]
 }

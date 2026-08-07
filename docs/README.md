@@ -47,11 +47,11 @@
     <strong class="dpr-home-dashboard-count">共 2 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
-    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>2 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>2</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>0</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-08-07 00:43:00 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-08-07 20:14:31 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -62,7 +62,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日精读两篇8分论文，聚焦AI临时团队协作与多机器人系统。最值得关注：任务无关的伙伴能力估计，以及未知环境下异构机器人的去中心化视觉-语言协同。下一步可结合这两个方向，探索自适应策略与多模态协作在真实场景中的应用潜力。</p>
+<p>今日精读2篇多智能体协作方向高分论文，聚焦临时团队适应与异构机器人协同。最值得关注：无任务先验的伙伴能力估计，以及去中心化视觉-语言多机器人未知环境协作。建议可延伸关注这两项技术如何融合，提升现实集群智能的泛化性。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
