@@ -1,0 +1,39 @@
+{
+  "label": "2026-08-07",
+  "date": "2026-08-07",
+  "generated_at": "2026-08-07T00:43:04",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202608/07/2607.27177v1-partner-capability-estimation-for-task-agnostic-adaptation-in-ad-hoc-teamwork",
+      "section": "deep",
+      "title_en": "Partner Capability Estimation for Task-Agnostic Adaptation in Ad-Hoc Teamwork",
+      "authors": "Peter Tisnikar, Maja Swieczkowska, Benteng Ma, Gerard Canal, Matteo Leonetti",
+      "date": "2026-07-29",
+      "pdf": "https://arxiv.org/pdf/2607.27177v1",
+      "score": "8.0",
+      "evidence": "隐藏异构伙伴能力下的临时团队协作能力估计",
+      "tldr": "针对临时团队合作中伙伴能力未知且任务多变的问题，本文提出CE-CM贝叶斯方法，通过上下文模型与模拟采样估计任务无关的能力向量，无需预训练即可在线更新。扩展CE-CM-Div进一步考虑人类行为多样性。模拟实验表明能快速恢复隐藏能力并减少不可行分配，离线人类研究中显著改进估计，证明能力建模是可解释且任务无关的有效表示。",
+      "tags": "query:hetero-marl",
+      "abstract_en": "Effective collaboration with novel and diverse partners is a crucial skill for autonomous agents. Most current ad-hoc teamwork (AHT) approaches assume that agents will collaborate on a single, fixed task and that the partner's capabilities, their ability to successfully execute the desired action, are already known. In reality, a partner's true capabilities are often hidden, and human collaborators may act sub-optimally on tasks with multiple valid strategies. To address these limitations, we extend ad-hoc teamwork into a multi-task setting by re-framing it as a problem of joint planning with decentralised execution under hidden partner capabilities. We introduce CE-CM (Capability Estimation via Contextual Models), an approximate Bayesian method that infers task-invariant capability vectors. By using simulation-based sampling, the agent estimates capabilities and induces a contextual Multi-agent Markov Decision Processes for planning. This approach requires no population pre-training and refines its beliefs online from just a few tasks. To account for human unpredictability, we propose CE-CM-Div, an extension that evaluates capability hypotheses against diverse planner rollouts rather than a single optimal trajectory. Simulated experiments demonstrate that CE-CM rapidly recovers hidden capabilities, reduces infeasible action assignments, and adapts to changes over time. Furthermore, in an offline human study of 225 trajectories from 15 participants, CE-CM-Div substantially improved capability estimates over the baseline CE-CM method. Our results suggest capability-based modelling is a promising interpretable, task-agnostic representation in the studied settings, demonstrating that accounting for behavioural diversity is essential for robust human-AI teaming.",
+      "source": "arxiv",
+      "selection_source": "carryover_cache"
+    },
+    {
+      "paper_id": "202608/07/2607.29009v2-d-vlc-decentralized-vision-language-collaboration-for-heterogeneous-embodied-multi-robot-systems-in-unknown-environments",
+      "section": "deep",
+      "title_en": "D-VLC: Decentralized Vision-Language Collaboration for Heterogeneous Embodied Multi-Robot Systems in Unknown Environments",
+      "authors": "Yuan Zhou, Ruitong Lin, Shen Wang, Weiqi Gai, Mo Zhu, Xin Zhou, Yuze Wu, Fei Gao",
+      "date": "2026-07-31",
+      "pdf": "https://arxiv.org/pdf/2607.29009v2",
+      "score": "8.0",
+      "evidence": "面向异构多机器人系统的视觉-语言协作与角色分配",
+      "tldr": "多机器人系统可借助异构能力提升复杂任务效率，但传统规则方法难以理解语义指令，现有大模型多依赖已知地图与集中决策，无法泛化。本文提出D-VLC框架，通过去中心化异步推理、轻量级信息共享、能力感知协作与统一行动接口，使通用视觉语言模型无需特定训练即可生成机器人可执行动作。实验覆盖多种场景与多个视觉语言模型，成功率均超70%，完成时间较几何贪心基线最多降低55.8%。该方法为异构多机器人在未知环境中的语义协作提供了高效、可泛化的新途径。",
+      "tags": "query:hetero-marl",
+      "abstract_en": "Multi-robot systems, particularly heterogeneous robot swarms, can improve the efficiency of complex task execution through parallel collaboration and complementary capabilities. However, conventional rule-based methods rely on predefined task models and specialized decision making programs, making it difficult to understand complex semantic instructions and coordinate heterogeneous robots. LLMs introduce strong language understanding and task reasoning capabilities, allowing multi-robot systems to interpret instructions, decompose tasks, and assign roles according to task semantics. VLMs further incorporate visual perception, enabling robots to reason about objects, regions, and spatial relationships in physical environments. Nevertheless, existing LLM/VLM based methods often depend on known maps, centralized and synchronized decision making, limiting their generalization to heterogeneous robots and unseen tasks. We therefore propose a framework that combines decentralized asynchronous reasoning, lightweight information sharing, capability aware collaboration, and a unified action interface, enabling general purpose VLMs to generate robot specific actions executed by learning free experts without task or robot specific training. Experiments across diverse scenarios and multiple VLMs show success rates above 70\\%, with completion time reduced by up to 55.8\\% relative to the geometric greedy baseline.",
+      "source": "arxiv",
+      "selection_source": "carryover_cache"
+    }
+  ],
+  "errors": []
+}

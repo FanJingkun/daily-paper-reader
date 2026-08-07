@@ -41,17 +41,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-07-08 ~ 2026-08-06</span>
+      <span class="dpr-home-dashboard-kicker">2026-08-07</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 17 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 2 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>6</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>11</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>2</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>0</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-08-06 02:58:02 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-08-07 00:43:00 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -62,7 +62,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>本期共17篇论文，精读6篇、速读11篇，聚焦多智能体强化学习与协作推理。最值得关注的两项高分工作：基于元策略委派解决异构多智能体历史依赖问题（10分），以及连续动作空间下自进化默认动作的协作方法（9分）。建议优先精读这两篇论文，并速读扩散模型驱动的无通信多机器人协调方向。</p>
+<p>今日精读两篇8分论文，聚焦AI临时团队协作与多机器人系统。最值得关注：任务无关的伙伴能力估计，以及未知环境下异构机器人的去中心化视觉-语言协同。下一步可结合这两个方向，探索自适应策略与多模态协作在真实场景中的应用潜力。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -71,12 +71,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">精读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">6 篇</strong>
+    <strong class="dpr-home-dashboard-count">2 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="History Matters: Meta-policy Delegation with Heterogeneous Multi-agent Reinforcement Learning">History Matters: Meta-policy Delegation with Heterogeneous Multi-agent Reinforcement Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space">A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space</span></li><li><span class="dpr-home-dashboard-paper-title" title="Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning">Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Partner Capability Estimation for Task-Agnostic Adaptation in Ad-Hoc Teamwork">Partner Capability Estimation for Task-Agnostic Adaptation in Ad-Hoc Teamwork</span></li><li><span class="dpr-home-dashboard-paper-title" title="D-VLC: Decentralized Vision-Language Collaboration for Heterogeneous Embodied Multi-Robot Systems in Unknown Environments">D-VLC: Decentralized Vision-Language Collaboration for Heterogeneous Embodied Multi-Robot Systems in Unknown Environments</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">hetero-marl <strong>3</strong></span><span class="dpr-home-dashboard-tag">mcd <strong>3</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">hetero-marl <strong>2</strong></span></div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-skim-card">
   <div class="dpr-home-dashboard-header">
@@ -84,12 +84,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">11 篇</strong>
+    <strong class="dpr-home-dashboard-count">0 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="CoDiMAD: Diffusion-Based Privileged Distillation for Communication-Free Multi-Robot Coordination">CoDiMAD: Diffusion-Based Privileged Distillation for Communication-Free Multi-Robot Coordination</span></li><li><span class="dpr-home-dashboard-paper-title" title="Route, Communicate, and Reason: Gated Routing and Adaptive Depth for Efficient Multi-Agent Reasoning">Route, Communicate, and Reason: Gated Routing and Adaptive Depth for Efficient Multi-Agent Reasoning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Multi-Agent LLMs Fail to Explore Each Other">Multi-Agent LLMs Fail to Explore Each Other</span></li></ul>
+<p class="dpr-home-dashboard-empty">今日暂无推荐。</p>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">mcd <strong>8</strong></span><span class="dpr-home-dashboard-tag">hetero-marl <strong>3</strong></span></div>
+
 </section>
 </div>
 
